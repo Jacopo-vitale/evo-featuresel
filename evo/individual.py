@@ -1,7 +1,7 @@
 from typing import Iterable,overload,Any
-
 from abc import ABC,abstractmethod
 import numpy as np
+from utils import Setup
 
 class BaseIndividual(ABC):
     def __init__(self, 
@@ -29,7 +29,7 @@ class BaseIndividual(ABC):
         self._fitness : float = -1.0
 
     @abstractmethod
-    def fitness_eval(self, FEATURES:Iterable, model) -> float:
+    def fitness_eval(self,) -> float:
         pass
     
     @property
@@ -46,17 +46,30 @@ class Individual(BaseIndividual):
         super().__init__(filament_len, genes)
     
 
-    def fitness_eval(self, FEATURES : Iterable, model) -> float:
+    def fitness_eval(self, FEATURES, LABELS=None, model = None) -> float:
+        '''
+        Function that evaluates the individual fitness.
+
+        Parameters:
+            FEATURES (`tuple(X_train, X_test)`): sets that will be sliced from the individual genes
+            LABELS   (`tuple(y_train, y_test)`): labels to fit the model and evaluate fitness
+          
+        Returns:
+            `float` : The fitness value        
+        '''
+
         if not np.count_nonzero(self.genes):
             print(self.genes)
             raise Exception('All genes are zero... ABORTING')
         
         try:
+            #@TODO: Implement model selection and model parameter(s) selection
             selected_features = FEATURES[:,np.array(self.genes,dtype=bool)]
-            #result = model.fit()
+            #result = model.fit(selected_features,LABELS)
         except:
             raise Exception('Model can\'t be fitted... ABORTING')
         
+        # self._fitness = metric(TEST_SET, TEST_LABELS)
         self._fitness = selected_features.sum()
         
         return self._fitness
@@ -66,12 +79,16 @@ if __name__ == '__main__':
     genes = np.array((1,0,0,1,1,0,1,0))
     filament_len = len(genes)
 
+    evo_setup = Setup()
+    # should be: evo_setup.FEATURES = (X_train, X_test) ready for sk-learn fit()
+    evo_setup.FEATURES = np.random.randint(0,2,(50,filament_len))
+
     individual = Individual(filament_len = filament_len,
                             genes        = genes)
 
     print(individual.fitness)
 
-    individual.fitness_eval()
+    individual.fitness_eval(evo_setup.FEATURES)
 
     print(individual.fitness)
 
