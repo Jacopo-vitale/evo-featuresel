@@ -59,6 +59,7 @@ class Individual(BaseIndividual):
         '''
 
         if not np.count_nonzero(self.genes):
+            # @TODO: Should be like killing the individual e.g. place fitness = -1
             print(self.genes)
             raise Exception('All genes are zero... ABORTING')
         
