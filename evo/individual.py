@@ -10,7 +10,8 @@ import sys,os
 class BaseIndividual(ABC):
     def __init__(self,
                  filament_len: int,
-                 genes: Iterable) -> None:
+                 genes: Iterable,
+                 project_folder : str) -> None:
         super().__init__()
 
         # Check if DNA is binary @TODO: evo for floating points
@@ -27,6 +28,26 @@ class BaseIndividual(ABC):
         if not filament_len > 1:
             raise Exception(
                 f'Nothing to optimize got filament_len {filament_len}')
+        self.logger = logging.getLogger("individual")
+        self.logger.setLevel(logging.DEBUG)
+        # Create handlers for logging to the standard output and a file
+        stdoutHandler = logging.StreamHandler(stream=sys.stdout)
+        errHandler = logging.FileHandler(os.path.join(project_folder,"error.log"))
+        # Set the log levels on the handlers
+        stdoutHandler.setLevel(logging.DEBUG)
+        errHandler.setLevel(logging.ERROR)
+        # Create a log format using Log Record attributes
+        fmt = logging.Formatter(
+            "%(name)s: %(asctime)s | %(levelname)s | %(filename)s:%(lineno)s | %(process)d >>> %(message)s"
+        )
+
+        # Set the log format on each handler
+        stdoutHandler.setFormatter(fmt)
+        errHandler.setFormatter(fmt)
+
+        # Add each handler to the Logger object
+        self.logger.addHandler(stdoutHandler)
+        self.logger.addHandler(errHandler)
         
         self.filament_len: int = filament_len
         self.genes: Iterable = np.array(genes, dtype=np.int8)
@@ -54,29 +75,9 @@ class BaseIndividual(ABC):
 
 class Individual(BaseIndividual):
     def __init__(self, filament_len, genes, bits : dict,project_folder) -> None:
-        super().__init__(filament_len, genes)
+        super().__init__(filament_len, genes,project_folder)
         
         self.bits = bits
-        self.logger = logging.getLogger("individual")
-        self.logger.setLevel(logging.DEBUG)
-        # Create handlers for logging to the standard output and a file
-        stdoutHandler = logging.StreamHandler(stream=sys.stdout)
-        errHandler = logging.FileHandler(os.path.join(project_folder,"error.log"))
-        # Set the log levels on the handlers
-        stdoutHandler.setLevel(logging.DEBUG)
-        errHandler.setLevel(logging.ERROR)
-        # Create a log format using Log Record attributes
-        fmt = logging.Formatter(
-            "%(name)s: %(asctime)s | %(levelname)s | %(filename)s:%(lineno)s | %(process)d >>> %(message)s"
-        )
-
-        # Set the log format on each handler
-        stdoutHandler.setFormatter(fmt)
-        errHandler.setFormatter(fmt)
-
-        # Add each handler to the Logger object
-        self.logger.addHandler(stdoutHandler)
-        self.logger.addHandler(errHandler)
         
 
     def fitness_eval(self, DATA: tuple, LABELS: tuple,) -> float:
