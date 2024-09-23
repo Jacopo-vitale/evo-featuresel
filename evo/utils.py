@@ -62,6 +62,9 @@ class Setup(object):
         os.makedirs(self.project_folder   , exist_ok=True)
 
 
+
+
+
 if __name__ == '__main__':
     evo_setup = Setup()#<---- first instanciate
     evo_setup.POP_SIZE = 500 #<---- then init static attributes
