@@ -2,7 +2,10 @@ from typing import Iterable
 from abc import ABC, abstractmethod
 import numpy as np
 from evo.utils import Setup
-
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import matthews_corrcoef
+import logging
+import sys,os
 
 class BaseIndividual(ABC):
     def __init__(self,
@@ -35,6 +38,12 @@ class BaseIndividual(ABC):
     def fitness_eval(self,) -> float:
         pass
 
+    def binaryToDecimal(self,binary):
+        decimal : np.int16 = 0
+        for p,b in enumerate(binary,start=1):
+            decimal += b * (2**(len(binary) - p))
+        return decimal
+    
     @property
     def fitness(self,) -> float:
         return self._fitness
@@ -44,10 +53,33 @@ class BaseIndividual(ABC):
 
 
 class Individual(BaseIndividual):
-    def __init__(self, filament_len, genes) -> None:
+    def __init__(self, filament_len, genes, bits : dict,project_folder) -> None:
         super().__init__(filament_len, genes)
+        
+        self.bits = bits
+        self.logger = logging.getLogger("individual")
+        self.logger.setLevel(logging.DEBUG)
+        # Create handlers for logging to the standard output and a file
+        stdoutHandler = logging.StreamHandler(stream=sys.stdout)
+        errHandler = logging.FileHandler(os.path.join(project_folder,"error.log"))
+        # Set the log levels on the handlers
+        stdoutHandler.setLevel(logging.DEBUG)
+        errHandler.setLevel(logging.ERROR)
+        # Create a log format using Log Record attributes
+        fmt = logging.Formatter(
+            "%(name)s: %(asctime)s | %(levelname)s | %(filename)s:%(lineno)s | %(process)d >>> %(message)s"
+        )
 
-    def fitness_eval(self, FEATURES: tuple, LABELS: tuple, model) -> float:
+        # Set the log format on each handler
+        stdoutHandler.setFormatter(fmt)
+        errHandler.setFormatter(fmt)
+
+        # Add each handler to the Logger object
+        self.logger.addHandler(stdoutHandler)
+        self.logger.addHandler(errHandler)
+        
+
+    def fitness_eval(self, DATA: tuple, LABELS: tuple,) -> float:
         '''
         Function that evaluates the individual fitness.
 
@@ -60,65 +92,68 @@ class Individual(BaseIndividual):
         '''
 
         if not np.count_nonzero(self.genes):
-            # @TODO: Should be like killing the individual e.g. place fitness = -1
+            # killing the individual e.g. place fitness = -1
             self._fitness = -1.0
             raise Warning(f'All genes are zero... Killing individual {id(self)}')
 
         try:
-            # @TODO: Implement model selection and model parameter(s) selection
-            X_train,X_test = FEATURES
+            X_train,X_test = DATA
             y_train,y_test = LABELS
-            
-            radiomics   = self.genes[:107]      # array[107]
-            model_sel   = self.genes[107:107+4] # array[2]
-            model_param = self.genes[107+4:]    # array[6]
                         
-            model_param = self.genes[107+4:]
+            radiomics, model_sel, model_param  = self.to_phenotype()
             
-            if self.binaryToDecimal(model_sel) == 0:
-                pass
+            self.logger.error(f'DEBUG: {radiomics, model_sel, model_param}')
             
+            match (model_sel):
+                case 0:
+                    model = RandomForestClassifier()
+                case 1:
+                    model = RandomForestClassifier()
+                case 2:
+                    model = RandomForestClassifier()
+                case 3:
+                    model = RandomForestClassifier()
+                
             
             X_train_sel = X_train[:, np.array(radiomics, dtype=bool)]
             X_test_sel  = X_test [:, np.array(radiomics, dtype=bool)]
             
-            result = model.fit(X_train_sel,y_train)
+            model.fit(X_train_sel,y_train)
+            preds = model.predict(X_test_sel)
+            self._fitness = matthews_corrcoef(y_test,preds)
+        
         except:
             self._fitness = -1.0
-            raise Warning(f'All genes are zero... Killing individual {id(self)}')
+            self.logger.warning(f'All genes are zero... Killing individual {id(self)}')
 
-        preds = model.predict(X_test_sel)
-        self._fitness = mcc_score(y_test,preds)
-                    
-        def binaryToDecimal(self,binary):
-            decimal, i = 0, 0
-            while(binary != 0):
-                dec = binary % 10
-                decimal = decimal + dec * pow(2, i)
-                binary = binary//10
-                i += 1
-            return decimal
+    def to_phenotype(self,):
+        return (    
+                    self.genes[:self.bits['features']], # radiomics to be selected
+
+                    self.binaryToDecimal(
+                        self.genes[self.bits['features']:\
+                                   self.bits['features'] + self.bits['model_selection']
+                            ]), # Selected Model
+                    self.binaryToDecimal(
+                        self.genes[self.bits['features'] + self.bits['model_selection']:]
+                        ), # Model parameter(s)
+                )
  
-        
-        
-        
-        
-
 
 if __name__ == '__main__':
-    genes = np.array((1, 0, 0, 1, 1, 0, 1, 0))
+    genes = np.random.choice([0,1],size=150)
     filament_len = len(genes)
 
     evo_setup = Setup()
     # should be: evo_setup.FEATURES = (X_train, X_test) ready for sk-learn fit()
-    evo_setup.FEATURES = np.random.randint(0, 2, (50, filament_len))
+    evo_setup.DATA = np.random.randint(0, 2, (50, filament_len))
 
     individual = Individual(filament_len=filament_len,
                             genes=genes)
 
     print(individual.fitness)
 
-    individual.fitness_eval(evo_setup.FEATURES)
+    individual.fitness_eval(evo_setup.DATA)
 
     print(individual.fitness)
 

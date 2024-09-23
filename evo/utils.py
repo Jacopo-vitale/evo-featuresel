@@ -48,9 +48,10 @@ class Setup(object):
     MUT_RATE     : float    = None
     GENES        : list     = [0,1]
     FILAMENT_LEN : int      = None
-    FEATURES     : np.array = None
+    DATA         : np.array = None
     LABELS       : np.array = None
-
+    INDICES      : dict     = None
+    
     def __init__(self,experiment_folder : str = 'experiment', project_prefix : str = '') -> None:
         self.experiment_folder = experiment_folder
         self.project_folder = os.path.join(experiment_folder,\
@@ -68,6 +69,6 @@ class Setup(object):
 if __name__ == '__main__':
     evo_setup = Setup()#<---- first instanciate
     evo_setup.POP_SIZE = 500 #<---- then init static attributes
-    evo_setup.FEATURES = [1,4,5,6,7,8,9,6,6,4,]
+    evo_setup.DATA = [1,4,5,6,7,8,9,6,6,4,]
 
     print(evo_setup.POP_SIZE)
