@@ -50,7 +50,7 @@ class Setup(object):
     FILAMENT_LEN : int      = None
     DATA         : np.array = None
     LABELS       : np.array = None
-    INDICES      : dict     = None
+    BITS         : dict     = None
     
     def __init__(self,experiment_folder : str = 'experiment', project_prefix : str = '') -> None:
         self.experiment_folder = experiment_folder

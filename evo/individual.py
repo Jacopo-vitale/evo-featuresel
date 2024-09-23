@@ -38,7 +38,7 @@ class BaseIndividual(ABC):
         errHandler.setLevel(logging.ERROR)
         # Create a log format using Log Record attributes
         fmt = logging.Formatter(
-            "%(name)s: %(asctime)s | %(levelname)s | %(filename)s:%(lineno)s | %(process)d >>> %(message)s"
+            "%(message)s"
         )
 
         # Set the log format on each handler
@@ -74,7 +74,7 @@ class BaseIndividual(ABC):
 
 
 class Individual(BaseIndividual):
-    def __init__(self, filament_len, genes, bits : dict,project_folder) -> None:
+    def __init__(self, filament_len, genes, bits : dict, project_folder) -> None:
         super().__init__(filament_len, genes,project_folder)
         
         self.bits = bits
@@ -85,7 +85,7 @@ class Individual(BaseIndividual):
         Function that evaluates the individual fitness.
 
         Parameters:
-            FEATURES (`tuple(X_train, X_test)`): sets that will be sliced from the individual genes
+            DATA     (`tuple(X_train, X_test)`): sets that will be sliced from the individual genes
             LABELS   (`tuple(y_train, y_test)`): labels to fit the model and evaluate fitness
             model    (`BaseEstimator`): model for fitness evaluation
         Returns:
@@ -102,9 +102,8 @@ class Individual(BaseIndividual):
             y_train,y_test = LABELS
                         
             radiomics, model_sel, model_param  = self.to_phenotype()
-            
-            self.logger.error(f'DEBUG: {radiomics, model_sel, model_param}')
-            
+
+
             match (model_sel):
                 case 0:
                     model = RandomForestClassifier()

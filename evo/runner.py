@@ -4,7 +4,7 @@ from evo.utils import Setup
 import sys,os
 
 class Runner(object):
-    def __init__(self,setup:Setup = None ,population : Population = None) -> None:
+    def __init__(self,setup:Setup = None, population : Population = None) -> None:
         self.setup = setup
         self.population = population
         self.logger = logging.getLogger("runner")
@@ -17,7 +17,7 @@ class Runner(object):
         errHandler.setLevel(logging.ERROR)
         # Create a log format using Log Record attributes
         fmt = logging.Formatter(
-            "%(name)s: %(asctime)s | %(levelname)s | %(filename)s:%(lineno)s | %(process)d >>> %(message)s"
+            "%(message)s"
         )
 
         # Set the log format on each handler
@@ -28,17 +28,29 @@ class Runner(object):
         self.logger.addHandler(stdoutHandler)
         self.logger.addHandler(errHandler)
     
-    def step(self):
+    def step(self,epoch_counter):
         self.logger.info('Starting Crossover...')
-        #self.population.crossover()
+        self.population.crossover() # qui fa scelta dei genitori con condizioni (ironman e scarpari) e nascita bambini
         self.logger.info('Starting Mutation...')
-        #self.population.mutation()
+        self.population.mutation(epoch_counter) #mutazione, fitness eval e sort
+        self.logger.info('Starting Replace...')
+        self.population.replace()
+        
     
     def run(self,epochs:int = 10,target = 0.9):
+        self.logger.info('Initializing Population...')
+        self.population.init_population()      # e fitness eval e sortati già
+    
+
         for epoch_counter in range(epochs):
             self.logger.info(f'Starting epoch {epoch_counter}...')
-            self.step()
-            self.logger.error(f'End epoch {epoch_counter}...')
+            self.step(epoch_counter)
+            if self.population.bestindividual.fitness >= target:
+                self.logger.info(f'Target achieved: {target}')
+                break
+            self.logger.info(f'End epoch {epoch_counter}...')
+            self.logger.info('**************************')
+            self.logger.info(f'Best fitness is: {self.population.bestindividual.fitness} ')
 
 
 if __name__ == '__main__':
