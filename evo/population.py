@@ -18,9 +18,11 @@ class Population(object):
         return self._offspring
     
     def init_population(self):
- 
+        '''
+        @FIXME: Introduce all ones Individual --- 25/11 lun,mar,mer 11-13 pick 3 days (topics)
+        '''
         for _ in range(self.setup.POP_SIZE):
-            genes        = list(np.random.choice(self.setup.GENES,size=self.setup.FILAMENT_LEN))
+            genes        = np.random.choice(self.setup.GENES,size=self.setup.FILAMENT_LEN)
             individual   = Individual(self.setup.FILAMENT_LEN,genes=genes, bits=self.setup.BITS,project_folder=self.setup.project_folder)
             individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
 
@@ -43,15 +45,17 @@ class Population(object):
             
             self._offspring.append(child)
 
-    def mutation(self, epoch_counter : int):
+    def mutation(self, epoch : int,tot_epoch : int):
+        #alpha ** epoch_counter # formula esponenziale per diminuire mutation rate (diminuisce al variare delle epoche)
+        '''
+        Using as mutation rate Capacitor discharge formula, increase alpha for increase decading
+        '''
+        alpha = 0.5
+        self.mutation_rate = np.exp(-epoch/(tot_epoch * alpha))
         
-        alpha   = 0.9
-        T_zero = 0.9
-        mutation_rate = T_zero + (alpha ** epoch_counter) # formula esponenziale per diminuire mutation rate (diminuisce al variare delle epoche)
-
         for individual in self._offspring:
             for i in range(len(individual.genes)):
-                if np.random.random() < mutation_rate:
+                if np.random.random() < self.mutation_rate:
                     individual.genes[i] = 1 - individual.genes[i]
 
             individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
@@ -60,12 +64,15 @@ class Population(object):
 
 
     def replace(self):
-        
+        tmp_generation = []
         for old,new in zip(self._population,self._offspring):
             if old.fitness < new.fitness:
-                old = new  
-        
-        self._population = sorted(self._population, key= lambda x: x.fitness,reverse=True)
-        self._offspring = []
+                print(f'Replacing {old.fitness} with {new.fitness}')
+                tmp_generation.append(new)
+            else:
+                tmp_generation.append(old)
+            
+        self._population = sorted(tmp_generation, key= lambda x: x.fitness,reverse=True)
+        self._offspring.clear()
 
         self.bestindividual = self.population[0]

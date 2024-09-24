@@ -2,8 +2,8 @@ from typing import Iterable
 from abc import ABC, abstractmethod
 import numpy as np
 from evo.utils import Setup
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import matthews_corrcoef
+from sklearn.ensemble import RandomForestClassifier,BaggingClassifier,GradientBoostingClassifier,ExtraTreesClassifier
+from sklearn.metrics import matthews_corrcoef,accuracy_score
 import logging
 import sys,os
 
@@ -32,10 +32,8 @@ class BaseIndividual(ABC):
         self.logger.setLevel(logging.DEBUG)
         # Create handlers for logging to the standard output and a file
         stdoutHandler = logging.StreamHandler(stream=sys.stdout)
-        errHandler = logging.FileHandler(os.path.join(project_folder,"error.log"))
         # Set the log levels on the handlers
         stdoutHandler.setLevel(logging.DEBUG)
-        errHandler.setLevel(logging.ERROR)
         # Create a log format using Log Record attributes
         fmt = logging.Formatter(
             "%(message)s"
@@ -43,11 +41,9 @@ class BaseIndividual(ABC):
 
         # Set the log format on each handler
         stdoutHandler.setFormatter(fmt)
-        errHandler.setFormatter(fmt)
 
         # Add each handler to the Logger object
         self.logger.addHandler(stdoutHandler)
-        self.logger.addHandler(errHandler)
         
         self.filament_len: int = filament_len
         self.genes: Iterable = np.array(genes, dtype=np.int8)
@@ -95,36 +91,43 @@ class Individual(BaseIndividual):
         if not np.count_nonzero(self.genes):
             # killing the individual e.g. place fitness = -1
             self._fitness = -1.0
-            raise self.logger.warning(f'All genes are zero... Killing individual {id(self)}')
+            self.logger.warning(f'Every gene is zero... Killing individual {id(self)}')
+            return
 
         try:
             X_train,X_test = DATA
             y_train,y_test = LABELS
                         
-            radiomics, model_sel, model_param  = self.to_phenotype()
+            self.radiomics, self.model_sel, self.model_param  = self.to_phenotype()
 
-
-            match (model_sel):
+            match (self.model_sel):
                 case 0:
-                    model = RandomForestClassifier()
+                    self.model = RandomForestClassifier()
                 case 1:
-                    model = RandomForestClassifier()
+                    self.model = BaggingClassifier()
                 case 2:
-                    model = RandomForestClassifier()
+                    self.model = GradientBoostingClassifier()
                 case 3:
-                    model = RandomForestClassifier()
-                
+                    self.model = ExtraTreesClassifier()
             
-            X_train_sel = X_train[:, np.array(radiomics, dtype=bool)]
-            X_test_sel  = X_test [:, np.array(radiomics, dtype=bool)]
+            if self.radiomics.sum() > 1:
+                X_train_sel = X_train[:, np.array(self.radiomics, dtype=bool)]
+                X_test_sel  = X_test [:, np.array(self.radiomics, dtype=bool)]
+            else:
+                raise Exception()            
             
-            model.fit(X_train_sel,y_train)
-            preds = model.predict(X_test_sel)
+            self.model.set_params(n_estimators = self.model_param if self.model_param > 2 else 2)
+            
+            self.model.fit(X_train_sel,y_train)
+            preds = self.model.predict(X_test_sel)
             self._fitness = matthews_corrcoef(y_test,preds)
+            self.acc = accuracy_score(y_test,preds)
         
-        except:
+        except Exception as e:
             self._fitness = -1.0
-            self.logger.warning(f'All genes are zero... Killing individual {id(self)}')
+            #self.logger.warning(e)
+            return
+
 
     def to_phenotype(self,):
         return (    

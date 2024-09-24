@@ -4,8 +4,7 @@ from evo.utils import Setup
 import sys,os
 from datetime import datetime
 import numpy as np
-
-
+from joblib import dump
 
 class Runner(object):
     def __init__(self,setup:Setup = None, population : Population = None) -> None:
@@ -32,46 +31,63 @@ class Runner(object):
         self.logger.addHandler(stdoutHandler)
         self.logger.addHandler(errHandler)
     
-    def step(self,epoch_counter):
-        self.logger.info('🧬 🔀 🧬 Starting Crossover 🧬 🔀 🧬')
+    def step(self,epoch,generations):
+        self.logger.info('Starting Crossover')
         self.population.crossover() # qui fa scelta dei genitori con condizioni (ironman e scarpari) e nascita bambini
-        self.logger.info(np.random.choice(['👽','👻','👾']) + ' Starting Mutation ' + np.random.choice(['👽','👻','👾']))
-        self.population.mutation(epoch_counter) #mutazione, fitness eval e sort
-        self.logger.info('👴👵 🔄 🧒👧 Starting Replace 👴👵 🔄 🧒👧')
+        self.population.mutation(epoch,generations) #mutazione, fitness eval e sort
+        self.logger.info(f'Mutant born @MR: {self.population.mutation_rate}')
+        self.logger.info('Starting Replace')
         self.population.replace()
         
     
-    def run(self,epochs:int = 10,target = 1.0):
+    def run(self,generations:int = 10,target = 1.0):
         self.welcome()
         self.logger.info('Initializing Population')
         self.population.init_population()      # e fitness eval e sortati già
     
-
-        for epoch_counter in range(epochs):
+        for epoch in range(generations):
             self.logger.info(80*'*')
-            self.logger.info(f'Starting epoch {epoch_counter}')
-            self.step(epoch_counter)
+            self.logger.info(f'Starting epoch {epoch + 1}')
+            self.step(epoch,generations)
+            self.log_top_five()
             if self.population.bestindividual.fitness >= target:
                 self.logger.info(f'Target achieved: {self.population.bestindividual.fitness}')
                 self.logger.info(80*'*')
                 break
             
-            self.logger.info(f'Best fitness @epoch {epoch_counter + 1} is: {self.population.bestindividual.fitness} ')
-        
         self.logger.info(80*'*')
+        self.log_tail()
+        
+        dump({
+              'best_model' : self.population.bestindividual.model,
+              'best_genes' : self.population.bestindividual.radiomics,
+              'best_fitness':self.population.bestindividual.fitness,
+              'best_acc' : self.population.bestindividual.acc,
+            },
+             os.path.join(self.setup.project_folder,'iron_man.joblib'))
     
-    def log_tail(self,):
-        self.logger.info('--- Experiment summary ---')
-        self.logger.info([f'I{n}: {i.fitness}' for i,n in enumerate(self.population.population,start=1)])
+    
     
     def welcome(self,):
-        os.system('clear')
+        os.system('cls')
         self.logger.info(' --------------------------------------------------------------')
         self.logger.info('|                             Welcome                          |')
         self.logger.info('|                      Evo Feature Selector                    |')
         self.logger.info('|                                                              |')
         self.logger.info(' --------------------------------------------------------------')
         
+    
+    def log_top_five(self,):
+        self.logger.info('-------- Top 5 Individuals Fitness --------')
+        for i in range(self.setup.POP_SIZE):
+            self.logger.info(f'I{i+1}: ' + f'{self.population.population[i].fitness:0.2f}')
+    
+    def log_tail(self,):
+        self.logger.info('--- Experiment summary ranking ---')
+        for i in range(self.setup.POP_SIZE):
+            self.logger.info(f'{self.population.population[i].fitness} | Selected: {self.population.population[i].genes.sum()} | Model: {self.population.population[i].model}')
+    
+    
         
 
 if __name__ == '__main__':

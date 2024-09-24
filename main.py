@@ -6,7 +6,7 @@ from sklearn.impute          import SimpleImputer
 from sklearn.preprocessing   import StandardScaler
 import numpy as np
 import pandas as pd
-
+from joblib import load
 
 def preprocessing():
     
@@ -32,30 +32,36 @@ def main():
     '''
     # Data loading and preproc
     data,labels        = preprocessing()
-    
+    #-------------------------------------------------------------
     setup              = Setup()
-    setup.POP_SIZE     = 500
-    setup.FILAMENT_LEN = 117
+    
+    setup.POP_SIZE     = 20
+    
+    setup.BITS = {'features':data[0].shape[1],
+                  'model_selection' : 2,
+                  'model_n_estimators' : 9,
+                 }
+    
+    setup.FILAMENT_LEN = setup.BITS['features'] +\
+                         setup.BITS['model_selection']+\
+                         setup.BITS['model_n_estimators']
+                         
     setup.GENES        = [0,1]
     setup.DATA         = data
     setup.LABELS       = labels
- 
-    setup.BITS = {
-                'features':data[0].shape[1],
-                'model_selection' : 2,
-                'model_param' : 8
-            }
-    
+    #--------------------------------------------------------------
     pop = Population(setup=setup)
-    
+    #--------------------------------------------------------------
     r = Runner(setup=setup,population=pop)
-    r.run(epochs=2)
+    r.run(generations=2)
+    #--------------------------------------------------------------
 
-
-
+def load_iron_man():
+    iron_man = load(r'experiment\iron_man.joblib')
+    print(iron_man)
 
 
 if __name__ == '__main__':
-    #preprocessing()
-    main()
+    #main()
+    load_iron_man()
     
