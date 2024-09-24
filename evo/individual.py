@@ -95,7 +95,7 @@ class Individual(BaseIndividual):
         if not np.count_nonzero(self.genes):
             # killing the individual e.g. place fitness = -1
             self._fitness = -1.0
-            raise Warning(f'All genes are zero... Killing individual {id(self)}')
+            raise self.logger.warning(f'All genes are zero... Killing individual {id(self)}')
 
         try:
             X_train,X_test = DATA

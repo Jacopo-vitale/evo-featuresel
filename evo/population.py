@@ -46,7 +46,8 @@ class Population(object):
     def mutation(self, epoch_counter : int):
         
         alpha   = 0.9
-        mutation_rate = (alpha ** epoch_counter) # formula esponenziale per diminuire mutation rate (diminuisce al variare delle epoche)
+        T_zero = 0.9
+        mutation_rate = T_zero + (alpha ** epoch_counter) # formula esponenziale per diminuire mutation rate (diminuisce al variare delle epoche)
 
         for individual in self._offspring:
             for i in range(len(individual.genes)):
