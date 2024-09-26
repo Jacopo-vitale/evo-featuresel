@@ -62,6 +62,6 @@ def load_iron_man():
 
 
 if __name__ == '__main__':
-    #main()
-    load_iron_man()
+    main()
+    #load_iron_man()
     

@@ -66,9 +66,13 @@ class BaseIndividual(ABC):
         return self._fitness
 
     def __str__(self) -> str:
-        return f'DNA: {self.genes}'
+        return f'{id(self)}:{self.fitness}'
 
-
+    def __repr__(self):
+        # This will be called in interactive sessions or when using repr()
+        return f'{id(self)!r}:{self.fitness!r}'
+    
+    
 class Individual(BaseIndividual):
     def __init__(self, filament_len, genes, bits : dict, project_folder) -> None:
         super().__init__(filament_len, genes,project_folder)
