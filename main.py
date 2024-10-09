@@ -10,19 +10,16 @@ from joblib import load
 
 def preprocessing():
     
-    df = pd.read_csv('breast_cancer.csv')
-    df = df.drop('Sample code number',axis='columns')
-    
-    data = df[df.columns[:-1]].to_numpy()
-    
-    classes = df[df.columns[-1]]\
-                .apply(lambda x: 0 if x == 2 else 1)\
-                    .to_numpy()
+    df = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc.csv')
+    X_train = df.query('subj  in [6,12,11,16,8,15]')[df.columns[:-2]].to_numpy()
+    y_train = df.query('subj  in [6,12,11,16,8,15]')[df.columns[-2]].to_numpy()
+    X_test  = df.query('subj  in [13,10,2]')[df.columns[:-2]].to_numpy()
+    y_test  = df.query('subj  in [13,10,2]')[df.columns[-2]].to_numpy()
+
     
     imputer,scaler = SimpleImputer(),StandardScaler()
-    data = scaler.fit_transform(imputer.fit_transform(data))
-    X_train,X_test,y_train,y_test = train_test_split(data,classes)    
-
+    X_train = scaler.fit_transform(imputer.fit_transform(X_train))
+    X_test  = scaler.transform(imputer.transform(X_test))
     return ((X_train,X_test),(y_train,y_test))
 
 
@@ -35,7 +32,7 @@ def main():
     #-------------------------------------------------------------
     setup              = Setup()
     
-    setup.POP_SIZE     = 20
+    setup.POP_SIZE     = 500
     
     setup.BITS = {'features':data[0].shape[1],
                   'model_selection' : 2,
@@ -49,6 +46,7 @@ def main():
     setup.GENES        = [0,1]
     setup.DATA         = data
     setup.LABELS       = labels
+    setup.DESCRIPTION  = ' pre-processing, train and test subj balanced (9 subjs tot. 3 subjs test (2 class 0 and 1 class 1))'
     #--------------------------------------------------------------
     pop = Population(setup=setup)
     #--------------------------------------------------------------
@@ -57,11 +55,44 @@ def main():
     #--------------------------------------------------------------
 
 def load_iron_man():
-    iron_man = load(r'experiment\iron_man.joblib')
+
+    iron_man = load(r'experiment\202410091203\iron_man.joblib')
     print(iron_man)
+
+    return iron_man['preds']
+
+def comparison(preds):
+
+    df        = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc.csv')
+    subjs     = df.query('subj  in [13,10,2]')[df.columns[-1]]   #si puo' fare diversamente? 
+
+    _, labels = preprocessing()
+    y_test    = labels[1]
+
+    results   = {}
+
+    for subj in subjs.unique():
+        mask        = subjs == subj
+        y_test_subj = y_test[mask]
+        preds_subj  = preds[mask]
+
+        correct         = (y_test_subj == preds_subj).sum()
+        incorrect       = (y_test_subj != preds_subj).sum()
+        total           = len(preds_subj)
+        correct_percent = (correct/total) * 100
+        error_percent   = (incorrect/total) * 100
+        
+
+        results[subj] = {'correct':correct, 'incorrect':incorrect, 'tot':total, 'correct %':correct_percent, 'error %':error_percent}
+    print(results)
+    #return results
 
 
 if __name__ == '__main__':
-    main()
-    #load_iron_man()
+    #main()
+
+    preds = load_iron_man()
+    comparison(preds=preds)
+
+
     

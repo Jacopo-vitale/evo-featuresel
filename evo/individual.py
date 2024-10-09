@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from evo.utils import Setup
 from sklearn.ensemble import RandomForestClassifier,BaggingClassifier,GradientBoostingClassifier,ExtraTreesClassifier
-from sklearn.metrics import matthews_corrcoef,accuracy_score
+from sklearn.metrics import matthews_corrcoef,accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 import logging
 import sys,os
 
@@ -106,7 +106,7 @@ class Individual(BaseIndividual):
 
             match (self.model_sel):
                 case 0:
-                    self.model = RandomForestClassifier()
+                    self.model = RandomForestClassifier(criterion=)
                 case 1:
                     self.model = BaggingClassifier()
                 case 2:
@@ -123,10 +123,15 @@ class Individual(BaseIndividual):
             self.model.set_params(n_estimators = self.model_param if self.model_param > 2 else 2)
             
             self.model.fit(X_train_sel,y_train)
-            preds = self.model.predict(X_test_sel)
+            preds         = self.model.predict(X_test_sel)
+            self.preds    = preds
             self._fitness = matthews_corrcoef(y_test,preds)
-            self.acc = accuracy_score(y_test,preds)
-        
+            self.acc      = accuracy_score(y_test,preds)
+            self.f1       = f1_score(y_test,preds)
+            self.prec     = precision_score(y_test,preds)
+            self.recall   = recall_score(y_test,preds)
+            self.cm       = confusion_matrix(y_test,preds)
+
         except Exception as e:
             self._fitness = -1.0
             #self.logger.warning(e)
@@ -134,6 +139,9 @@ class Individual(BaseIndividual):
 
 
     def to_phenotype(self,):
+
+        
+
         return (    
                     self.genes[:self.bits['features']], # radiomics to be selected
 

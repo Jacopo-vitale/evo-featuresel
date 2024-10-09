@@ -51,6 +51,7 @@ class Setup(object):
     DATA         : np.array = None
     LABELS       : np.array = None
     BITS         : dict     = None
+    DESCRIPTION  : str      = None
     
     def __init__(self,experiment_folder : str = 'experiment', project_prefix : str = '') -> None:
         self.experiment_folder = experiment_folder

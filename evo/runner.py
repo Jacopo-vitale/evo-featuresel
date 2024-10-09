@@ -42,6 +42,7 @@ class Runner(object):
     
     def run(self,generations:int = 10,target = 1.0):
         self.welcome()
+        self.description(self.setup.DESCRIPTION)
         self.logger.info('🐣 Initializing Population 🐤')
         self.logger.info('###############################################################################')
         self.population.init_population()      # e fitness eval e sortati già
@@ -64,6 +65,12 @@ class Runner(object):
               'best_genes' : self.population.bestindividual.radiomics,
               'best_fitness':self.population.bestindividual.fitness,
               'best_acc' : self.population.bestindividual.acc,
+              'best_f1' : self.population.bestindividual.f1,
+              'best_recall' : self.population.bestindividual.recall,
+              'best_precision' : self.population.bestindividual.prec,
+              'best_cm' : self.population.bestindividual.cm,
+              'preds' : self.population.bestindividual.preds
+
             },
              os.path.join(self.setup.project_folder,'iron_man.joblib'))
     
@@ -85,7 +92,9 @@ class Runner(object):
         #self.logger.info('|                                                              |')
         #self.logger.info(' --------------------------------------------------------------')
         self.logger.info(welcome_message)
-        
+
+    def description(self,descr):
+        self.logger.info(descr)   
     
     def log_top_five(self,):
         self.logger.info('-------- Top 5 Individuals Fitness --------')
