@@ -1,7 +1,7 @@
 from evo.individual import Individual
 import numpy as np
 from evo.utils import Setup
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 import logging
 import sys,os
 
@@ -91,6 +91,8 @@ class Population(object):
                     lambda _: self.crossover_individuals(),range(self.setup.POP_SIZE)
                     )
                 )
+            
+    
     
     ###############################################################################
     #                                                                             #
@@ -115,14 +117,7 @@ class Population(object):
         self.mutation_rate = np.exp(-epoch/(tot_epoch * alpha))
         
         with ThreadPoolExecutor() as executor:
-            self._offspring[:] = list(executor.map(self.create_mutant,self._offspring))
-        
-        #for individual in self._offspring:
-        #    for i in range(len(individual.genes)):
-        #        if np.random.random() < self.mutation_rate:
-        #            individual.genes[i] = 1 - individual.genes[i]
-        #
-        #    individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
+            self._offspring[:] = list(executor.map(self.create_mutant,self._offspring))        
 
         self._offspring = sorted(self._offspring, key = lambda x: x.fitness,reverse=True)
 

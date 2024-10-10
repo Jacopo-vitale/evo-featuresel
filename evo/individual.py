@@ -5,6 +5,7 @@ from evo.utils import Setup
 from sklearn.ensemble import RandomForestClassifier,BaggingClassifier,GradientBoostingClassifier,ExtraTreesClassifier
 from sklearn.metrics import matthews_corrcoef,accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 import logging
+from sklearn.svm             import SVC
 import sys,os
 
 class BaseIndividual(ABC):
@@ -78,6 +79,10 @@ class Individual(BaseIndividual):
         super().__init__(filament_len, genes,project_folder)
         
         self.bits = bits
+
+        self.model = None
+        self.radiomics = None
+        self.model_sel = None
         
 
     def fitness_eval(self, DATA: tuple, LABELS: tuple,) -> float:
@@ -106,21 +111,23 @@ class Individual(BaseIndividual):
 
             match (self.model_sel):
                 case 0:
-                    self.model = RandomForestClassifier(criterion=)
+                    self.model = RandomForestClassifier()
                 case 1:
-                    self.model = BaggingClassifier()
+                    self.model = SVC()
                 case 2:
                     self.model = GradientBoostingClassifier()
                 case 3:
                     self.model = ExtraTreesClassifier()
-            
+                case _:
+                    raise Exception()
+                
             if self.radiomics.sum() > 1:
                 X_train_sel = X_train[:, np.array(self.radiomics, dtype=bool)]
                 X_test_sel  = X_test [:, np.array(self.radiomics, dtype=bool)]
             else:
                 raise Exception()            
             
-            self.model.set_params(n_estimators = self.model_param if self.model_param > 2 else 2)
+            self.model.set_params(**self.model_param)
             
             self.model.fit(X_train_sel,y_train)
             preds         = self.model.predict(X_test_sel)
@@ -140,19 +147,72 @@ class Individual(BaseIndividual):
 
     def to_phenotype(self,):
 
-        
+        genes = self.genes[:self.bits['features']] # radiomics to be selected
 
-        return (    
-                    self.genes[:self.bits['features']], # radiomics to be selected
-
-                    self.binaryToDecimal(
+        model_selection = self.binaryToDecimal(
                         self.genes[self.bits['features']:\
                                    self.bits['features'] + self.bits['model_selection']
-                            ]), # Selected Model
-                    self.binaryToDecimal(
-                        self.genes[self.bits['features'] + self.bits['model_selection']:]
-                        ), # Model parameter(s)
-                )
+                            ]) # Selected Model
+        
+        param_bits =  self.genes[self.bits['features'] + self.bits['model_selection']:] # Model parameter(s)
+        
+        model_param = dict()
+
+        match (model_selection):
+                case 0: #parametri della RandomForestClassifier: n estimators (9 bit) e criterion (2 bit)
+                    n_estimators = self.binaryToDecimal(param_bits[:9])
+                    model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
+                    criterion_selector = self.binaryToDecimal(param_bits[9:])
+                    if criterion_selector == 0:
+                        model_param['criterion'] = 'gini'
+                    elif criterion_selector == 1:
+                        model_param['criterion'] = 'entropy'
+                    else:
+                        model_param['criterion'] = 'log_loss'
+
+                case 1: #parametri della SVC: C (1e-7 fino a 1e1): 1 bit per il segno (pos o neg dell'esponente), 3 bit per la mantissa, e 3 per il numero esponente ; kernel (2 bit) e degree (2 bit)
+                    parteintera      = 1
+                    mantissa         = self.binaryToDecimal(param_bits[:3]) * (10**-1)
+                    segno            = 1 if self.binaryToDecimal([param_bits[3]]) == 0 else -1   #1 sarebbe positivo, e -1 è negativo
+                    esponente        = self.binaryToDecimal(param_bits[4:7])
+                    model_param['C'] = (parteintera + mantissa) *(10 **(segno*esponente))
+                    #if model_param['C'] > 17:
+                    #    model_param['C'] = 100
+
+                    kernel_selector = self.binaryToDecimal(param_bits[8:10])
+                    if kernel_selector == 0:
+                        model_param['kernel'] = 'linear'
+                    elif kernel_selector == 1:
+                        model_param['kernel'] = 'poly'
+                    elif kernel_selector == 2:
+                        model_param['kernel'] = 'rbf'
+                    else:
+                        model_param['kernel'] = 'sigmoid'
+                    
+                    model_param['degree'] = self.binaryToDecimal(param_bits[10:])+1 #il gradi va da 1 a 4
+
+                case 2: #parametri della GradientBoostingClassifier:  #n estimators (9 bit), criterion (1 bit), loss (1 bit)
+                    n_estimators = self.binaryToDecimal(param_bits[:9])
+                    model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
+                    
+                    model_param['criterion'] = 'friedman_mse' if self.binaryToDecimal(param_bits[9:10]) == 0 else 'squared_error'  #criterion (1 bit)
+                    
+                    model_param['loss'] = 'log_loss' if self.binaryToDecimal(param_bits[10:]) == 0 else 'deviance'  #criterion (1 bit)
+                    
+
+                case 3:  #parametri della ExtraTreesClassifier: n estimators (9 bit) e criterion (2 bit)
+                    n_estimators = self.binaryToDecimal(param_bits[:9])
+                    model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
+                    criterion_selector = self.binaryToDecimal(param_bits[9:])
+                    if criterion_selector == 0:
+                        model_param['criterion'] = 'gini'
+                    elif criterion_selector == 1:
+                        model_param['criterion'] = 'entropy'
+                    else:
+                        model_param['criterion'] = 'log_loss'
+                    
+
+        return genes, model_selection, model_param
  
 
 if __name__ == '__main__':

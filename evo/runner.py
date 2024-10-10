@@ -105,7 +105,7 @@ class Runner(object):
         self.logger.info('--- Experiment summary ranking ---')
         for i in range(self.setup.POP_SIZE):
             self.logger.info(f'{self.population.population[i].fitness} | Selected: {self.population.population[i].genes.sum()} | Model: {self.population.population[i].model}')
-    
+  
     
         
 

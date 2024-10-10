@@ -36,22 +36,22 @@ def main():
     
     setup.BITS = {'features':data[0].shape[1],
                   'model_selection' : 2,
-                  'model_n_estimators' : 9,
+                  'model_params' : 11,
                  }
     
     setup.FILAMENT_LEN = setup.BITS['features'] +\
                          setup.BITS['model_selection']+\
-                         setup.BITS['model_n_estimators']
+                         setup.BITS['model_params']
                          
     setup.GENES        = [0,1]
     setup.DATA         = data
     setup.LABELS       = labels
-    setup.DESCRIPTION  = ' pre-processing, train and test subj balanced (9 subjs tot. 3 subjs test (2 class 0 and 1 class 1))'
+    setup.DESCRIPTION  = 'pre-processing, train and test subj balanced (9 subjs tot. 3 subjs test (2 class 0 and 1 class 1))'
     #--------------------------------------------------------------
     pop = Population(setup=setup)
     #--------------------------------------------------------------
-    r = Runner(setup=setup,population=pop)
-    r.run(generations=2)
+    r = Runner(setup = setup,population=pop)
+    r.run(generations = 200)
     #--------------------------------------------------------------
 
 def load_iron_man():
@@ -89,10 +89,9 @@ def comparison(preds):
 
 
 if __name__ == '__main__':
-    #main()
-
-    preds = load_iron_man()
-    comparison(preds=preds)
+    main()
+    #preds = load_iron_man()
+    #comparison(preds=preds)
 
 
     
