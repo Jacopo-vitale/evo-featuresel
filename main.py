@@ -56,7 +56,7 @@ def main():
 
 def load_iron_man():
 
-    iron_man = load(r'experiment\202410091203\iron_man.joblib')
+    iron_man = load(r'experiment\202410101205\iron_man.joblib')
     print(iron_man)
 
     return iron_man['preds']
@@ -89,9 +89,9 @@ def comparison(preds):
 
 
 if __name__ == '__main__':
-    main()
-    #preds = load_iron_man()
-    #comparison(preds=preds)
+    #main()
+    preds = load_iron_man()
+    comparison(preds=preds)
 
 
     
