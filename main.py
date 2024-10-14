@@ -51,12 +51,12 @@ def main():
     pop = Population(setup=setup)
     #--------------------------------------------------------------
     r = Runner(setup = setup,population=pop)
-    r.run(generations = 200)
+    r.run(generations = 5)
     #--------------------------------------------------------------
 
 def load_iron_man():
 
-    iron_man = load(r'experiment\202410101205\iron_man.joblib')
+    iron_man = load(r'experiment\202410110954_withallsubjects\iron_man.joblib')
     print(iron_man)
 
     return iron_man['preds']
@@ -64,7 +64,7 @@ def load_iron_man():
 def comparison(preds):
 
     df        = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc.csv')
-    subjs     = df.query('subj  in [13,10,2]')[df.columns[-1]]   #si puo' fare diversamente? 
+    subjs     = df.query('subj  in [13,10,2]')[df.columns[-1]]  
 
     _, labels = preprocessing()
     y_test    = labels[1]
@@ -81,17 +81,16 @@ def comparison(preds):
         total           = len(preds_subj)
         correct_percent = (correct/total) * 100
         error_percent   = (incorrect/total) * 100
-        
-
-        results[subj] = {'correct':correct, 'incorrect':incorrect, 'tot':total, 'correct %':correct_percent, 'error %':error_percent}
+    
+        results[subj] = {'tot':total, 'correct':correct, 'incorrect':incorrect, 'correct %':correct_percent, 'error %':error_percent}
     print(results)
     #return results
 
 
 if __name__ == '__main__':
-    #main()
-    preds = load_iron_man()
-    comparison(preds=preds)
+    main()
+    #preds = load_iron_man()
+    #comparison(preds=preds)
 
 
     

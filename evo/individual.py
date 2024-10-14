@@ -170,6 +170,9 @@ class Individual(BaseIndividual):
                     else:
                         model_param['criterion'] = 'log_loss'
 
+                    model_name = "RandomForestClassifier"
+                    print(f"Model: {model_name}, Params: {model_param}")
+
                 case 1: #parametri della SVC: C (1e-7 fino a 1e1): 1 bit per il segno (pos o neg dell'esponente), 3 bit per la mantissa, e 3 per il numero esponente ; kernel (2 bit) e degree (2 bit)
                     parteintera      = 1
                     mantissa         = self.binaryToDecimal(param_bits[:3]) * (10**-1)
@@ -191,6 +194,9 @@ class Individual(BaseIndividual):
                     
                     model_param['degree'] = self.binaryToDecimal(param_bits[10:])+1 #il gradi va da 1 a 4
 
+                    model_name = "SVC"
+                    print(f"Model: {model_name}, Params: {model_param}")
+
                 case 2: #parametri della GradientBoostingClassifier:  #n estimators (9 bit), criterion (1 bit), loss (1 bit)
                     n_estimators = self.binaryToDecimal(param_bits[:9])
                     model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
@@ -199,6 +205,8 @@ class Individual(BaseIndividual):
                     
                     model_param['loss'] = 'log_loss' if self.binaryToDecimal(param_bits[10:]) == 0 else 'deviance'  #criterion (1 bit)
                     
+                    model_name = "GradientBoostingClassifier"
+                    print(f"Model: {model_name}, Params: {model_param}")
 
                 case 3:  #parametri della ExtraTreesClassifier: n estimators (9 bit) e criterion (2 bit)
                     n_estimators = self.binaryToDecimal(param_bits[:9])
@@ -211,7 +219,9 @@ class Individual(BaseIndividual):
                     else:
                         model_param['criterion'] = 'log_loss'
                     
-
+                    model_name = "ExtraTreesClassifier"
+                    print(f"Model: {model_name}, Params: {model_param}")
+        
         return genes, model_selection, model_param
  
 
