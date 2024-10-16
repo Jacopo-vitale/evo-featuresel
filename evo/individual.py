@@ -75,7 +75,7 @@ class BaseIndividual(ABC):
     
     
 class Individual(BaseIndividual):
-    def __init__(self, filament_len, genes, bits : dict, project_folder) -> None:
+    def __init__(self, filament_len, genes, bits : dict, project_folder,random_state) -> None:
         super().__init__(filament_len, genes,project_folder)
         
         self.bits = bits
@@ -83,6 +83,8 @@ class Individual(BaseIndividual):
         self.model = None
         self.radiomics = None
         self.model_sel = None
+
+        self.random_state = random_state 
         
 
     def fitness_eval(self, DATA: tuple, LABELS: tuple,) -> float:
@@ -111,13 +113,13 @@ class Individual(BaseIndividual):
 
             match (self.model_sel):
                 case 0:
-                    self.model = RandomForestClassifier()
+                    self.model = RandomForestClassifier(random_state = self.random_state)
                 case 1:
-                    self.model = SVC()
+                    self.model = SVC(random_state = self.random_state)
                 case 2:
-                    self.model = GradientBoostingClassifier()
+                    self.model = GradientBoostingClassifier(random_state = self.random_state)
                 case 3:
-                    self.model = ExtraTreesClassifier()
+                    self.model = ExtraTreesClassifier(random_state = self.random_state)
                 case _:
                     raise Exception()
                 
@@ -170,8 +172,6 @@ class Individual(BaseIndividual):
                     else:
                         model_param['criterion'] = 'log_loss'
 
-                    model_name = "RandomForestClassifier"
-                    print(f"Model: {model_name}, Params: {model_param}")
 
                 case 1: #parametri della SVC: C (1e-7 fino a 1e1): 1 bit per il segno (pos o neg dell'esponente), 3 bit per la mantissa, e 3 per il numero esponente ; kernel (2 bit) e degree (2 bit)
                     parteintera      = 1
@@ -194,8 +194,6 @@ class Individual(BaseIndividual):
                     
                     model_param['degree'] = self.binaryToDecimal(param_bits[10:])+1 #il gradi va da 1 a 4
 
-                    model_name = "SVC"
-                    print(f"Model: {model_name}, Params: {model_param}")
 
                 case 2: #parametri della GradientBoostingClassifier:  #n estimators (9 bit), criterion (1 bit), loss (1 bit)
                     n_estimators = self.binaryToDecimal(param_bits[:9])
@@ -205,8 +203,6 @@ class Individual(BaseIndividual):
                     
                     model_param['loss'] = 'log_loss' if self.binaryToDecimal(param_bits[10:]) == 0 else 'deviance'  #criterion (1 bit)
                     
-                    model_name = "GradientBoostingClassifier"
-                    print(f"Model: {model_name}, Params: {model_param}")
 
                 case 3:  #parametri della ExtraTreesClassifier: n estimators (9 bit) e criterion (2 bit)
                     n_estimators = self.binaryToDecimal(param_bits[:9])
@@ -218,9 +214,6 @@ class Individual(BaseIndividual):
                         model_param['criterion'] = 'entropy'
                     else:
                         model_param['criterion'] = 'log_loss'
-                    
-                    model_name = "ExtraTreesClassifier"
-                    print(f"Model: {model_name}, Params: {model_param}")
         
         return genes, model_selection, model_param
  

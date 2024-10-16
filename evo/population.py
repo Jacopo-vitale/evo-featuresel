@@ -51,9 +51,10 @@ class Population(object):
         # New individual
         individual   = \
             Individual(self.setup.FILAMENT_LEN,
-                       genes=np.random.choice(self.setup.GENES,size=self.setup.FILAMENT_LEN), 
-                       bits=self.setup.BITS,
-                       project_folder=self.setup.project_folder)
+                       genes          = self.setup.rng.choice(self.setup.GENES,size=self.setup.FILAMENT_LEN), #np.random.choice(self.setup.GENES,size=self.setup.FILAMENT_LEN), 
+                       bits           = self.setup.BITS,
+                       project_folder = self.setup.project_folder,
+                       random_state   = self.setup.RANDOM_SEED)
         
         individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
         return individual
@@ -73,15 +74,16 @@ class Population(object):
     #                                                                             #
     ###############################################################################
     def crossover_individuals(self):
-        crossover_point = np.random.randint(1, self.setup.FILAMENT_LEN-1)
+        crossover_point = self.setup.rng.integers(1, self.setup.FILAMENT_LEN-1) #np.random.randint(1, self.setup.FILAMENT_LEN-1)
         return Individual(filament_len   = self.setup.FILAMENT_LEN,
                           genes          = np.concatenate(
-                                                    [np.random.choice(self._population[:int(0.5*self.setup.POP_SIZE)])\
+                                                    [self.setup.rng.choice(self._population[:int(0.5*self.setup.POP_SIZE)])\
                                                         .genes[:crossover_point],
-                                                     np.random.choice(self._population[int(0.5*self.setup.POP_SIZE):])\
+                                                     self.setup.rng.choice(self._population[int(0.5*self.setup.POP_SIZE):])\
                                                         .genes[crossover_point:]]),
                           bits           = self.setup.BITS,
-                          project_folder = self.setup.project_folder)
+                          project_folder = self.setup.project_folder,
+                          random_state   = self.setup.RANDOM_SEED)
         
         
     def crossover(self,):
@@ -102,7 +104,7 @@ class Population(object):
     
     def create_mutant(self, individual):
         for i in range(len(individual.genes)):
-            if np.random.random() < self.mutation_rate:
+            if self.setup.rng.uniform(0,1) < self.mutation_rate:
                 individual.genes[i] = 1 - individual.genes[i]
 
         individual.fitness_eval(self.setup.DATA, self.setup.LABELS)

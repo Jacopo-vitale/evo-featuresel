@@ -8,15 +8,16 @@ import numpy as np
 import pandas as pd
 from joblib import load
 
-def preprocessing():
-    
-    df = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc.csv')
-    X_train = df.query('subj  in [6,12,11,16,8,15]')[df.columns[:-2]].to_numpy()
-    y_train = df.query('subj  in [6,12,11,16,8,15]')[df.columns[-2]].to_numpy()
-    X_test  = df.query('subj  in [13,10,2]')[df.columns[:-2]].to_numpy()
-    y_test  = df.query('subj  in [13,10,2]')[df.columns[-2]].to_numpy()
 
+def preprocessing(test_subj):
     
+    df = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc_quartils.csv')
+    X_train = df.query('subj  in [1,3,4,5,7,9,14,6,12,11,16,8,15]')[df.columns[:-2]].to_numpy()
+    y_train = df.query('subj  in [1,3,4,5,7,9,14,6,12,11,16,8,15]')[df.columns[-2]].to_numpy()
+    X_test  = df.query(f'subj  in {test_subj}')[df.columns[:-2]].to_numpy()   #[13,10,2]
+    y_test  = df.query(f'subj  in {test_subj}')[df.columns[-2]].to_numpy()
+    
+
     imputer,scaler = SimpleImputer(),StandardScaler()
     X_train = scaler.fit_transform(imputer.fit_transform(X_train))
     X_test  = scaler.transform(imputer.transform(X_test))
@@ -27,12 +28,13 @@ def main():
     '''
     @FIXME: Rare case is to have genes all ones, maybe better to manually insert
     '''
+    test_subj = [13,10,2]
     # Data loading and preproc
-    data,labels        = preprocessing()
+    data,labels        = preprocessing(test_subj)
     #-------------------------------------------------------------
     setup              = Setup()
     
-    setup.POP_SIZE     = 500
+    setup.POP_SIZE     = 10
     
     setup.BITS = {'features':data[0].shape[1],
                   'model_selection' : 2,
@@ -42,28 +44,30 @@ def main():
     setup.FILAMENT_LEN = setup.BITS['features'] +\
                          setup.BITS['model_selection']+\
                          setup.BITS['model_params']
-                         
+    
     setup.GENES        = [0,1]
     setup.DATA         = data
     setup.LABELS       = labels
-    setup.DESCRIPTION  = 'pre-processing, train and test subj balanced (9 subjs tot. 3 subjs test (2 class 0 and 1 class 1))'
+    setup.RANDOM_SEED  = 42
+    setup.DESCRIPTION  = f'pre-processing, 3 subjs test: {test_subj} (2 class 0 and 1 class 1) all the others in train set). Random State equal to {setup.RANDOM_SEED} '
+    setup.init_rng()
     #--------------------------------------------------------------
     pop = Population(setup=setup)
     #--------------------------------------------------------------
     r = Runner(setup = setup,population=pop)
-    r.run(generations = 5)
+    r.run(generations = 10)
     #--------------------------------------------------------------
 
 def load_iron_man():
 
-    iron_man = load(r'experiment\202410110954_withallsubjects\iron_man.joblib')
+    iron_man = load(r'experiment\202410151741\iron_man.joblib')
     print(iron_man)
 
     return iron_man['preds']
 
 def comparison(preds):
 
-    df        = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc.csv')
+    df        = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc_quartils.csv')
     subjs     = df.query('subj  in [13,10,2]')[df.columns[-1]]  
 
     _, labels = preprocessing()
