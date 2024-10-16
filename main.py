@@ -11,12 +11,13 @@ from joblib import load
 
 def preprocessing(test_subj):
     
+    list_sub = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,15]
+
     df = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc_quartils.csv')
-    X_train = df.query('subj  in [1,3,4,5,7,9,14,6,12,11,16,8,15]')[df.columns[:-2]].to_numpy()
-    y_train = df.query('subj  in [1,3,4,5,7,9,14,6,12,11,16,8,15]')[df.columns[-2]].to_numpy()
+    X_train = df.query('subj  in [4,8,9,1,3,5,6,7,11,12,14,15,16]')[df.columns[:-2]].to_numpy()
+    y_train = df.query('subj  in [4,8,9,1,3,5,6,7,11,12,14,15,16]')[df.columns[-2]].to_numpy()
     X_test  = df.query(f'subj  in {test_subj}')[df.columns[:-2]].to_numpy()   #[13,10,2]
     y_test  = df.query(f'subj  in {test_subj}')[df.columns[-2]].to_numpy()
-    
 
     imputer,scaler = SimpleImputer(),StandardScaler()
     X_train = scaler.fit_transform(imputer.fit_transform(X_train))
@@ -28,7 +29,7 @@ def main():
     '''
     @FIXME: Rare case is to have genes all ones, maybe better to manually insert
     '''
-    test_subj = [13,10,2]
+    test_subj = [13,10,2] #[4,8,9]
     # Data loading and preproc
     data,labels        = preprocessing(test_subj)
     #-------------------------------------------------------------
@@ -55,7 +56,7 @@ def main():
     pop = Population(setup=setup)
     #--------------------------------------------------------------
     r = Runner(setup = setup,population=pop)
-    r.run(generations = 10)
+    r.run(generations = 100)
     #--------------------------------------------------------------
 
 def load_iron_man():

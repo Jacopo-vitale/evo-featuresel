@@ -85,6 +85,14 @@ class Individual(BaseIndividual):
         self.model_sel = None
 
         self.random_state = random_state 
+
+        self.preds    = None
+        self._fitness = None
+        self.acc      = None
+        self.f1       = None
+        self.prec     = None
+        self.recall   = None
+        self.cm       = None
         
 
     def fitness_eval(self, DATA: tuple, LABELS: tuple,) -> float:
@@ -137,7 +145,7 @@ class Individual(BaseIndividual):
             self._fitness = matthews_corrcoef(y_test,preds)
             self.acc      = accuracy_score(y_test,preds)
             self.f1       = f1_score(y_test,preds)
-            self.prec     = precision_score(y_test,preds)
+            self.prec     = precision_score(y_test,preds,zero_division=0.0)
             self.recall   = recall_score(y_test,preds)
             self.cm       = confusion_matrix(y_test,preds)
 
@@ -201,7 +209,7 @@ class Individual(BaseIndividual):
                     
                     model_param['criterion'] = 'friedman_mse' if self.binaryToDecimal(param_bits[9:10]) == 0 else 'squared_error'  #criterion (1 bit)
                     
-                    model_param['loss'] = 'log_loss' if self.binaryToDecimal(param_bits[10:]) == 0 else 'deviance'  #criterion (1 bit)
+                    model_param['loss'] = 'log_loss' if self.binaryToDecimal(param_bits[10:]) == 0 else 'exponential'  #criterion (1 bit)
                     
 
                 case 3:  #parametri della ExtraTreesClassifier: n estimators (9 bit) e criterion (2 bit)
