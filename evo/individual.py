@@ -121,13 +121,13 @@ class Individual(BaseIndividual):
 
             match (self.model_sel):
                 case 0:
-                    self.model = RandomForestClassifier(random_state = self.random_state)
+                    self.model = RandomForestClassifier(random_state = self.random_state,n_jobs=8)
                 case 1:
                     self.model = SVC(random_state = self.random_state)
                 case 2:
                     self.model = GradientBoostingClassifier(random_state = self.random_state)
                 case 3:
-                    self.model = ExtraTreesClassifier(random_state = self.random_state)
+                    self.model = ExtraTreesClassifier(random_state = self.random_state,n_jobs=8)
                 case _:
                     raise Exception()
                 
