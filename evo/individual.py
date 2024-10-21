@@ -47,7 +47,7 @@ class BaseIndividual(ABC):
         self.logger.addHandler(stdoutHandler)
         
         self.filament_len: int = filament_len
-        self.genes: Iterable = np.array(genes, dtype=np.int8)
+        self.genes: Iterable = np.array(genes, dtype = np.int8)
 
         # Set fitness to -1.0 as initial value
         self._fitness: float = -1.0
@@ -57,8 +57,8 @@ class BaseIndividual(ABC):
         pass
 
     def binaryToDecimal(self,binary):
-        decimal : np.int16 = 0
-        for p,b in enumerate(binary,start=1):
+        decimal = 0
+        for p,b in enumerate(np.int16(binary), start = 1):
             decimal += b * (2**(len(binary) - p))
         return decimal
     
@@ -134,9 +134,8 @@ class Individual(BaseIndividual):
             if self.radiomics.sum() > 1:
                 X_train_sel = X_train[:, np.array(self.radiomics, dtype=bool)]
                 X_test_sel  = X_test [:, np.array(self.radiomics, dtype=bool)]
-            else:
-                raise Exception()            
-            
+            #else:
+            #    raise Exception()   
             self.model.set_params(**self.model_param)
             
             self.model.fit(X_train_sel,y_train)
@@ -151,7 +150,6 @@ class Individual(BaseIndividual):
 
         except Exception as e:
             self._fitness = -1.0
-            #self.logger.warning(e)
             return
 
 
@@ -184,8 +182,9 @@ class Individual(BaseIndividual):
                 case 1: #parametri della SVC: C (1e-7 fino a 1e1): 1 bit per il segno (pos o neg dell'esponente), 3 bit per la mantissa, e 3 per il numero esponente ; kernel (2 bit) e degree (2 bit)
                     parteintera      = 1
                     mantissa         = self.binaryToDecimal(param_bits[:3]) * (10**-1)
-                    segno            = 1 if self.binaryToDecimal([param_bits[3]]) == 0 else -1   #1 sarebbe positivo, e -1 è negativo
+                    segno            = 1.0 if self.binaryToDecimal([param_bits[3]]) == 0 else -1.0   #1 sarebbe positivo, e -1 è negativo
                     esponente        = self.binaryToDecimal(param_bits[4:7])
+
                     model_param['C'] = (parteintera + mantissa) *(10 **(segno*esponente))
                     #if model_param['C'] > 17:
                     #    model_param['C'] = 100
