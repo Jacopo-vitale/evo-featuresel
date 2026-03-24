@@ -1,99 +1,87 @@
-from evo.utils               import Setup
-from evo.population          import Population
-from evo.runner              import Runner
-from sklearn.impute          import SimpleImputer
-from sklearn.preprocessing   import StandardScaler
+import os
+import sys
 import pandas as pd
+import numpy as np
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
 from joblib import load
 
+from evo.utils import Setup
+from evo.population import Population
+from evo.runner import Runner
 
-def preprocessing(train_subj,test_subj):
+def preprocessing(train_subj, test_subj, dataset_path):
+    if not os.path.exists(dataset_path):
+        raise FileNotFoundError(f"Dataset not found at {dataset_path}")
 
-    df = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc_quartils_OK.csv')
-    X_train = df.query(f'subj  in {train_subj}')[df.columns[:-2]].to_numpy()
-    y_train = df.query(f'subj  in {train_subj}')[df.columns[-2]].to_numpy()
-    X_test  = df.query(f'subj  in {test_subj}')[df.columns[:-2]].to_numpy()  
-    y_test  = df.query(f'subj  in {test_subj}')[df.columns[-2]].to_numpy()
+    df = pd.read_csv(dataset_path)
+    # Assuming 'subj' is the column for subject IDs
+    # and labels are in the second to last column, and some other info in the last
+    # This might need adjustment based on the actual CSV structure
+    X_train = df.query(f'subj in {train_subj}').iloc[:, :-2].to_numpy()
+    y_train = df.query(f'subj in {train_subj}').iloc[:, -2].to_numpy()
+    X_test = df.query(f'subj in {test_subj}').iloc[:, :-2].to_numpy()
+    y_test = df.query(f'subj in {test_subj}').iloc[:, -2].to_numpy()
 
-    imputer,scaler = SimpleImputer(),StandardScaler()
+    imputer, scaler = SimpleImputer(), StandardScaler()
     X_train = scaler.fit_transform(imputer.fit_transform(X_train))
-    X_test  = scaler.transform(imputer.transform(X_test))
-    return ((X_train,X_test),(y_train,y_test))
-
+    X_test = scaler.transform(imputer.transform(X_test))
+    return ((X_train, X_test), (y_train, y_test))
 
 def main():
-    '''
-    @FIXME: Rare case is to have genes all ones, maybe better to manually insert
-    '''
-    list_sub = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
-    train_subj = [2,3,4,6,7,8,11,12,13,14,15,16,17]
-    test_subj = [5,9,10] 
+    # Default parameters
+    train_subj = [2, 3, 4, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17]
+    test_subj = [5, 9, 10]
+    
+    # Try to use a relative path first
+    dataset_path = 'data/dataset.csv'
+    
+    if not os.path.exists(dataset_path):
+        print(f"Warning: Dataset not found at {dataset_path}. Please provide a valid path.")
+        # Create a dummy dataset if it doesn't exist for demonstration purposes
+        os.makedirs('data', exist_ok=True)
+        cols = [f'feat_{i}' for i in range(20)] + ['subj', 'label', 'extra']
+        dummy_data = np.random.randn(100, 20)
+        subjs = np.random.choice(train_subj + test_subj, 100)
+        labels = np.random.choice([0, 1], 100)
+        extra = np.random.randn(100)
+        df_dummy = pd.DataFrame(dummy_data, columns=cols[:-3])
+        df_dummy['subj'] = subjs
+        df_dummy['label'] = labels
+        df_dummy['extra'] = extra
+        df_dummy.to_csv(dataset_path, index=False)
+        print(f"Created a dummy dataset at {dataset_path} for demonstration.")
+
     # Data loading and preproc
-    data,labels        = preprocessing(train_subj,test_subj)
-    #-------------------------------------------------------------
-    setup              = Setup()
+    try:
+        data, labels = preprocessing(train_subj, test_subj, dataset_path)
+    except Exception as e:
+        print(f"Error during preprocessing: {e}")
+        return
+
+    setup = Setup(project_prefix='experiment_')
     
-    setup.POP_SIZE     = 500
+    setup.POP_SIZE = 50
+    setup.BITS = {
+        'features': data[0].shape[1],
+        'model_selection': 2,
+        'model_params': 11,
+    }
     
-    setup.BITS = {'features':data[0].shape[1],
-                  'model_selection' : 2,
-                  'model_params' : 11,
-                 }
-    
-    setup.FILAMENT_LEN = setup.BITS['features'] +\
-                         setup.BITS['model_selection']+\
-                         setup.BITS['model_params']
-    
-    setup.GENES        = [0,1]
-    setup.DATA         = data
-    setup.LABELS       = labels
-    setup.RANDOM_SEED  = 42
-    setup.DESCRIPTION  = f'pre-processing, 3 subjs test: {test_subj} (2 class 0 and 1 class 1) all the others in train set). Random State equal to {setup.RANDOM_SEED} '
+    setup.FILAMENT_LEN = sum(setup.BITS.values())
+    setup.GENES = [0, 1]
+    setup.DATA = data
+    setup.LABELS = labels
+    setup.RANDOM_SEED = 42
+    setup.DESCRIPTION = f'Evolutionary feature selection on subjects {test_subj}'
     setup.init_rng()
-    #--------------------------------------------------------------
-    pop = Population(setup=setup)
-    #--------------------------------------------------------------
-    r = Runner(setup = setup,population=pop)
-    r.run(generations = 200)
-    #--------------------------------------------------------------
-
-def load_iron_man():
-    iron_man = load(r'experiment\202410161933_ALIEN3\iron_man.joblib')
-    print(iron_man)
-
-    return iron_man['preds']
-
-def comparison(preds):
-
-    test_subj = test_subj
-    df        = pd.read_csv(r'C:\Users\jacop\OneDrive\Desktop\GIST\DATASET\Dataset_features_2D_preproc_quartils_OK.csv')
-    subjs     = df.query(f'subj  in {test_subj}')[df.columns[-1]]  
-
-    _, labels = preprocessing(test_subj)
-    y_test    = labels[1]
-
-    results   = {}
-
-    for subj in subjs.unique():
-        mask        = subjs == subj
-        y_test_subj = y_test[mask]
-        preds_subj  = preds[mask]
-
-        correct         = (y_test_subj == preds_subj).sum()
-        incorrect       = (y_test_subj != preds_subj).sum()
-        total           = len(preds_subj)
-        correct_percent = (correct/total) * 100
-        error_percent   = (incorrect/total) * 100
     
-        results[subj] = {'tot':total, 'correct':correct, 'incorrect':incorrect, 'correct %':correct_percent, 'error %':error_percent}
-    print(results)
-    #return results
-
+    pop = Population(setup=setup)
+    r = Runner(setup=setup, population=pop)
+    r.run(generations=10) # Reduced for quick test
 
 if __name__ == '__main__':
     main()
-    #preds = load_iron_man()
-    #comparison(preds=preds)
 
 
     

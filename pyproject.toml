@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evo-featuresel"
+version = "0.1.0"
+description = "Binary Evolutionary Algorithm for automatic features and model selection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Jacopo", email = "jacopo@example.com"},
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "joblib",
+    "scipy",
+    "statsmodels",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/jacopo/evo-featuresel"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["evo*"]

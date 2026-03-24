@@ -1,81 +1,43 @@
-'''
-Shared constants among the program:
-User must define othrewise default will be applied
-'''
-
 import numpy as np
 import os
 import datetime as dt
+from dataclasses import dataclass, field
+from typing import Dict, List, Tuple, Any, Optional
 
-
-#POP_SIZE = 1000
-#MUT_RATE = 0.2
-#GENES    = [0,1] # bool[46]
-#DNA      = 46
-#RHI      = pd.read_csv('./data/rhi_123.csv').to_numpy()
-#FEATURES = pd.read_csv('./data/all_features_cleaned.csv').drop(['RHI'],axis='columns').to_numpy()
-
-class Setup(object):
-    '''
+@dataclass
+class Setup:
+    """
     Setup class for the evolutionary algorithm experiment.
+    """
+    POP_SIZE: int = 50
+    MUT_RATE: float = 1.0
+    GENES: List[int] = field(default_factory=lambda: [0, 1])
+    FILAMENT_LEN: int = 0
+    DATA: Optional[Tuple[np.ndarray, np.ndarray]] = None
+    LABELS: Optional[Tuple[np.ndarray, np.ndarray]] = None
+    BITS: Dict[str, int] = field(default_factory=dict)
+    DESCRIPTION: str = ""
+    RANDOM_SEED: int = 42
     
-    Parameters (static)
-    ---
-        POP_SIZE (`static int`): Size of the individuals population
-        MUT_RATE (`static float`): Mutation rate @FIXME: should be either a function (e.g., metal cooling).
-        GENES(`static list[int]`): list of possible genes, in this case either 0 or 1 for indicating presence/absence.
-        FILAMENT_LEN (`static int`): Length of the DNA filament of each `Individual` (e.g., how many features in total)
-        FEATURES     (`static tuple(X_train,X_test)`): tuple containing train and test set for fitness evaluation
-        LABELS       (`static tuple(y_train,y_test)`): tuple containing train and test set labels for fitness evaualtion
+    experiment_folder: str = 'experiment'
+    project_prefix: str = ''
     
-    Parameters (constructor)
-    ---
-        experiment_folder (`str`): (default:`"experiment"`)
-        project_prefix    (`str`): path to `experiment_folder/project_prefix + datetime.now()` (default: empty str)
-    
-    Exmple
-    ---
-    >>> evo_setup = Setup() #<---- first instanciate
-    >>> evo_setup.POP_SIZE = 500 #<---- then init static attributes
-    >>> evo_setup.FEATURES = (np.random.randn(50,8),np.random.randn(10,8)) # <---- this should be a tuple of pd.read_csv(...).to_numpy()
-
-    >>> print(evo_setup.POP_SIZE)
-    >>> 500
-    
-    
-    '''
-    POP_SIZE     : int      = None
-    MUT_RATE     : float    = None
-    GENES        : list     = [0,1]
-    FILAMENT_LEN : int      = None
-    DATA         : np.array = None
-    LABELS       : np.array = None
-    BITS         : dict     = None
-    DESCRIPTION  : str      = None
-    RANDOM_SEED  : int      = None
-    
-
-    def __init__(self,experiment_folder : str = 'experiment', project_prefix : str = '') -> None:
-        self.experiment_folder = experiment_folder
-        self.project_folder = os.path.join(experiment_folder,\
-                                           project_prefix + dt.datetime\
-                                                                .now()\
-                                                                    .strftime("%Y%m%d%H%M"))
-        
+    def __post_init__(self):
+        self.project_folder = os.path.join(
+            self.experiment_folder,
+            f"{self.project_prefix}{dt.datetime.now().strftime('%Y%m%d%H%M')}"
+        )
         os.makedirs(self.experiment_folder, exist_ok=True)
-        os.makedirs(self.project_folder   , exist_ok=True)
+        os.makedirs(self.project_folder, exist_ok=True)
+        self.rng = np.random.default_rng(seed=self.RANDOM_SEED)
 
-    def init_rng(self,):
+    def init_rng(self):
+        # Kept for backward compatibility but functionality moved to __post_init__
         if self.RANDOM_SEED:
-            self.rng = np.random.default_rng(seed = self.RANDOM_SEED)
+            self.rng = np.random.default_rng(seed=self.RANDOM_SEED)
         else:
-            raise Exception('Random seed not valid. Consider using 42')
-
-
+            self.rng = np.random.default_rng()
 
 if __name__ == '__main__':
-    evo_setup = Setup()#<---- first instanciate
-    evo_setup.POP_SIZE = 500 #<---- then init static attributes
-    evo_setup.DATA = [1,4,5,6,7,8,9,6,6,4,]
-
-    print(evo_setup.POP_SIZE)
+    evo_setup = Setup(POP_SIZE=500)
+    print(f"Project folder: {evo_setup.project_folder}")
