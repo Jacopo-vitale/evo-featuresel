@@ -51,7 +51,10 @@ class Setup(object):
     DATA         : np.array = None
     LABELS       : np.array = None
     BITS         : dict     = None
+    DESCRIPTION  : str      = None
+    RANDOM_SEED  : int      = None
     
+
     def __init__(self,experiment_folder : str = 'experiment', project_prefix : str = '') -> None:
         self.experiment_folder = experiment_folder
         self.project_folder = os.path.join(experiment_folder,\
@@ -62,7 +65,11 @@ class Setup(object):
         os.makedirs(self.experiment_folder, exist_ok=True)
         os.makedirs(self.project_folder   , exist_ok=True)
 
-
+    def init_rng(self,):
+        if self.RANDOM_SEED:
+            self.rng = np.random.default_rng(seed = self.RANDOM_SEED)
+        else:
+            raise Exception('Random seed not valid. Consider using 42')
 
 
 
