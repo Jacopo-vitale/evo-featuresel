@@ -11,13 +11,11 @@ from evo.population import Population
 from evo.runner import Runner
 
 def preprocessing(train_subj, test_subj, dataset_path):
+    # ... (keep existing subject-based one for backward compatibility if needed)
     if not os.path.exists(dataset_path):
         raise FileNotFoundError(f"Dataset not found at {dataset_path}")
 
     df = pd.read_csv(dataset_path)
-    # Assuming 'subj' is the column for subject IDs
-    # and labels are in the second to last column, and some other info in the last
-    # This might need adjustment based on the actual CSV structure
     X_train = df.query(f'subj in {train_subj}').iloc[:, :-2].to_numpy()
     y_train = df.query(f'subj in {train_subj}').iloc[:, -2].to_numpy()
     X_test = df.query(f'subj in {test_subj}').iloc[:, :-2].to_numpy()
@@ -27,6 +25,37 @@ def preprocessing(train_subj, test_subj, dataset_path):
     X_train = scaler.fit_transform(imputer.fit_transform(X_train))
     X_test = scaler.transform(imputer.transform(X_test))
     return ((X_train, X_test), (y_train, y_test))
+
+def preprocessing_general(train_path, val_path, test_path):
+    """
+    Generalized preprocessing that loads separate files for train, val, and test.
+    Assumes last column is labels.
+    """
+    def load_and_split(path):
+        if not path or not os.path.exists(path):
+            return None, None
+        df = pd.read_csv(path)
+        X = df.iloc[:, :-1].to_numpy()
+        y = df.iloc[:, -1].to_numpy()
+        return X, y
+
+    X_train, y_train = load_and_split(train_path)
+    X_val, y_val = load_and_split(val_path)
+    X_test, y_test = load_and_split(test_path)
+
+    if X_train is None:
+        raise ValueError("Train dataset is required.")
+
+    imputer, scaler = SimpleImputer(), StandardScaler()
+    X_train = scaler.fit_transform(imputer.fit_transform(X_train))
+    
+    if X_val is not None:
+        X_val = scaler.transform(imputer.transform(X_val))
+    if X_test is not None:
+        X_test = scaler.transform(imputer.transform(X_test))
+        
+    # Return (X_train, X_val, X_test), (y_train, y_val, y_test)
+    return ((X_train, X_val, X_test), (y_train, y_val, y_test))
 
 def main():
     # Default parameters

@@ -20,6 +20,8 @@ dependencies = [
     "scipy",
     "statsmodels",
     "Cython",
+    "PySide6",
+    "matplotlib",
 ]
 
 [project.urls]
