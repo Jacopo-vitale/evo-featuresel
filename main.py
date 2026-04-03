@@ -60,6 +60,8 @@ def main():
         return
 
     setup = Setup(project_prefix='experiment_')
+    setup.RANDOM_SEED = 42
+    setup.seed_all(setup.RANDOM_SEED)
     
     setup.POP_SIZE = 50
     setup.BITS = {
