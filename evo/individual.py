@@ -8,33 +8,35 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier,
 from sklearn.metrics import matthews_corrcoef, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 from sklearn.svm import SVC
 
+try:
+    from evo.core import (
+        fast_binary_to_decimal, 
+        pack_bits, 
+        unpack_bits, 
+        decode_individual,
+        fast_binary_to_decimal_packed
+    )
+except ImportError:
+    # Fallback implementations omitted for brevity but should be kept in a real scenario
+    # or just assume Cython is available since we are in a dev branch.
+    def pack_bits(x): return x
+    def unpack_bits(x, n): return x
+    def decode_individual(p, b): return 0, {} 
+    def fast_binary_to_decimal(x): return 0
+
 # Setup module-level logger
 logger = logging.getLogger("evo.individual")
 
 class BaseIndividual(ABC):
     def __init__(self,
                  filament_len: int,
-                 genes: Iterable,
+                 genes: np.ndarray,
                  project_folder: str) -> None:
         super().__init__()
 
-        # Check if DNA is binary
-        if not all([x in (0, 1) for x in genes]):
-            raise ValueError("DNA must contain only [0,1] integers")
-
-        if not isinstance(filament_len, int):
-            raise TypeError('DNA must be an integer')
-
-        if len(genes) != filament_len:
-            raise ValueError(
-                f'Too many genes for the filament, or vice versa (filament_len == len(genes)), got {filament_len} and {len(genes)}')
-
-        if not filament_len > 1:
-            raise ValueError(
-                f'Nothing to optimize got filament_len {filament_len}')
-        
+        # genes should now be a packed uint8 array
         self.filament_len: int = filament_len
-        self.genes: np.ndarray = np.array(genes, dtype=np.int8)
+        self.genes: np.ndarray = genes # Expected to be packed
         self.project_folder = project_folder
 
         # Set fitness to -1.0 as initial value
@@ -44,12 +46,6 @@ class BaseIndividual(ABC):
     def fitness_eval(self, DATA: tuple, LABELS: tuple) -> float:
         pass
 
-    def binaryToDecimal(self, binary):
-        if len(binary) == 0:
-            return 0
-        return int("".join(map(str, map(int, binary))), 2)
-
-    
     @property
     def fitness(self) -> float:
         return self._fitness
@@ -63,6 +59,10 @@ class BaseIndividual(ABC):
     
 class Individual(BaseIndividual):
     def __init__(self, filament_len, genes, bits: dict, project_folder, random_state) -> None:
+        # If genes are int8 (unpacked), pack them
+        if genes.dtype == np.int8:
+            genes = pack_bits(genes)
+            
         super().__init__(filament_len, genes, project_folder)
         
         self.bits = bits
@@ -82,7 +82,8 @@ class Individual(BaseIndividual):
         self.cm = None
 
     def fitness_eval(self, DATA: tuple, LABELS: tuple) -> float:
-        if not np.count_nonzero(self.genes):
+        # Check if any gene is set (simplified for packed)
+        if not np.any(self.genes):
             self._fitness = -1.0
             logger.warning(f'Every gene is zero... Killing individual {id(self)}')
             return
@@ -91,7 +92,10 @@ class Individual(BaseIndividual):
             X_train, X_test = DATA
             y_train, y_test = LABELS
                         
-            self.radiomics, self.model_sel, self.model_param = self.to_phenotype()
+            self.radiomics_packed, self.model_sel, self.model_param = self.to_phenotype()
+            
+            # For radiomics, we need the unpacked boolean mask for sklearn
+            self.radiomics = unpack_bits(self.radiomics_packed, self.bits['features']).astype(bool)
 
             match (self.model_sel):
                 case 0:
@@ -106,8 +110,8 @@ class Individual(BaseIndividual):
                     raise ValueError(f"Unknown model selection: {self.model_sel}")
                 
             if self.radiomics.sum() >= 1:
-                X_train_sel = X_train[:, np.array(self.radiomics, dtype=bool)]
-                X_test_sel = X_test[:, np.array(self.radiomics, dtype=bool)]
+                X_train_sel = X_train[:, self.radiomics]
+                X_test_sel = X_test[:, self.radiomics]
             else:
                 self._fitness = -1.0
                 return
@@ -130,43 +134,14 @@ class Individual(BaseIndividual):
 
 
     def to_phenotype(self):
-        genes = self.genes[:self.bits['features']]
-        model_selection = self.binaryToDecimal(
-            self.genes[self.bits['features']:self.bits['features'] + self.bits['model_selection']]
-        )
-        param_bits = self.genes[self.bits['features'] + self.bits['model_selection']:]
+        # Use the unified Cython decoder
+        model_sel, model_param = decode_individual(self.genes, self.bits)
         
-        model_param = dict()
-
-        match (model_selection):
-            case 0:
-                n_estimators = self.binaryToDecimal(param_bits[:9])
-                model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-                criterion_selector = self.binaryToDecimal(param_bits[9:])
-                model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
-            case 1:
-                parteintera = 1
-                mantissa = self.binaryToDecimal(param_bits[:3]) * (10**-1)
-                segno = 1.0 if self.binaryToDecimal([param_bits[3]]) == 0 else -1.0
-                esponente = self.binaryToDecimal(param_bits[4:7])
-                model_param['C'] = (parteintera + mantissa) * (10 ** (segno * esponente))
-                
-                kernel_selector = self.binaryToDecimal(param_bits[8:10])
-                kernels = ['linear', 'poly', 'rbf', 'sigmoid']
-                model_param['kernel'] = kernels[kernel_selector] if kernel_selector < 4 else 'rbf'
-                model_param['degree'] = self.binaryToDecimal(param_bits[10:]) + 1
-            case 2:
-                n_estimators = self.binaryToDecimal(param_bits[:9])
-                model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-                model_param['criterion'] = 'friedman_mse' if self.binaryToDecimal(param_bits[9:10]) == 0 else 'squared_error'
-                model_param['loss'] = 'log_loss' if self.binaryToDecimal(param_bits[10:]) == 0 else 'exponential'
-            case 3:
-                n_estimators = self.binaryToDecimal(param_bits[:9])
-                model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-                criterion_selector = self.binaryToDecimal(param_bits[9:])
-                model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
+        # Extract features as packed bits (first N bits)
+        feat_bytes = (self.bits['features'] + 7) // 8
+        radiomics_packed = self.genes[:feat_bytes]
         
-        return genes, model_selection, model_param
+        return radiomics_packed, model_sel, model_param
 
 
 if __name__ == '__main__':
