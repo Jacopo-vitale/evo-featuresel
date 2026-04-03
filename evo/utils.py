@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import random
 import datetime as dt
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Any, Optional
@@ -29,14 +30,20 @@ class Setup:
         )
         os.makedirs(self.experiment_folder, exist_ok=True)
         os.makedirs(self.project_folder, exist_ok=True)
-        self.rng = np.random.default_rng(seed=self.RANDOM_SEED)
+        self.seed_all(self.RANDOM_SEED)
+
+    def seed_all(self, seed: int):
+        """
+        Seeds all random number generators for reproducibility.
+        """
+        random.seed(seed)
+        os.environ['PYTHONHASHSEED'] = str(seed)
+        np.random.seed(seed)
+        self.rng = np.random.default_rng(seed=seed)
 
     def init_rng(self):
-        # Kept for backward compatibility but functionality moved to __post_init__
-        if self.RANDOM_SEED:
-            self.rng = np.random.default_rng(seed=self.RANDOM_SEED)
-        else:
-            self.rng = np.random.default_rng()
+        # Kept for backward compatibility
+        self.seed_all(self.RANDOM_SEED)
 
 if __name__ == '__main__':
     evo_setup = Setup(POP_SIZE=500)
