@@ -151,6 +151,19 @@ class MainWindow(QMainWindow):
         console_group.setLayout(console_layout)
         layout.addWidget(console_group)
 
+        # --- 🕒 Status Bar ---
+        self.status_bar = QHBoxLayout()
+        self.avg_feat_lbl = QLabel("Avg Features: -")
+        self.gen_time_lbl = QLabel("Gen Time: -")
+        self.eta_lbl = QLabel("ETA: -")
+        
+        for lbl in [self.avg_feat_lbl, self.gen_time_lbl, self.eta_lbl]:
+            lbl.setStyleSheet("color: #7f8c8d; font-size: 9pt;")
+            self.status_bar.addWidget(lbl)
+            self.status_bar.addStretch()
+            
+        layout.addLayout(self.status_bar)
+
     def _setup_logging(self):
         self.log_handler = QtLoggingHandler()
         self.log_handler.log_signal.connect(self._append_log)
@@ -213,12 +226,21 @@ class MainWindow(QMainWindow):
             self.worker.stop()
             self.stop_btn.setEnabled(False)
 
-    @Slot(int, float, float)
-    def _on_generation_update(self, gen, best, avg):
+    @Slot(int, float, float, dict)
+    def _on_generation_update(self, gen, best, avg, stats):
         self.history_gen.append(gen)
         self.history_best.append(best)
         self.history_avg.append(avg)
         self.canvas.plot_data(self.history_gen, self.history_best, self.history_avg)
+        self.canvas.plot_stats(stats)
+        
+        # Update labels
+        self.avg_feat_lbl.setText(f"Avg Features: {stats.get('avg_features', 0):.1f}")
+        if 'gen_time' in stats:
+            self.gen_time_lbl.setText(f"Gen Time: {stats['gen_time']:.2f}s")
+        if 'eta' in stats:
+            eta = stats['eta']
+            self.eta_lbl.setText(f"ETA: {int(eta // 60)}m {int(eta % 60)}s")
 
     @Slot(dict)
     def _on_finished(self, results):
