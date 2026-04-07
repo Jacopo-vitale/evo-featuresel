@@ -257,3 +257,59 @@ def fast_mutation(cnp.ndarray[int8_t, ndim=1] genes,
         if random_values[i] < mutation_rate:
             genes[i] = 1 - genes[i]
     return genes
+
+from libc.math cimport sqrt
+
+def fast_binary_metrics(cnp.ndarray[cnp.int64_t, ndim=1] y_true, cnp.ndarray[cnp.int64_t, ndim=1] y_pred):
+    """
+    Ultra-fast C-level calculation of binary classification metrics.
+    Calculates TP, TN, FP, FN in a single pass to avoid Python loop overhead
+    and multiple scikit-learn function calls.
+    Returns: mcc, acc, f1, prec, recall, confusion_matrix
+    """
+    cdef int n = y_true.shape[0]
+    cdef long long tp = 0, tn = 0, fp = 0, fn = 0
+    cdef int i
+    
+    with nogil:
+        for i in range(n):
+            if y_true[i] == 1:
+                if y_pred[i] == 1:
+                    tp += 1
+                else:
+                    fn += 1
+            else:
+                if y_pred[i] == 1:
+                    fp += 1
+                else:
+                    tn += 1
+                
+    cdef double acc = 0.0
+    cdef double prec = 0.0
+    cdef double recall = 0.0
+    cdef double f1 = 0.0
+    cdef double mcc = 0.0
+    cdef double mcc_num, mcc_den_sq
+    
+    if n > 0:
+        acc = (tp + tn) / float(n)
+        
+    if (tp + fp) > 0:
+        prec = tp / float(tp + fp)
+        
+    if (tp + fn) > 0:
+        recall = tp / float(tp + fn)
+        
+    if (prec + recall) > 0:
+        f1 = 2 * (prec * recall) / (prec + recall)
+        
+    mcc_num = (tp * tn) - (fp * fn)
+    mcc_den_sq = float(tp + fp) * float(tp + fn) * float(tn + fp) * float(tn + fn)
+    
+    if mcc_den_sq > 0:
+        mcc = mcc_num / sqrt(mcc_den_sq)
+    else:
+        mcc = 0.0
+        
+    # Return cm as list of lists
+    return mcc, acc, f1, prec, recall, [[tn, fp], [fn, tp]]

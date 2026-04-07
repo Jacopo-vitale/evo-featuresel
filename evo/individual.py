@@ -5,7 +5,6 @@ from typing import Iterable
 from abc import ABC, abstractmethod
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier
-from sklearn.metrics import matthews_corrcoef, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 from sklearn.svm import SVC
 
 try:
@@ -14,7 +13,8 @@ try:
         pack_bits, 
         unpack_bits, 
         decode_individual,
-        fast_binary_to_decimal_packed
+        fast_binary_to_decimal_packed,
+        fast_binary_metrics
     )
 except ImportError:
     # Fallback implementations omitted for brevity but should be kept in a real scenario
@@ -23,6 +23,7 @@ except ImportError:
     def unpack_bits(x, n): return x
     def decode_individual(p, b): return 0, {} 
     def fast_binary_to_decimal(x): return 0
+    def fast_binary_metrics(y_true, y_pred): return 0,0,0,0,0,[]
 
 # Setup module-level logger
 logger = logging.getLogger("evo.individual")
@@ -121,12 +122,19 @@ class Individual(BaseIndividual):
             self.model.fit(X_train_sel, y_train)
             preds = self.model.predict(X_test_sel)
             self.preds = preds
-            self._fitness = matthews_corrcoef(y_test, preds)
-            self.acc = accuracy_score(y_test, preds)
-            self.f1 = f1_score(y_test, preds)
-            self.prec = precision_score(y_test, preds, zero_division=0.0)
-            self.recall = recall_score(y_test, preds)
-            self.cm = confusion_matrix(y_test, preds)
+            
+            # Ensure int64 for Cython fast metrics
+            y_test_fast = np.asarray(y_test, dtype=np.int64)
+            preds_fast = np.asarray(preds, dtype=np.int64)
+            
+            mcc, acc, f1, prec, recall, cm = fast_binary_metrics(y_test_fast, preds_fast)
+            
+            self._fitness = mcc
+            self.acc = acc
+            self.f1 = f1
+            self.prec = prec
+            self.recall = recall
+            self.cm = cm
 
         except Exception as e:
             logger.error(f"Fitness evaluation failed: {e}")

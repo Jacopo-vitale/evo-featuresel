@@ -26,22 +26,31 @@ def preprocessing(train_subj, test_subj, dataset_path):
     X_test = scaler.transform(imputer.transform(X_test))
     return ((X_train, X_test), (y_train, y_test))
 
-def preprocessing_general(train_path, val_path, test_path):
+def preprocessing_general(train_path, val_path, test_path, 
+                          train_labels_path=None, val_labels_path=None, test_labels_path=None):
     """
     Generalized preprocessing that loads separate files for train, val, and test.
-    Assumes last column is labels.
+    If label paths are not provided, it assumes the last column is labels.
     """
-    def load_and_split(path):
-        if not path or not os.path.exists(path):
+    def load_and_split(feat_path, label_path=None):
+        if not feat_path or not os.path.exists(feat_path):
             return None, None
-        df = pd.read_csv(path)
-        X = df.iloc[:, :-1].to_numpy()
-        y = df.iloc[:, -1].to_numpy()
+        
+        df_feat = pd.read_csv(feat_path)
+        
+        if label_path and os.path.exists(label_path):
+            X = df_feat.to_numpy()
+            y = pd.read_csv(label_path).iloc[:, 0].to_numpy() # Assumes single-column label file
+        else:
+            # Assume last column is labels
+            X = df_feat.iloc[:, :-1].to_numpy()
+            y = df_feat.iloc[:, -1].to_numpy()
+            
         return X, y
 
-    X_train, y_train = load_and_split(train_path)
-    X_val, y_val = load_and_split(val_path)
-    X_test, y_test = load_and_split(test_path)
+    X_train, y_train = load_and_split(train_path, train_labels_path)
+    X_val, y_val = load_and_split(val_path, val_labels_path)
+    X_test, y_test = load_and_split(test_path, test_labels_path)
 
     if X_train is None:
         raise ValueError("Train dataset is required.")

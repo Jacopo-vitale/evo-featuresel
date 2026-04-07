@@ -38,10 +38,13 @@ class MainWindow(QMainWindow):
         dataset_layout = QFormLayout()
         
         self.train_path = QLineEdit("data/dataset.csv")
+        self.train_labels_path = QLineEdit("")
         self.val_path = QLineEdit("")
+        self.val_labels_path = QLineEdit("")
         self.test_path = QLineEdit("")
+        self.test_labels_path = QLineEdit("")
         
-        def create_file_row(label, line_edit):
+        def create_file_row(label, line_edit, is_label=False):
             row = QHBoxLayout()
             row.addWidget(line_edit)
             btn = QPushButton("Browse")
@@ -49,9 +52,12 @@ class MainWindow(QMainWindow):
             row.addWidget(btn)
             dataset_layout.addRow(label, row)
 
-        create_file_row("Train CSV:", self.train_path)
-        create_file_row("Validation CSV:", self.val_path)
-        create_file_row("Test CSV:", self.test_path)
+        create_file_row("Train Features:", self.train_path)
+        create_file_row("Train Labels (opt):", self.train_labels_path)
+        create_file_row("Validation Features:", self.val_path)
+        create_file_row("Validation Labels (opt):", self.val_labels_path)
+        create_file_row("Test Features:", self.test_path)
+        create_file_row("Test Labels (opt):", self.test_labels_path)
         
         dataset_group.setLayout(dataset_layout)
         layout.addWidget(dataset_group)
@@ -79,6 +85,11 @@ class MainWindow(QMainWindow):
         self.alpha.setRange(0.01, 2.0)
         self.alpha.setSingleStep(0.05)
         self.alpha.setValue(0.5)
+
+        self.cv_folds = QSpinBox()
+        self.cv_folds.setRange(1, 10)
+        self.cv_folds.setValue(1)
+        self.cv_folds.setToolTip("1 = No CV (Train/Val split). >1 = Outer CV (folds)")
 
         self.start_btn = QPushButton("🚀 Run Evolution")
         self.start_btn.setFixedHeight(40)
@@ -162,12 +173,22 @@ class MainWindow(QMainWindow):
 
     def _on_start(self):
         # 1. Gather inputs
-        t_path = self.train_path.text()
-        v_path = self.val_path.text()
-        ts_path = self.test_path.text()
+        params = {
+            'train_path': self.train_path.text(),
+            'train_labels_path': self.train_labels_path.text(),
+            'val_path': self.val_path.text(),
+            'val_labels_path': self.val_labels_path.text(),
+            'test_path': self.test_path.text(),
+            'test_labels_path': self.test_labels_path.text(),
+            'pop_size': self.pop_size.value(),
+            'generations': self.generations.value(),
+            'seed': self.seed.value(),
+            'alpha': self.alpha.value(),
+            'cv_folds': self.cv_folds.value()
+        }
 
-        if not os.path.exists(t_path):
-            self.console.appendPlainText(f"❌ ERROR: Train file not found: {t_path}")
+        if not os.path.exists(params['train_path']):
+            self.console.appendPlainText(f"❌ ERROR: Train file not found: {params['train_path']}")
             return
 
         # 2. Reset Plot Data
@@ -179,15 +200,6 @@ class MainWindow(QMainWindow):
         # 3. Threading
         self.start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
-        params = {
-            'train_path': t_path,
-            'val_path': v_path,
-            'test_path': ts_path,
-            'pop_size': self.pop_size.value(),
-            'generations': self.generations.value(),
-            'seed': self.seed.value(),
-            'alpha': self.alpha.value()
-        }
         
         self.worker = EvolutionWorker(params)
         self.worker.generation_completed.connect(self._on_generation_update)
@@ -215,10 +227,14 @@ class MainWindow(QMainWindow):
         self.console.appendPlainText("✅ SUCCESS: Evolution completed.")
         
         # Update results UI
-        self.res_labels['fitness'].setText(f"MCC: {results['fitness']:.4f}")
+        if 'std_fitness' in results:
+            self.res_labels['fitness'].setText(f"MCC: {results['fitness']:.4f} ± {results['std_fitness']:.4f}")
+        else:
+            self.res_labels['fitness'].setText(f"MCC: {results['fitness']:.4f}")
+            
         self.res_labels['acc'].setText(f"Acc: {results['acc']:.4f}")
         self.res_labels['model'].setText(f"Model: {results['model_type']}")
-        self.res_labels['features'].setText(f"Features: {results['features_count']}")
+        self.res_labels['features'].setText(f"Features: {results['features_count']:.1f}")
         self.results_group.setVisible(True)
 
     def _on_error(self, msg):
