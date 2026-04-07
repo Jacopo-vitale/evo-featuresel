@@ -46,6 +46,37 @@ The algorithm currently optimizes across:
 
 ---
 
+## 🖥️ Dashboard (GUI) - `dev-gui` branch
+
+The `dev-gui` branch introduces a high-performance interactive dashboard built with **PySide6** and **Matplotlib** for real-time monitoring of the evolutionary process.
+
+### 🚀 GUI Usage
+
+1.  **⚙️ Prerequisites**: Ensure you have installed the GUI dependencies:
+    ```bash
+    pip install PySide6 matplotlib
+    ```
+
+2.  **🛠️ Build the C Core**: If you haven't already, compile the Cython extension:
+    ```bash
+    python setup.py build_ext --inplace
+    ```
+
+3.  **🏃 Start the Dashboard**:
+    ```bash
+    python gui_main.py
+    ```
+
+### 🌟 GUI Features
+-   **📂 Flexible Dataset Loading**: Support for separate feature and label CSV files for Train, Validation, and Test sets.
+-   **🔄 Macro Cross-Validation**: Run the entire EA process over $N$ stratified folds to evaluate model stability (Outer CV).
+-   **📈 Real-time Plotting**: Monitor the Best and Average fitness (MCC) trends as they evolve.
+-   **⚙️ Parameter Control**: Interactively adjust Population Size, Generations, Mutation Alpha, and Random Seeds.
+-   **📟 Integrated Console**: View detailed logs, top individual rankings, and fold progress directly in the UI.
+-   **🏆 Results Summary**: Automatic aggregation of metrics (Avg ± Std) and model selection across CV folds.
+
+---
+
 ## 🚀 Usage
 
 ### 🏃 Quick Start
