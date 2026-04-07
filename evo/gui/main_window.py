@@ -116,6 +116,7 @@ class MainWindow(QMainWindow):
         form_layout.addRow("Generations:", self.generations)
         form_layout.addRow("Random Seed:", self.seed)
         form_layout.addRow("Mutation Alpha:", self.alpha)
+        form_layout.addRow("Outer CV Folds:", self.cv_folds)
         form_layout.addRow("", btn_layout)
         param_group.setLayout(form_layout)
         
