@@ -129,8 +129,7 @@ class Population(object):
             ) for i in range(n_pop)
         ]
             
-    def mutation(self, epoch: int, tot_epoch: int):
-        alpha = 0.5
+    def mutation(self, epoch: int, tot_epoch: int, alpha: float = 0.5):
         self.mutation_rate = np.exp(-epoch / (tot_epoch * alpha))
         
         logger.info(f"Batch mutation using OpenMP (rate: {self.mutation_rate:.4f})...")

@@ -164,3 +164,4 @@ cython_debug/
 
 experiment
 *.csv
+paper/

@@ -41,15 +41,15 @@ class Runner(object):
                 file_handler.setFormatter(fmt)
                 main_logger.addHandler(file_handler)
 
-    def step(self, epoch, generations):
+    def step(self, epoch, generations, alpha: float = 0.5):
         logger.info('👪 Starting Crossover 👪')
         self.population.crossover()
         logger.info(f'Mutant genes rate: {self.population.mutation_rate} ' + np.random.choice(['👽', '👾', '👹']))
-        self.population.mutation(epoch, generations)
+        self.population.mutation(epoch, generations, alpha=alpha)
         logger.info('👴👵 Starting Replace 👦👧')
         self.population.replace()
         
-    def run(self, generations: int = 10, target=1.0):
+    def run(self, generations: int = 10, target=1.0, alpha: float = 0.5):
         self.welcome()
         if self.setup and self.setup.DESCRIPTION:
             self.description(self.setup.DESCRIPTION)
@@ -61,7 +61,7 @@ class Runner(object):
         for epoch in range(generations):
             logger.info('*' * 80)
             logger.info(f'Starting epoch {epoch + 1}')
-            self.step(epoch, generations)
+            self.step(epoch, generations, alpha=alpha)
             self.log_top_five()
             if self.population.bestindividual.fitness >= target:
                 logger.info(f'Target achieved: {self.population.bestindividual.fitness}')

@@ -8,8 +8,18 @@ from evo.utils import Setup
 from main import preprocessing_general
 
 class EvolutionWorker(QThread):
-    # ... (signals remain same)
-    
+    generation_completed = Signal(int, float, float) # gen, best, avg
+    finished = Signal(dict) # best results
+    error = Signal(str)
+
+    def __init__(self, params):
+        super().__init__()
+        self.params = params
+        self.is_running = True
+
+    def stop(self):
+        self.is_running = False
+
     def run(self):
         try:
             # 1. Heavy Data Loading in Background (General)
@@ -25,8 +35,20 @@ class EvolutionWorker(QThread):
             X_train, X_val, X_test = data_all
             y_train, y_val, y_test = labels_all
             
-            data_evo = (X_train, X_val if X_val is not None else X_test)
-            labels_evo = (y_train, y_val if y_val is not None else y_test)
+            # If val is not provided, use a split of train or just use test if provided
+            if X_val is None:
+                if X_test is not None:
+                    logging.info("⚠️ Validation set not provided, using Test set for evolution fitness.")
+                    data_evo = (X_train, X_test)
+                    labels_evo = (y_train, y_test)
+                else:
+                    # Fallback: simple split of train (e.g. 80/20) - for now just use train
+                    logging.info("⚠️ Validation and Test sets not provided, using Train set for evolution fitness.")
+                    data_evo = (X_train, X_train)
+                    labels_evo = (y_train, y_train)
+            else:
+                data_evo = (X_train, X_val)
+                labels_evo = (y_train, y_val)
 
             # 2. Setup Configuration
             setup = Setup(project_prefix='gui_exp_')
@@ -41,6 +63,7 @@ class EvolutionWorker(QThread):
             setup.LABELS = labels_evo
             setup.RANDOM_SEED = self.params.get('seed', 42)
             setup.seed_all(setup.RANDOM_SEED)
+            setup.init_rng()
 
             # 3. Evolutionary Process
             pop = Population(setup=setup)
@@ -55,12 +78,13 @@ class EvolutionWorker(QThread):
             self.generation_completed.emit(0, best_f, avg_f)
 
             generations = self.params.get('generations', 10)
+            alpha = self.params.get('alpha', 0.5)
             for epoch in range(generations):
                 if not self.is_running:
                     logging.info('🛑 Evolution stopped by user.')
                     break
                 
-                runner.step(epoch, generations)
+                runner.step(epoch, generations, alpha=alpha)
                 
                 best_f = pop.best_individual.fitness
                 avg_f = sum(ind.fitness for ind in pop.population) / len(pop.population)
@@ -69,7 +93,17 @@ class EvolutionWorker(QThread):
 
             if self.is_running:
                 runner.log_tail()
-                self.finished.emit()
+                best = pop.best_individual
+                results = {
+                    'fitness': best.fitness,
+                    'acc': best.acc,
+                    'f1': best.f1,
+                    'prec': best.prec,
+                    'recall': best.recall,
+                    'model_type': type(best.model).__name__,
+                    'features_count': int(best.radiomics.sum()) if best.radiomics is not None else 0
+                }
+                self.finished.emit(results)
 
         except Exception as e:
             err_msg = traceback.format_exc()

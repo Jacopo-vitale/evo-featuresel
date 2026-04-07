@@ -68,8 +68,17 @@ class MainWindow(QMainWindow):
         self.pop_size.setValue(50)
         
         self.generations = QSpinBox()
-        self.generations.setRange(1, 100)
+        self.generations.setRange(1, 1000)
         self.generations.setValue(10)
+
+        self.seed = QSpinBox()
+        self.seed.setRange(0, 999999)
+        self.seed.setValue(42)
+
+        self.alpha = QDoubleSpinBox()
+        self.alpha.setRange(0.01, 2.0)
+        self.alpha.setSingleStep(0.05)
+        self.alpha.setValue(0.5)
 
         self.start_btn = QPushButton("🚀 Run Evolution")
         self.start_btn.setFixedHeight(40)
@@ -88,6 +97,8 @@ class MainWindow(QMainWindow):
 
         form_layout.addRow("Population Size:", self.pop_size)
         form_layout.addRow("Generations:", self.generations)
+        form_layout.addRow("Random Seed:", self.seed)
+        form_layout.addRow("Mutation Alpha:", self.alpha)
         form_layout.addRow("", btn_layout)
         param_group.setLayout(form_layout)
         
@@ -100,6 +111,24 @@ class MainWindow(QMainWindow):
         middle_layout.setSpacing(10)
         
         layout.addLayout(middle_layout)
+
+        # --- 🏆 Best Results ---
+        self.results_group = QGroupBox("🏆 Best Individual Results")
+        self.results_group.setVisible(False)
+        results_layout = QHBoxLayout()
+        
+        self.res_labels = {
+            'fitness': QLabel("MCC: -"),
+            'acc': QLabel("Acc: -"),
+            'model': QLabel("Model: -"),
+            'features': QLabel("Features: -")
+        }
+        for lbl in self.res_labels.values():
+            lbl.setStyleSheet("font-weight: bold; color: #2980b9; font-size: 11pt;")
+            results_layout.addWidget(lbl)
+        
+        self.results_group.setLayout(results_layout)
+        layout.addWidget(self.results_group)
 
         # --- 📟 Console ---
         console_group = QGroupBox("📟 Integrated Console")
@@ -156,7 +185,8 @@ class MainWindow(QMainWindow):
             'test_path': ts_path,
             'pop_size': self.pop_size.value(),
             'generations': self.generations.value(),
-            'seed': 42
+            'seed': self.seed.value(),
+            'alpha': self.alpha.value()
         }
         
         self.worker = EvolutionWorker(params)
@@ -178,10 +208,18 @@ class MainWindow(QMainWindow):
         self.history_avg.append(avg)
         self.canvas.plot_data(self.history_gen, self.history_best, self.history_avg)
 
-    def _on_finished(self):
+    @Slot(dict)
+    def _on_finished(self, results):
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
         self.console.appendPlainText("✅ SUCCESS: Evolution completed.")
+        
+        # Update results UI
+        self.res_labels['fitness'].setText(f"MCC: {results['fitness']:.4f}")
+        self.res_labels['acc'].setText(f"Acc: {results['acc']:.4f}")
+        self.res_labels['model'].setText(f"Model: {results['model_type']}")
+        self.res_labels['features'].setText(f"Features: {results['features_count']}")
+        self.results_group.setVisible(True)
 
     def _on_error(self, msg):
         self.start_btn.setEnabled(True)
