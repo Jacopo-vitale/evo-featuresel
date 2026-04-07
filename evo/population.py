@@ -1,7 +1,7 @@
 import logging
 import sys
 import os
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 from evo.individual import Individual
 from evo.utils import Setup
@@ -60,6 +60,26 @@ class Population(object):
         individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
         return individual
     
+    @staticmethod
+    def _evaluate_individual(args):
+        """Helper for ProcessPoolExecutor"""
+        genes, filament_len, bits, project_folder, random_state, DATA, LABELS = args
+        from evo.individual import Individual
+        ind = Individual(filament_len, genes, bits, project_folder, random_state)
+        ind.fitness_eval(DATA, LABELS)
+        # Return serializable results
+        return {
+            'fitness': ind.fitness,
+            'acc': ind.acc,
+            'f1': ind.f1,
+            'prec': ind.prec,
+            'recall': ind.recall,
+            'cm': ind.cm,
+            'model': ind.model,
+            'preds': ind.preds,
+            'genes': ind.genes
+        }
+
     def init_population(self):
         logger.info(f"Initializing population of size {self.setup.POP_SIZE}...")
         
@@ -84,13 +104,52 @@ class Population(object):
             edge_cases_genes.append(pack_bits(single_bit))
             
         logger.info(f"Injecting {len(edge_cases_genes)} edge-case individuals (dense/sparse seeds)...")
+        # Evaluate edge cases in main process (few enough)
         self._population = [self.init_individual(g) for g in edge_cases_genes]
         
         # 2. Initialize the rest of the population randomly
         remaining = self.setup.POP_SIZE - len(self._population)
         if remaining > 0:
-            with ThreadPoolExecutor() as executor:
-                self._population.extend(list(executor.map(self.init_individual, range(remaining))))
+            logger.info(f"Evaluating {remaining} individuals in parallel...")
+            
+            # Prepare arguments for ProcessPool
+            random_genes_list = []
+            for _ in range(remaining):
+                unpacked = self.setup.rng.choice(self.setup.GENES, size=self.setup.FILAMENT_LEN).astype(np.int8)
+                random_genes_list.append(pack_bits(unpacked))
+            
+            eval_args = [
+                (
+                    genes, 
+                    self.setup.FILAMENT_LEN, 
+                    self.setup.BITS, 
+                    self.setup.project_folder, 
+                    self.setup.RANDOM_SEED, 
+                    self.setup.DATA, 
+                    self.setup.LABELS
+                ) for genes in random_genes_list
+            ]
+            
+            with ProcessPoolExecutor() as executor:
+                results = list(executor.map(Population._evaluate_individual, eval_args))
+            
+            for res in results:
+                ind = Individual(
+                    self.setup.FILAMENT_LEN, 
+                    res['genes'], 
+                    self.setup.BITS, 
+                    self.setup.project_folder, 
+                    self.setup.RANDOM_SEED
+                )
+                ind._fitness = res['fitness']
+                ind.acc = res['acc']
+                ind.f1 = res['f1']
+                ind.prec = res['prec']
+                ind.recall = res['recall']
+                ind.cm = res['cm']
+                ind.model = res['model']
+                ind.preds = res['preds']
+                self._population.append(ind)
         
         self._population = sorted(self._population, key=lambda x: x.fitness, reverse=True)
         self.best_individual = self._population[0]
@@ -147,16 +206,40 @@ class Population(object):
         )
         
         # 3. Update Individual genes and re-evaluate fitness
-        # We use ThreadPoolExecutor for fitness_eval as it's the main bottleneck (ML training)
-        def evaluate(args):
-            idx, genes = args
-            ind = self._offspring[idx]
-            ind.genes = genes
-            ind.fitness_eval(self.setup.DATA, self.setup.LABELS)
-            return ind
-
-        with ThreadPoolExecutor() as executor:
-            self._offspring = list(executor.map(evaluate, enumerate(mutated_pool)))
+        logger.info(f"Evaluating {len(mutated_pool)} mutated individuals in parallel...")
+        eval_args = [
+            (
+                mutated_pool[i], 
+                self.setup.FILAMENT_LEN, 
+                self.setup.BITS, 
+                self.setup.project_folder, 
+                self.setup.RANDOM_SEED, 
+                self.setup.DATA, 
+                self.setup.LABELS
+            ) for i in range(len(mutated_pool))
+        ]
+        
+        with ProcessPoolExecutor() as executor:
+            results = list(executor.map(Population._evaluate_individual, eval_args))
+        
+        self._offspring = []
+        for res in results:
+            ind = Individual(
+                self.setup.FILAMENT_LEN, 
+                res['genes'], 
+                self.setup.BITS, 
+                self.setup.project_folder, 
+                self.setup.RANDOM_SEED
+            )
+            ind._fitness = res['fitness']
+            ind.acc = res['acc']
+            ind.f1 = res['f1']
+            ind.prec = res['prec']
+            ind.recall = res['recall']
+            ind.cm = res['cm']
+            ind.model = res['model']
+            ind.preds = res['preds']
+            self._offspring.append(ind)
 
         self._offspring = sorted(self._offspring, key=lambda x: x.fitness, reverse=True)
 

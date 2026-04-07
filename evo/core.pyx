@@ -1,7 +1,7 @@
 # cython: language_level=3
 import numpy as np
 cimport numpy as cnp
-from libc.stdint cimport uint8_t, int8_t
+from libc.stdint cimport uint8_t, int8_t, uint64_t
 
 from cython.parallel import prange
 
@@ -10,32 +10,48 @@ from cython.parallel import prange
 def pack_bits(cnp.ndarray[int8_t, ndim=1] unpacked):
     """
     Packs an int8 array of 0s and 1s into a uint8 array (1 bit per bit).
+    Optimized to process 8 elements at a time.
     """
     cdef int n = unpacked.shape[0]
     cdef int packed_n = (n + 7) // 8
     cdef cnp.ndarray[uint8_t, ndim=1] packed = np.zeros(packed_n, dtype=np.uint8)
-    cdef int i, byte_idx, bit_idx
+    cdef int i, j, byte_idx
+    cdef uint8_t byte_val
     
-    for i in range(n):
-        byte_idx = i // 8
-        bit_idx = i % 8
-        if unpacked[i]:
-            packed[byte_idx] |= (1 << (7 - bit_idx))
+    # Process complete bytes
+    for byte_idx in range(n // 8):
+        byte_val = 0
+        for j in range(8):
+            if unpacked[byte_idx * 8 + j]:
+                byte_val |= (1 << (7 - j))
+        packed[byte_idx] = byte_val
+            
+    # Process remaining bits
+    if n % 8 != 0:
+        byte_idx = n // 8
+        byte_val = 0
+        for j in range(n % 8):
+            if unpacked[byte_idx * 8 + j]:
+                byte_val |= (1 << (7 - j))
+        packed[byte_idx] = byte_val
             
     return packed
 
 def unpack_bits(cnp.ndarray[uint8_t, ndim=1] packed, int original_n):
     """
     Unpacks a uint8 array back into an int8 array of 0s and 1s.
+    Optimized to process bits using bitwise extraction.
     """
     cdef cnp.ndarray[int8_t, ndim=1] unpacked = np.zeros(original_n, dtype=np.int8)
     cdef int i, byte_idx, bit_idx
+    cdef uint8_t byte_val
     
-    for i in range(original_n):
-        byte_idx = i // 8
-        bit_idx = i % 8
-        if (packed[byte_idx] >> (7 - bit_idx)) & 1:
-            unpacked[i] = 1
+    for byte_idx in range(packed.shape[0]):
+        byte_val = packed[byte_idx]
+        for bit_idx in range(8):
+            i = byte_idx * 8 + bit_idx
+            if i < original_n:
+                unpacked[i] = (byte_val >> (7 - bit_idx)) & 1
             
     return unpacked
 
