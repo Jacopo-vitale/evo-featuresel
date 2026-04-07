@@ -57,7 +57,7 @@ The `dev-gui` branch introduces a high-performance interactive dashboard built w
     pip install PySide6 matplotlib
     ```
 
-2.  **🛠️ Build the C Core**: If you haven't already, compile the Cython extension:
+2.  **🛠️ Build the C Core**: If you haven't already, compile the Cython extension. **Note**: If you run a clean command (like `git clean`), you must re-run this:
     ```bash
     python setup.py build_ext --inplace
     ```

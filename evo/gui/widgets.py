@@ -18,25 +18,25 @@ class MplCanvas(FigureCanvasQTAgg):
         
         # 1. Top: Fitness Plot
         self.ax_fitness = self.fig.add_subplot(2, 1, 1)
-        self.ax_fitness.set_title("📈 Evolution Progress (MCC)", fontsize=10, fontweight='bold')
+        self.ax_fitness.set_title("Evolution Progress (MCC)", fontsize=10, fontweight='bold')
         self.ax_fitness.set_xlabel("Generation")
         self.ax_fitness.set_ylabel("MCC")
         self.ax_fitness.grid(True, linestyle='--', alpha=0.6)
         
         # 2. Bottom Left: Model Distribution (Pie)
         self.ax_model = self.fig.add_subplot(2, 2, 3)
-        self.ax_model.set_title("🍕 Model Distribution", fontsize=10, fontweight='bold')
+        self.ax_model.set_title("Model Distribution", fontsize=10, fontweight='bold')
         
         # 3. Bottom Right: Feature Frequency (Bar)
         self.ax_features = self.fig.add_subplot(2, 2, 4)
-        self.ax_features.set_title("📊 Top Features Frequency", fontsize=10, fontweight='bold')
+        self.ax_features.set_title("Top Features Frequency", fontsize=10, fontweight='bold')
         
         self.fig.tight_layout(pad=3.0)
         super().__init__(self.fig)
 
     def plot_data(self, generations, best_fitness, avg_fitness):
         self.ax_fitness.clear()
-        self.ax_fitness.set_title("📈 Evolution Progress (MCC)", fontsize=10, fontweight='bold')
+        self.ax_fitness.set_title("Evolution Progress (MCC)", fontsize=10, fontweight='bold')
         self.ax_fitness.set_xlabel("Generation")
         self.ax_fitness.set_ylabel("MCC")
         self.ax_fitness.grid(True, linestyle='--', alpha=0.6)
@@ -61,7 +61,7 @@ class MplCanvas(FigureCanvasQTAgg):
         """
         # --- Model Distribution (Pie) ---
         self.ax_model.clear()
-        self.ax_model.set_title("🍕 Model Distribution", fontsize=10, fontweight='bold')
+        self.ax_model.set_title("Model Distribution", fontsize=10, fontweight='bold')
         model_counts = stats.get('model_counts', {})
         if model_counts:
             labels = list(model_counts.keys())
@@ -73,7 +73,7 @@ class MplCanvas(FigureCanvasQTAgg):
         
         # --- Feature Frequency (Bar) ---
         self.ax_features.clear()
-        self.ax_features.set_title("📊 Top Features Frequency", fontsize=10, fontweight='bold')
+        self.ax_features.set_title("Top Features Frequency", fontsize=10, fontweight='bold')
         feat_freq = stats.get('feat_freq', [])
         if feat_freq:
             # Show only top 15 features

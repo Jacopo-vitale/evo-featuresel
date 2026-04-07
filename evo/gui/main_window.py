@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QSpinBox, QDoubleSpinBox, QPlainTextEdit, QGroupBox, QFormLayout
 )
 from PySide6.QtCore import Qt, Slot
+from PySide6.QtGui import QIcon
 
 from evo.gui.widgets import MplCanvas
 from evo.gui.worker import EvolutionWorker
@@ -17,8 +18,13 @@ from evo.utils import Setup
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("🚀 evo-featuresel Dashboard")
+        self.setWindowTitle("evo-featuresel Dashboard")
         self.resize(1100, 800)
+        
+        # Set Application Icon
+        icon_path = os.path.join("assets", "dna.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
 
         # Evolution stats for plotting
         self.history_gen = []
