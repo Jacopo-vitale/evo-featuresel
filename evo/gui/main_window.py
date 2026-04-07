@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("evo-featuresel Dashboard")
-        self.resize(1100, 800)
+        self.resize(1200, 850)
         
         # Set Application Icon
         icon_path = os.path.join("assets", "dna.png")
@@ -37,7 +37,13 @@ class MainWindow(QMainWindow):
     def _init_ui(self):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
-        layout = QVBoxLayout(main_widget)
+        main_layout = QHBoxLayout(main_widget)
+        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+
+        # ================= Sidebar (Left) =================
+        sidebar = QVBoxLayout()
+        sidebar.setSpacing(15)
 
         # --- 📂 Dataset Selection ---
         dataset_group = QGroupBox("📁 Dataset Configuration")
@@ -50,30 +56,28 @@ class MainWindow(QMainWindow):
         self.test_path = QLineEdit("")
         self.test_labels_path = QLineEdit("")
         
-        def create_file_row(label, line_edit, is_label=False):
+        def create_file_row(label, line_edit):
             row = QHBoxLayout()
             row.addWidget(line_edit)
-            btn = QPushButton("Browse")
+            btn = QPushButton("...")
+            btn.setFixedWidth(30)
             btn.clicked.connect(lambda: self._on_browse_general(line_edit))
             row.addWidget(btn)
             dataset_layout.addRow(label, row)
 
         create_file_row("Train Features:", self.train_path)
-        create_file_row("Train Labels (opt):", self.train_labels_path)
-        create_file_row("Validation Features:", self.val_path)
-        create_file_row("Validation Labels (opt):", self.val_labels_path)
+        create_file_row("Train Labels:", self.train_labels_path)
+        create_file_row("Val Features:", self.val_path)
+        create_file_row("Val Labels:", self.val_labels_path)
         create_file_row("Test Features:", self.test_path)
-        create_file_row("Test Labels (opt):", self.test_labels_path)
+        create_file_row("Test Labels:", self.test_labels_path)
         
         dataset_group.setLayout(dataset_layout)
-        layout.addWidget(dataset_group)
+        sidebar.addWidget(dataset_group)
 
-        # --- ⚙️ Parameters & 📊 Graph ---
-        middle_layout = QHBoxLayout()
-        
-        # Parameters
+        # --- ⚙️ Parameters ---
         param_group = QGroupBox("⚙️ Algorithm Parameters")
-        form_layout = QFormLayout()
+        param_form = QFormLayout()
         
         self.pop_size = QSpinBox()
         self.pop_size.setRange(10, 1000)
@@ -95,11 +99,20 @@ class MainWindow(QMainWindow):
         self.cv_folds = QSpinBox()
         self.cv_folds.setRange(1, 10)
         self.cv_folds.setValue(1)
-        self.cv_folds.setToolTip("1 = No CV (Train/Val split). >1 = Outer CV (folds)")
+        
+        param_form.addRow("Population Size:", self.pop_size)
+        param_form.addRow("Generations:", self.generations)
+        param_form.addRow("Random Seed:", self.seed)
+        param_form.addRow("Mutation Alpha:", self.alpha)
+        param_form.addRow("Outer CV Folds:", self.cv_folds)
+        
+        param_group.setLayout(param_form)
+        sidebar.addWidget(param_group)
 
+        # --- 🚀 Execution Buttons ---
         self.start_btn = QPushButton("🚀 Run Evolution")
-        self.start_btn.setFixedHeight(40)
-        self.start_btn.setStyleSheet("background-color: #27ae60; color: white; font-weight: bold;")
+        self.start_btn.setFixedHeight(45)
+        self.start_btn.setStyleSheet("background-color: #27ae60; color: white; font-weight: bold; font-size: 11pt;")
         self.start_btn.clicked.connect(self._on_start)
 
         self.stop_btn = QPushButton("🛑 Stop")
@@ -108,28 +121,20 @@ class MainWindow(QMainWindow):
         self.stop_btn.setStyleSheet("background-color: #c0392b; color: white; font-weight: bold;")
         self.stop_btn.clicked.connect(self._on_stop)
         
-        btn_layout = QHBoxLayout()
-        btn_layout.addWidget(self.start_btn, 2)
-        btn_layout.addWidget(self.stop_btn, 1)
+        sidebar.addWidget(self.start_btn)
+        sidebar.addWidget(self.stop_btn)
+        sidebar.addStretch()
+        
+        main_layout.addLayout(sidebar, 1) # Sidebar weight 1
 
-        form_layout.addRow("Population Size:", self.pop_size)
-        form_layout.addRow("Generations:", self.generations)
-        form_layout.addRow("Random Seed:", self.seed)
-        form_layout.addRow("Mutation Alpha:", self.alpha)
-        form_layout.addRow("Outer CV Folds:", self.cv_folds)
-        form_layout.addRow("", btn_layout)
-        param_group.setLayout(form_layout)
-        
-        middle_layout.addWidget(param_group, 1)
-        
-        # Graph
-        self.canvas = MplCanvas(self)
-        middle_layout.addWidget(self.canvas, 3) 
-        middle_layout.setContentsMargins(0, 0, 0, 0)
-        middle_layout.setSpacing(10)
-        
-        layout.addLayout(middle_layout)
+        # ================= Main Area (Right) =================
+        content = QVBoxLayout()
+        content.setSpacing(10)
 
+        # --- 📊 Graph ---
+        self.canvas = MplCanvas(self, width=8, height=10)
+        content.addWidget(self.canvas, 10) # Heavy stretch for graphs
+        
         # --- 🏆 Best Results ---
         self.results_group = QGroupBox("🏆 Best Individual Results")
         self.results_group.setVisible(False)
@@ -146,30 +151,33 @@ class MainWindow(QMainWindow):
             results_layout.addWidget(lbl)
         
         self.results_group.setLayout(results_layout)
-        layout.addWidget(self.results_group)
+        content.addWidget(self.results_group)
 
         # --- 📟 Console ---
         console_group = QGroupBox("📟 Integrated Console")
         console_layout = QVBoxLayout()
         self.console = QPlainTextEdit()
         self.console.setReadOnly(True)
-        self.console.setStyleSheet("background-color: #1e1e1e; color: #d4d4d4; font-family: 'Consolas'; font-size: 10pt;")
+        self.console.setMaximumHeight(180) # Fixed max height to save space
+        self.console.setStyleSheet("background-color: #1e1e1e; color: #d4d4d4; font-family: 'Consolas'; font-size: 9pt;")
         console_layout.addWidget(self.console)
         console_group.setLayout(console_layout)
-        layout.addWidget(console_group)
+        content.addWidget(console_group)
 
         # --- 🕒 Status Bar ---
-        self.status_bar = QHBoxLayout()
+        status_bar_layout = QHBoxLayout()
         self.avg_feat_lbl = QLabel("Avg Features: -")
         self.gen_time_lbl = QLabel("Gen Time: -")
         self.eta_lbl = QLabel("ETA: -")
         
         for lbl in [self.avg_feat_lbl, self.gen_time_lbl, self.eta_lbl]:
-            lbl.setStyleSheet("color: #7f8c8d; font-size: 9pt;")
-            self.status_bar.addWidget(lbl)
-            self.status_bar.addStretch()
+            lbl.setStyleSheet("color: #7f8c8d; font-size: 9pt; font-weight: bold;")
+            status_bar_layout.addWidget(lbl)
+            status_bar_layout.addStretch()
             
-        layout.addLayout(self.status_bar)
+        content.addLayout(status_bar_layout)
+        
+        main_layout.addLayout(content, 4) # Content area weight 4
 
     def _setup_logging(self):
         self.log_handler = QtLoggingHandler()
