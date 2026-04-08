@@ -25,7 +25,7 @@ def get_population_stats(population, bits):
     
     for ind in population:
         # Model type
-        m_type = type(ind.model).__name__ if ind.model else "None"
+        m_type = type(ind.model).__name__ if ind.model is not None else "None"
         model_counts[m_type] = model_counts.get(m_type, 0) + 1
         
         # Features (unpack genes)
@@ -53,7 +53,7 @@ def run_single_fold(args):
     setup.BITS = {
         'features': X_train.shape[1],
         'model_selection': 2,
-        'model_params': 11,
+        'model_params': 13,
     }
     setup.FILAMENT_LEN = sum(setup.BITS.values())
     setup.DATA = (X_train, X_val)
@@ -195,7 +195,7 @@ class EvolutionWorker(QThread):
                 setup.BITS = {
                     'features': X_train_full.shape[1],
                     'model_selection': 2,
-                    'model_params': 11,
+                    'model_params': 13,
                 }
                 setup.FILAMENT_LEN = sum(setup.BITS.values())
                 setup.DATA = data_evo

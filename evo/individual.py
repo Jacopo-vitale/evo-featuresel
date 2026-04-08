@@ -15,7 +15,7 @@ try:
         decode_individual,
         fast_binary_to_decimal_packed,
         fast_binary_metrics
-    )
+    ) 
 except ImportError:
     # Fallback implementations omitted for brevity but should be kept in a real scenario
     # or just assume Cython is available since we are in a dev branch.

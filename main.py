@@ -105,7 +105,7 @@ def main():
     setup.BITS = {
         'features': data[0].shape[1],
         'model_selection': 2,
-        'model_params': 11,
+        'model_params': 13,
     }
     
     setup.FILAMENT_LEN = sum(setup.BITS.values())
