@@ -58,6 +58,9 @@ class MainWindow(QMainWindow):
         
         # Set initial plot state
         self._update_plot()
+        
+        # Track saved state
+        self._last_saved_params = self._get_params()
 
     def _init_ui(self):
         main_widget = QWidget()
@@ -276,6 +279,56 @@ class MainWindow(QMainWindow):
         save_action = QAction("Save Configuration...", self)
         save_action.triggered.connect(self._on_save_config)
         file_menu.addAction(save_action)
+        
+        file_menu.addSeparator()
+
+        reset_action = QAction("Reset", self)
+        reset_action.triggered.connect(self._on_reset)
+        file_menu.addAction(reset_action)
+
+        exit_action = QAction("Exit", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        
+        help_menu = menu_bar.addMenu("?")
+        about_action = QAction("About evo-featuresel...", self)
+        about_action.triggered.connect(self._on_about)
+        help_menu.addAction(about_action)
+
+    def _on_about(self):
+        QMessageBox.about(
+            self,
+            "About evo-featuresel",
+            "<h3>evo-featuresel Dashboard</h3>"
+            "<p>A fast, multithreaded Binary Evolutionary Algorithm for "
+            "automatic feature selection and hyperparameter optimization.</p>"
+            "<p>It uses genetic algorithms and Cython/OpenMP to efficiently find "
+            "the optimal subset of features and model configurations for your data.</p>"
+        )
+
+    def closeEvent(self, event):
+        if self._get_params() == getattr(self, '_last_saved_params', None):
+            event.accept()
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Save Configuration?",
+            "Do you want to save the current configuration before exiting?",
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            QMessageBox.Save
+        )
+        if reply == QMessageBox.Save:
+            self._on_save_config()
+            # If the user cancelled the save dialog, params won't match, so don't close.
+            if self._get_params() == getattr(self, '_last_saved_params', None):
+                event.accept()
+            else:
+                event.ignore()
+        elif reply == QMessageBox.Cancel:
+            event.ignore()
+        else:
+            event.accept()
 
     def _get_params(self):
         return {
@@ -338,6 +391,7 @@ class MainWindow(QMainWindow):
                 with open(file_path, 'w', encoding='utf-8') as f:
                     json.dump(params, f, indent=4)
                 self.console.appendPlainText(f"Configuration saved to {file_path}")
+                self._last_saved_params = params
             except Exception as e:
                 QMessageBox.critical(self, "Save Error", f"Failed to save configuration:\\n{e}")
 
@@ -349,6 +403,7 @@ class MainWindow(QMainWindow):
                     params = json.load(f)
                 self._set_params(params)
                 self.console.appendPlainText(f"Configuration loaded from {file_path}")
+                self._last_saved_params = self._get_params()
             except Exception as e:
                 QMessageBox.critical(self, "Load Error", f"Failed to load configuration:\\n{e}")
 

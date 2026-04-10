@@ -166,3 +166,5 @@ experiment*
 *.csv
 paper/
 .vscode/
+qt-cython-expert/
+GEMINI.md

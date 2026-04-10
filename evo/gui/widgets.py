@@ -170,12 +170,10 @@ class MplCanvas(FigureCanvasQTAgg):
         
         if complexity_dist:
             # Create a histogram of the number of features selected
-            # Bins should cover every integer from 0 to n_features
             n_features = stats.get('n_features', max(complexity_dist) if complexity_dist else 100)
             
-            # Number of bins equal to number of feature bits + 1 (for 0 features)
-            # We shift by -0.5 so bars are centered on the integer values
-            bins = np.arange(-0.5, n_features + 1.5, 1)
+            # User specifically requested setting the number of bins equal to the number of features
+            bins = max(1, n_features)
             
             self.ax_features.hist(
                 complexity_dist, 
