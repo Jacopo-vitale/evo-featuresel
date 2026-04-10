@@ -14,31 +14,52 @@ from main import preprocessing_general
 
 def get_population_stats(population, bits):
     """
-    Calculate model distribution and feature frequency from a population.
+    Calculate model distribution and complexity distribution from a population.
     """
     model_counts = {}
-    total_pop = len(population)
-    
-    # Feature counts
     n_features = bits['features']
-    feat_sums = np.zeros(n_features, dtype=np.int32)
+    complexity_dist = []
     
     for ind in population:
+        # Ensure phenotypes are ready for stats
+        ind.ensure_phenotype()
+        
         # Model type
         m_type = type(ind.model).__name__ if ind.model is not None else "None"
         model_counts[m_type] = model_counts.get(m_type, 0) + 1
         
-        # Features (unpack genes)
+        # Count selected features
         if ind.radiomics is not None:
-            feat_sums += ind.radiomics.astype(np.int32)
+            complexity_dist.append(int(ind.radiomics.sum()))
+        else:
+            complexity_dist.append(0)
             
-    # Sort features by frequency
-    feat_freq = sorted(enumerate(feat_sums), key=lambda x: x[1], reverse=True)
+    # Calculate population averages for all metrics
+    pop_mcc = np.mean([ind._fitness + (ind.penalty_factor * (ind.radiomics.sum()/n_features)) if ind.radiomics is not None else ind._fitness for ind in population])
+    pop_acc = np.mean([ind.acc if ind.acc is not None else 0 for ind in population])
+    pop_f1 = np.mean([ind.f1 if ind.f1 is not None else 0 for ind in population])
+    pop_prec = np.mean([ind.prec if ind.prec is not None else 0 for ind in population])
+    pop_recall = np.mean([ind.recall if ind.recall is not None else 0 for ind in population])
+    
+    # Get best individual metrics (assuming population is sorted)
+    best = population[0]
+    best_mcc = best._fitness + (best.penalty_factor * (best.radiomics.sum()/n_features)) if best.radiomics is not None else best._fitness
     
     return {
         'model_counts': model_counts,
-        'feat_freq': feat_freq,
-        'avg_features': np.mean([ind.radiomics.sum() if ind.radiomics is not None else 0 for ind in population])
+        'complexity_dist': complexity_dist,
+        'n_features': n_features,
+        'avg_features': np.mean(complexity_dist) if complexity_dist else 0,
+        'avg_mcc': pop_mcc,
+        'avg_acc': pop_acc,
+        'avg_f1': pop_f1,
+        'avg_prec': pop_prec,
+        'avg_recall': pop_recall,
+        'best_mcc': best_mcc,
+        'best_acc': best.acc if best.acc is not None else 0,
+        'best_f1': best.f1 if best.f1 is not None else 0,
+        'best_prec': best.prec if best.prec is not None else 0,
+        'best_recall': best.recall if best.recall is not None else 0
     }
 
 def run_single_fold(args):
@@ -48,8 +69,15 @@ def run_single_fold(args):
     fold_k, X_train, y_train, X_val, y_val, params = args
     
     # Configure Setup
-    setup = Setup(project_prefix=f'gui_exp_fold_{fold_k}_')
+    setup = Setup(
+        project_prefix=params.get('project_prefix', f'gui_exp_fold_{fold_k}_'),
+        experiment_folder=params.get('experiment_folder', 'experiment'),
+        use_timestamp=params.get('use_timestamp', True),
+        DESCRIPTION=params.get('description', "Evolutionary Feature Selection Experiment")
+    )
+    setup.METADATA = params.copy() # Store all input params
     setup.POP_SIZE = params['pop_size']
+    setup.PENALTY_FACTOR = params.get('penalty_factor', 0.01)
     setup.BITS = {
         'features': X_train.shape[1],
         'model_selection': 2,
@@ -72,7 +100,9 @@ def run_single_fold(args):
     
     for epoch in range(generations):
         runner.step(epoch, generations, alpha=alpha)
-        
+
+    runner.save_best_result()
+    runner.save_detailed_report()
     best = pop.best_individual
     stats = get_population_stats(pop.population, setup.BITS)
     
@@ -112,7 +142,10 @@ class EvolutionWorker(QThread):
                 self.params['test_path'],
                 self.params.get('train_labels_path'),
                 self.params.get('val_labels_path'),
-                self.params.get('test_labels_path')
+                self.params.get('test_labels_path'),
+                pca=self.params.get('pca', False),
+                lda=self.params.get('lda', False),
+                scaler_type=self.params.get('scaler_type', "Standard")
             )
             
             X_train_full, X_val, X_test = data_all
@@ -171,7 +204,8 @@ class EvolutionWorker(QThread):
                     'recall': avg_recall,
                     'model_type': f"{most_common_model} (CV mode)",
                     'features_count': avg_features,
-                    'std_fitness': std_fitness
+                    'std_fitness': std_fitness,
+                    'output_folder': None
                 }
                 
                 logging.info(f"🏆 CV Completed. Avg MCC: {avg_fitness:.4f} ± {std_fitness:.4f}")
@@ -190,8 +224,15 @@ class EvolutionWorker(QThread):
                     data_evo = (X_train_full, X_val)
                     labels_evo = (y_train_full, y_val)
 
-                setup = Setup(project_prefix='gui_exp_')
+                setup = Setup(
+                    project_prefix=self.params.get('project_prefix', 'gui_exp_'),
+                    experiment_folder=self.params.get('experiment_folder', 'experiment'),
+                    use_timestamp=self.params.get('use_timestamp', True),
+                    DESCRIPTION=self.params.get('description', "Evolutionary Feature Selection Experiment")
+                )
+                setup.METADATA = self.params.copy()
                 setup.POP_SIZE = self.params['pop_size']
+                setup.PENALTY_FACTOR = self.params.get('penalty_factor', 0.01)
                 setup.BITS = {
                     'features': X_train_full.shape[1],
                     'model_selection': 2,
@@ -239,6 +280,8 @@ class EvolutionWorker(QThread):
 
                 if self.is_running:
                     runner.log_tail()
+                    runner.save_best_result()
+                    runner.save_detailed_report()
                     best = pop.best_individual
                     results = {
                         'fitness': best.fitness,
@@ -247,7 +290,8 @@ class EvolutionWorker(QThread):
                         'prec': best.prec,
                         'recall': best.recall,
                         'model_type': type(best.model).__name__,
-                        'features_count': int(best.radiomics.sum()) if best.radiomics is not None else 0
+                        'features_count': int(best.radiomics.sum()) if best.radiomics is not None else 0,
+                        'output_folder': setup.project_folder
                     }
                     self.finished.emit(results)
 

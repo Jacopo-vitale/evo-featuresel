@@ -59,7 +59,7 @@ class BaseIndividual(ABC):
     
     
 class Individual(BaseIndividual):
-    def __init__(self, filament_len, genes, bits: dict, project_folder, random_state) -> None:
+    def __init__(self, filament_len, genes, bits: dict, project_folder, random_state, penalty_factor: float = 0.0) -> None:
         # If genes are int8 (unpacked), pack them
         if genes.dtype == np.int8:
             genes = pack_bits(genes)
@@ -68,7 +68,7 @@ class Individual(BaseIndividual):
         
         self.bits = bits
         self.random_state = random_state 
-
+        self.penalty_factor = penalty_factor
         self.model = None
         self.radiomics = None
         self.model_sel = None
@@ -82,6 +82,14 @@ class Individual(BaseIndividual):
         self.recall = None
         self.cm = None
 
+    def ensure_phenotype(self):
+        """Ensure radiomics and model parameters are decoded from genes."""
+        if self.radiomics is not None:
+            return
+            
+        self.radiomics_packed, self.model_sel, self.model_param = self.to_phenotype()
+        self.radiomics = unpack_bits(self.radiomics_packed, self.bits['features']).astype(bool)
+
     def fitness_eval(self, DATA: tuple, LABELS: tuple) -> float:
         # Check if any gene is set (simplified for packed)
         if not np.any(self.genes):
@@ -93,10 +101,7 @@ class Individual(BaseIndividual):
             X_train, X_test = DATA
             y_train, y_test = LABELS
                         
-            self.radiomics_packed, self.model_sel, self.model_param = self.to_phenotype()
-            
-            # For radiomics, we need the unpacked boolean mask for sklearn
-            self.radiomics = unpack_bits(self.radiomics_packed, self.bits['features']).astype(bool)
+            self.ensure_phenotype()
 
             match (self.model_sel):
                 case 0:
@@ -129,7 +134,12 @@ class Individual(BaseIndividual):
             
             mcc, acc, f1, prec, recall, cm = fast_binary_metrics(y_test_fast, preds_fast)
             
-            self._fitness = mcc
+            # Apply feature selection penalty
+            n_features = self.bits['features']
+            n_selected = self.radiomics.sum()
+            penalty = self.penalty_factor * (n_selected / n_features)
+            
+            self._fitness = mcc - penalty
             self.acc = acc
             self.f1 = f1
             self.prec = prec

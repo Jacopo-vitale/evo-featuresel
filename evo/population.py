@@ -55,7 +55,8 @@ class Population(object):
             genes=genes,
             bits=self.setup.BITS,
             project_folder=self.setup.project_folder,
-            random_state=self.setup.RANDOM_SEED
+            random_state=self.setup.RANDOM_SEED,
+            penalty_factor=self.setup.PENALTY_FACTOR
         )
         individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
         return individual
@@ -63,9 +64,9 @@ class Population(object):
     @staticmethod
     def _evaluate_individual(args):
         """Helper for ProcessPoolExecutor"""
-        genes, filament_len, bits, project_folder, random_state, DATA, LABELS = args
+        genes, filament_len, bits, project_folder, random_state, penalty_factor, DATA, LABELS = args
         from evo.individual import Individual
-        ind = Individual(filament_len, genes, bits, project_folder, random_state)
+        ind = Individual(filament_len, genes, bits, project_folder, random_state, penalty_factor)
         ind.fitness_eval(DATA, LABELS)
         # Return serializable results
         return {
@@ -112,34 +113,40 @@ class Population(object):
         if remaining > 0:
             logger.info(f"Evaluating {remaining} individuals in parallel...")
             
-            # Prepare arguments for ProcessPool
+            # Prepare arguments for ProcessPool with unique sub-seeds
             random_genes_list = []
             for _ in range(remaining):
                 unpacked = self.setup.rng.choice(self.setup.GENES, size=self.setup.FILAMENT_LEN).astype(np.int8)
                 random_genes_list.append(pack_bits(unpacked))
             
+            # Use SeedSequence to generate independent child seeds for workers
+            ss = np.random.SeedSequence(self.setup.RANDOM_SEED)
+            child_seeds = ss.spawn(remaining)
+
             eval_args = [
                 (
                     genes, 
                     self.setup.FILAMENT_LEN, 
                     self.setup.BITS, 
                     self.setup.project_folder, 
-                    self.setup.RANDOM_SEED, 
+                    int(child_seeds[i].generate_state(1)[0]), # Unique sub-seed
+                    self.setup.PENALTY_FACTOR,
                     self.setup.DATA, 
                     self.setup.LABELS
-                ) for genes in random_genes_list
+                ) for i, genes in enumerate(random_genes_list)
             ]
             
             with ProcessPoolExecutor() as executor:
                 results = list(executor.map(Population._evaluate_individual, eval_args))
             
-            for res in results:
+            for i, res in enumerate(results):
                 ind = Individual(
                     self.setup.FILAMENT_LEN, 
                     res['genes'], 
                     self.setup.BITS, 
                     self.setup.project_folder, 
-                    self.setup.RANDOM_SEED
+                    int(child_seeds[i].generate_state(1)[0]), # Use same sub-seed as evaluation
+                    penalty_factor=self.setup.PENALTY_FACTOR
                 )
                 ind._fitness = res['fitness']
                 ind.acc = res['acc']
@@ -184,7 +191,8 @@ class Population(object):
                 genes=offspring_genes_pool[i],
                 bits=self.setup.BITS,
                 project_folder=self.setup.project_folder,
-                random_state=self.setup.RANDOM_SEED
+                random_state=self.setup.RANDOM_SEED,
+                penalty_factor=self.setup.PENALTY_FACTOR
             ) for i in range(n_pop)
         ]
             
@@ -207,13 +215,19 @@ class Population(object):
         
         # 3. Update Individual genes and re-evaluate fitness
         logger.info(f"Evaluating {len(mutated_pool)} mutated individuals in parallel...")
+        
+        # Use SeedSequence for independent child seeds
+        ss = np.random.SeedSequence(self.setup.RANDOM_SEED + epoch) # Unique per generation
+        child_seeds = ss.spawn(len(mutated_pool))
+
         eval_args = [
             (
                 mutated_pool[i], 
                 self.setup.FILAMENT_LEN, 
                 self.setup.BITS, 
                 self.setup.project_folder, 
-                self.setup.RANDOM_SEED, 
+                int(child_seeds[i].generate_state(1)[0]), 
+                self.setup.PENALTY_FACTOR,
                 self.setup.DATA, 
                 self.setup.LABELS
             ) for i in range(len(mutated_pool))
@@ -223,13 +237,14 @@ class Population(object):
             results = list(executor.map(Population._evaluate_individual, eval_args))
         
         self._offspring = []
-        for res in results:
+        for i, res in enumerate(results):
             ind = Individual(
                 self.setup.FILAMENT_LEN, 
                 res['genes'], 
                 self.setup.BITS, 
                 self.setup.project_folder, 
-                self.setup.RANDOM_SEED
+                int(child_seeds[i].generate_state(1)[0]), # Use same sub-seed as evaluation
+                penalty_factor=self.setup.PENALTY_FACTOR
             )
             ind._fitness = res['fitness']
             ind.acc = res['acc']

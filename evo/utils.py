@@ -17,16 +17,27 @@ class Setup:
     DATA: Optional[Tuple[np.ndarray, np.ndarray]] = None
     LABELS: Optional[Tuple[np.ndarray, np.ndarray]] = None
     BITS: Dict[str, int] = field(default_factory=dict)
-    DESCRIPTION: str = ""
+    DESCRIPTION: str = "Evolutionary Feature Selection Experiment"
     RANDOM_SEED: int = 42
+    PENALTY_FACTOR: float = 0.01  # Penalty for each selected feature as a ratio
+    N_ROBUSTNESS_RUNS: int = 1    # Number of runs for stability check
+    METADATA: Dict[str, Any] = field(default_factory=dict) # Store arbitrary config metadata
     
     experiment_folder: str = 'experiment'
     project_prefix: str = ''
+    use_timestamp: bool = True
     
     def __post_init__(self):
+        folder_name = self.project_prefix
+        if self.use_timestamp:
+            folder_name += dt.datetime.now().strftime('%Y%m%d%H%M')
+        
+        if not folder_name:
+            folder_name = "latest_run"
+
         self.project_folder = os.path.join(
             self.experiment_folder,
-            f"{self.project_prefix}{dt.datetime.now().strftime('%Y%m%d%H%M')}"
+            folder_name
         )
         os.makedirs(self.experiment_folder, exist_ok=True)
         os.makedirs(self.project_folder, exist_ok=True)

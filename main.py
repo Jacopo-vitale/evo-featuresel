@@ -3,7 +3,9 @@ import sys
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from joblib import load
 
 from evo.utils import Setup
@@ -27,7 +29,8 @@ def preprocessing(train_subj, test_subj, dataset_path):
     return ((X_train, X_test), (y_train, y_test))
 
 def preprocessing_general(train_path, val_path, test_path, 
-                          train_labels_path=None, val_labels_path=None, test_labels_path=None):
+                          train_labels_path=None, val_labels_path=None, test_labels_path=None,
+                          pca=False, lda=False, scaler_type="Standard"):
     """
     Generalized preprocessing that loads separate files for train, val, and test.
     If label paths are not provided, it assumes the last column is labels.
@@ -55,13 +58,37 @@ def preprocessing_general(train_path, val_path, test_path,
     if X_train is None:
         raise ValueError("Train dataset is required.")
 
-    imputer, scaler = SimpleImputer(), StandardScaler()
+    imputer = SimpleImputer()
+    if scaler_type == "MinMax":
+        scaler = MinMaxScaler()
+    else:
+        scaler = StandardScaler()
+        
     X_train = scaler.fit_transform(imputer.fit_transform(X_train))
     
     if X_val is not None:
         X_val = scaler.transform(imputer.transform(X_val))
     if X_test is not None:
         X_test = scaler.transform(imputer.transform(X_test))
+
+    # Apply PCA or LDA if requested
+    if pca:
+        pca_model = PCA(n_components=0.95) # Keep 95% of variance
+        X_train = pca_model.fit_transform(X_train)
+        if X_val is not None:
+            X_val = pca_model.transform(X_val)
+        if X_test is not None:
+            X_test = pca_model.transform(X_test)
+        print(f"PCA applied: {X_train.shape[1]} components retained.")
+        
+    elif lda:
+        lda_model = LDA()
+        X_train = lda_model.fit_transform(X_train, y_train)
+        if X_val is not None:
+            X_val = lda_model.transform(X_val)
+        if X_test is not None:
+            X_test = lda_model.transform(X_test)
+        print(f"LDA applied: {X_train.shape[1]} components retained.")
         
     # Return (X_train, X_val, X_test), (y_train, y_val, y_test)
     return ((X_train, X_val, X_test), (y_train, y_val, y_test))
