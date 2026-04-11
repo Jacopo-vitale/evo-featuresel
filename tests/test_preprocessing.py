@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
-from main import preprocessing_general
+from evo.utils import preprocessing_general
 
 def test_pca_preprocessing(tmp_path):
     # Create dummy feature file with high correlation to ensure PCA reduces dimensions

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 import pytest
-from main import preprocessing_general
+from evo.utils import preprocessing_general
 from evo.core import fast_binary_metrics, pack_bits, unpack_bits
 from evo.individual import Individual
 from evo.gui.worker import run_single_fold
@@ -63,27 +63,35 @@ def test_individual_fitness_eval_uses_cython_metrics():
     DATA = (X, X)
     LABELS = (y, y)
     
-    bits = {'features': 10, 'model_selection': 2, 'model_params': 11}
-    filament_len = sum(bits.values())
-    genes = np.ones(filament_len, dtype=np.int8)
+    from evo.utils import Setup
+    setup = Setup()
+    setup.BITS = {'features': 10}
+    setup.calculate_filament_len()
+    layout = setup.get_cython_layout()
+    enabled_models = [m for m in setup.INDIVIDUAL_CONFIG['models'] if m['enabled']]
     
-    ind = Individual(filament_len, genes, bits, ".", 42)
+    genes = np.ones(setup.FILAMENT_LEN, dtype=np.int8)
+    
+    ind = Individual(setup.FILAMENT_LEN, genes, setup.BITS, ".", 42, 
+                     cython_layout=layout, enabled_models=enabled_models)
     ind.fitness_eval(DATA, LABELS)
     
     assert ind.fitness >= -1.0 and ind.fitness <= 1.0
     assert hasattr(ind, 'cm')
-    assert isinstance(ind.cm, list) # Cython returns cm as list of lists
+    assert isinstance(ind.cm, list) 
 
 def test_run_single_fold_logic():
     # Smoke test for the helper function used in Outer CV
     X = np.random.randn(50, 10)
     y = np.random.randint(0, 2, 50)
     
+    from evo.utils import get_default_individual_config
     params = {
         'pop_size': 10,
         'generations': 2,
         'seed': 42,
-        'alpha': 0.5
+        'alpha': 0.5,
+        'individual_config': get_default_individual_config()
     }
     
     # Simulating one fold

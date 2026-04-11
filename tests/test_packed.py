@@ -19,25 +19,39 @@ def test_packing():
     np.testing.assert_array_equal(unpacked, unpacked_back)
 
 def test_decode_individual():
-    # Setup bits structure
-    bits = {'features': 8, 'model_selection': 2}
-    # 8 bits features, 2 bits model selection, rest params
-    # Let's target RandomForest (00)
-    # Features: 10101010 (170)
-    # Model: 00
-    # Params (n_estimators): 000001010 (10 bits total, first 9 for n_estimators) -> 10
-    
-    unpacked = np.zeros(30, dtype=np.int8)
-    unpacked[:8] = [1, 0, 1, 0, 1, 0, 1, 0] # Features
-    unpacked[8:10] = [0, 0] # Model 0
-    unpacked[10:19] = [0, 0, 0, 0, 0, 1, 0, 1, 0] # n_estimators = 10
-    
-    packed = pack_bits(unpacked)
-    model_sel, model_param = decode_individual(packed, bits)
-    
-    assert model_sel == 0
-    assert model_param['n_estimators'] == 10
+    from evo.utils import Setup
+    setup = Setup()
+    setup.BITS = {'features': 8}
+    setup.calculate_filament_len()
 
+    # RandomForest (0) is default enabled
+    # Features: 10101010
+    # Model: 0 (if only 1 model, bits=0, but default has multiple)
+    # n_models = 6 -> bits = 3
+
+    unpacked = np.zeros(setup.FILAMENT_LEN, dtype=np.int8)
+    unpacked[:8] = [1, 0, 1, 0, 1, 0, 1, 0] # Features
+    # Default bits: features=8, model_sel=3, params=...
+    # Model 0 (RandomForest) bits = [0, 0, 0]
+    unpacked[8:11] = [0, 0, 0] 
+    # RF params: n_estimators (9 bits) = 10
+    unpacked[11:20] = [0, 0, 0, 0, 0, 1, 0, 1, 0] 
+
+    packed = pack_bits(unpacked)
+
+    param_names, param_categories, layout = setup.get_cython_layout()
+
+    model_sel, model_param = decode_individual(
+        packed, 
+        setup.BITS['features'], 
+        setup.BITS['model_selection'],
+        param_names,
+        param_categories,
+        layout
+    )
+
+    assert model_sel == 0
+    assert model_param['n_estimators'] == 10 + 2 # min_val is 2
 def test_crossover_packed():
     p1_unpacked = np.array([1, 1, 1, 1, 1, 1, 1, 1], dtype=np.int8)
     p2_unpacked = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int8)
