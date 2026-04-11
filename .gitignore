@@ -165,6 +165,6 @@ cython_debug/
 experiment*
 *.csv
 paper/
-.vscode/
-qt-cython-expert/
-GEMINI.md
+#.vscode/
+#qt-cython-expert/
+#GEMINI.md

@@ -143,10 +143,14 @@ class Runner(object):
             with open(meta_path, "w", encoding="utf-8") as f:
                 f.write("--- Experiment Configuration ---\n")
                 for k, v in self.setup.METADATA.items():
-                    f.write(f"{k}: {v}\n")
+                    if k != 'individual_config':
+                        f.write(f"{k}: {v}\n")
                 f.write(f"Final Seed used: {self.setup.RANDOM_SEED}\n")
                 f.write(f"Penalty Factor: {self.setup.PENALTY_FACTOR}\n")
                 f.write("-" * 30 + "\n")
+                f.write("--- Individual Model Layout ---\n")
+                f.write(json.dumps(self.setup.INDIVIDUAL_CONFIG, indent=4))
+                f.write("\n" + "-" * 30 + "\n")
                 
             json_meta_path = os.path.join(self.setup.project_folder, "config.evoconf")
             try:

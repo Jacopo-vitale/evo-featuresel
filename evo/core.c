@@ -2322,20 +2322,7 @@ static void __Pyx_RaiseBufferIndexError(int axis);
 /* ModInt[long].proto */
 static CYTHON_INLINE long __Pyx_mod_long(long, long, int b_is_constant);
 
-/* DictGetItem.proto */
-#if !CYTHON_COMPILING_IN_PYPY
-static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key);
-#define __Pyx_PyObject_Dict_GetItem(obj, name)\
-    (likely(PyDict_CheckExact(obj)) ?\
-     __Pyx_PyDict_GetItem(obj, name) : PyObject_GetItem(obj, name))
-#else
-#define __Pyx_PyDict_GetItem(d, key) PyObject_GetItem(d, key)
-#define __Pyx_PyObject_Dict_GetItem(obj, name)  PyObject_GetItem(obj, name)
-#endif
-
-/* PyLongCompare.proto */
-static CYTHON_INLINE int __Pyx_PyLong_BoolEqObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
-
+#define __Pyx_BufPtrStrided2d(type, buf, i0, s0, i1, s1) (type)((char*)buf + i0 * s0 + i1 * s1)
 /* GetItemInt.proto */
 #define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck, has_gil, unsafe_shared)\
     (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
@@ -2358,13 +2345,8 @@ static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
 static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
                                                      int is_list, int wraparound, int boundscheck, int unsafe_shared);
 
-/* PyLongBinop.proto */
-#if !CYTHON_COMPILING_IN_PYPY
-static CYTHON_INLINE PyObject* __Pyx_PyLong_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check);
-#else
-#define __Pyx_PyLong_AddObjC(op1, op2, intval, inplace, zerodivision_check)\
-    (inplace ? PyNumber_InPlaceAdd(op1, op2) : PyNumber_Add(op1, op2))
-#endif
+/* RaiseUnexpectedTypeError.proto */
+static int __Pyx_RaiseUnexpectedTypeError(const char *expected, PyObject *obj);
 
 /* IncludeStdlibH.proto */
 #include <stdlib.h>
@@ -2372,7 +2354,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyLong_AddObjC(PyObject *op1, PyObject *op2
 /* BufferIndexErrorNogil.proto */
 static void __Pyx_RaiseBufferIndexErrorNogil(int axis);
 
-#define __Pyx_BufPtrStrided2d(type, buf, i0, s0, i1, s1) (type)((char*)buf + i0 * s0 + i1 * s1)
 /* SharedInFreeThreading.proto */
 #if CYTHON_COMPILING_IN_CPYTHON_FREETHREADING
 #define __Pyx_shared_in_cpython_freethreading(x) shared(x)
@@ -2722,6 +2703,9 @@ static CYTHON_INLINE PyObject* __Pyx_PyLong_From_Py_intptr_t(Py_intptr_t value);
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyLong_From_PY_LONG_LONG(PY_LONG_LONG value);
 
+/* CIntFromPy.proto */
+static CYTHON_INLINE PY_LONG_LONG __Pyx_PyLong_As_PY_LONG_LONG(PyObject *);
+
 /* FormatTypeName.proto */
 #if CYTHON_COMPILING_IN_LIMITED_API
 typedef PyObject *__Pyx_TypeName;
@@ -2862,8 +2846,8 @@ static CYTHON_INLINE char *__pyx_f_5numpy_7ndarray_4data_data(PyArrayObject *__p
 /* #### Code section: typeinfo ### */
 static const __Pyx_TypeInfo __Pyx_TypeInfo_nn_int8_t = { "int8_t", NULL, sizeof(int8_t), { 0 }, 0, __PYX_IS_UNSIGNED(int8_t) ? 'U' : 'I', __PYX_IS_UNSIGNED(int8_t), 0 };
 static const __Pyx_TypeInfo __Pyx_TypeInfo_nn_uint8_t = { "uint8_t", NULL, sizeof(uint8_t), { 0 }, 0, __PYX_IS_UNSIGNED(uint8_t) ? 'U' : 'I', __PYX_IS_UNSIGNED(uint8_t), 0 };
-static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t = { "float64_t", NULL, sizeof(__pyx_t_5numpy_float64_t), { 0 }, 0, 'R', 0, 0 };
 static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t = { "int32_t", NULL, sizeof(__pyx_t_5numpy_int32_t), { 0 }, 0, __PYX_IS_UNSIGNED(__pyx_t_5numpy_int32_t) ? 'U' : 'I', __PYX_IS_UNSIGNED(__pyx_t_5numpy_int32_t), 0 };
+static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t = { "float64_t", NULL, sizeof(__pyx_t_5numpy_float64_t), { 0 }, 0, 'R', 0, 0 };
 static const __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t = { "int64_t", NULL, sizeof(__pyx_t_5numpy_int64_t), { 0 }, 0, __PYX_IS_UNSIGNED(__pyx_t_5numpy_int64_t) ? 'U' : 'I', __PYX_IS_UNSIGNED(__pyx_t_5numpy_int64_t), 0 };
 /* #### Code section: before_global_var ### */
 #define __Pyx_MODULE_NAME "evo.core"
@@ -2877,7 +2861,7 @@ int __pyx_module_is_main_evo__core = 0;
 static PyObject *__pyx_pf_3evo_4core_pack_bits(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_unpacked); /* proto */
 static PyObject *__pyx_pf_3evo_4core_2unpack_bits(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, int __pyx_v_original_n); /* proto */
 static PyObject *__pyx_pf_3evo_4core_4fast_binary_to_decimal_packed(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, int __pyx_v_start_bit, int __pyx_v_n_bits); /* proto */
-static PyObject *__pyx_pf_3evo_4core_6decode_individual(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, PyObject *__pyx_v_bits); /* proto */
+static PyObject *__pyx_pf_3evo_4core_6decode_individual(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, int __pyx_v_feat_bits, int __pyx_v_model_sel_bits, PyObject *__pyx_v_param_names, PyObject *__pyx_v_param_categories, PyArrayObject *__pyx_v_model_layouts); /* proto */
 static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_p1, PyArrayObject *__pyx_v_p2, int __pyx_v_crossover_bit, CYTHON_UNUSED int __pyx_v_total_bits); /* proto */
 static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, double __pyx_v_mutation_rate, PyArrayObject *__pyx_v_random_values, int __pyx_v_total_bits); /* proto */
 static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_parents_pool, PyArrayObject *__pyx_v_p1_indices, PyArrayObject *__pyx_v_p2_indices, PyArrayObject *__pyx_v_crossover_bits, CYTHON_UNUSED int __pyx_v_total_bits); /* proto */
@@ -2926,8 +2910,7 @@ typedef struct {
   __Pyx_CachedCFunction __pyx_umethod_PyDict_Type_pop;
   __Pyx_CachedCFunction __pyx_umethod_PyDict_Type_values;
   PyObject *__pyx_codeobj_tab[12];
-  PyObject *__pyx_string_tab[134];
-  PyObject *__pyx_number_tab[6];
+  PyObject *__pyx_string_tab[126];
 /* #### Code section: module_state_contents ### */
 /* CommonTypesMetaclass.module_state_decls */
 PyTypeObject *__pyx_CommonTypesMetaclassType;
@@ -2974,140 +2957,126 @@ static __pyx_mstatetype * const __pyx_mstate_global = &__pyx_mstate_global_stati
 #define __pyx_kp_u_evo_core_pyx __pyx_string_tab[3]
 #define __pyx_kp_u_numpy_core_multiarray_failed_to __pyx_string_tab[4]
 #define __pyx_kp_u_numpy_core_umath_failed_to_impor __pyx_string_tab[5]
-#define __pyx_n_u_C __pyx_string_tab[6]
-#define __pyx_n_u_Pyx_PyDict_NextRef __pyx_string_tab[7]
-#define __pyx_n_u_acc __pyx_string_tab[8]
-#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[9]
-#define __pyx_n_u_batch_crossover_packed __pyx_string_tab[10]
-#define __pyx_n_u_batch_mutation_packed __pyx_string_tab[11]
-#define __pyx_n_u_binary __pyx_string_tab[12]
-#define __pyx_n_u_bit_idx __pyx_string_tab[13]
-#define __pyx_n_u_bits __pyx_string_tab[14]
-#define __pyx_n_u_byte_idx __pyx_string_tab[15]
-#define __pyx_n_u_byte_val __pyx_string_tab[16]
-#define __pyx_n_u_child __pyx_string_tab[17]
-#define __pyx_n_u_cline_in_traceback __pyx_string_tab[18]
-#define __pyx_n_u_criterion __pyx_string_tab[19]
-#define __pyx_n_u_criterion_selector __pyx_string_tab[20]
-#define __pyx_n_u_cross_bit __pyx_string_tab[21]
-#define __pyx_n_u_cross_byte __pyx_string_tab[22]
-#define __pyx_n_u_crossover_bit __pyx_string_tab[23]
-#define __pyx_n_u_crossover_bits __pyx_string_tab[24]
-#define __pyx_n_u_crossover_point __pyx_string_tab[25]
-#define __pyx_n_u_decode_individual __pyx_string_tab[26]
-#define __pyx_n_u_degree __pyx_string_tab[27]
-#define __pyx_n_u_degree_bits __pyx_string_tab[28]
-#define __pyx_n_u_dtype __pyx_string_tab[29]
+#define __pyx_n_u_Pyx_PyDict_NextRef __pyx_string_tab[6]
+#define __pyx_n_u_acc __pyx_string_tab[7]
+#define __pyx_n_u_asyncio_coroutines __pyx_string_tab[8]
+#define __pyx_n_u_batch_crossover_packed __pyx_string_tab[9]
+#define __pyx_n_u_batch_mutation_packed __pyx_string_tab[10]
+#define __pyx_n_u_binary __pyx_string_tab[11]
+#define __pyx_n_u_bit_idx __pyx_string_tab[12]
+#define __pyx_n_u_byte_idx __pyx_string_tab[13]
+#define __pyx_n_u_byte_val __pyx_string_tab[14]
+#define __pyx_n_u_cat_list __pyx_string_tab[15]
+#define __pyx_n_u_child __pyx_string_tab[16]
+#define __pyx_n_u_cline_in_traceback __pyx_string_tab[17]
+#define __pyx_n_u_cross_bit __pyx_string_tab[18]
+#define __pyx_n_u_cross_byte __pyx_string_tab[19]
+#define __pyx_n_u_crossover_bit __pyx_string_tab[20]
+#define __pyx_n_u_crossover_bits __pyx_string_tab[21]
+#define __pyx_n_u_crossover_point __pyx_string_tab[22]
+#define __pyx_n_u_current_bit __pyx_string_tab[23]
+#define __pyx_n_u_decode_individual __pyx_string_tab[24]
+#define __pyx_n_u_dtype __pyx_string_tab[25]
+#define __pyx_n_u_e1 __pyx_string_tab[26]
+#define __pyx_n_u_e2 __pyx_string_tab[27]
+#define __pyx_n_u_e3 __pyx_string_tab[28]
+#define __pyx_n_u_e_val __pyx_string_tab[29]
 #define __pyx_n_u_empty __pyx_string_tab[30]
-#define __pyx_n_u_entropy __pyx_string_tab[31]
-#define __pyx_n_u_esponente __pyx_string_tab[32]
-#define __pyx_n_u_evo_core __pyx_string_tab[33]
-#define __pyx_n_u_exponential __pyx_string_tab[34]
-#define __pyx_n_u_f1 __pyx_string_tab[35]
-#define __pyx_n_u_fast_binary_metrics __pyx_string_tab[36]
-#define __pyx_n_u_fast_binary_to_decimal __pyx_string_tab[37]
-#define __pyx_n_u_fast_binary_to_decimal_packed __pyx_string_tab[38]
-#define __pyx_n_u_fast_crossover __pyx_string_tab[39]
-#define __pyx_n_u_fast_crossover_packed __pyx_string_tab[40]
-#define __pyx_n_u_fast_mutation __pyx_string_tab[41]
-#define __pyx_n_u_fast_mutation_packed __pyx_string_tab[42]
-#define __pyx_n_u_feat_bits __pyx_string_tab[43]
-#define __pyx_n_u_features __pyx_string_tab[44]
-#define __pyx_n_u_fn __pyx_string_tab[45]
-#define __pyx_n_u_fp __pyx_string_tab[46]
-#define __pyx_n_u_friedman_mse __pyx_string_tab[47]
-#define __pyx_n_u_func __pyx_string_tab[48]
-#define __pyx_n_u_genes __pyx_string_tab[49]
-#define __pyx_n_u_gini __pyx_string_tab[50]
-#define __pyx_n_u_i __pyx_string_tab[51]
-#define __pyx_n_u_int8 __pyx_string_tab[52]
-#define __pyx_n_u_is_coroutine __pyx_string_tab[53]
-#define __pyx_n_u_items __pyx_string_tab[54]
-#define __pyx_n_u_j __pyx_string_tab[55]
-#define __pyx_n_u_kernel __pyx_string_tab[56]
-#define __pyx_n_u_kernel_selector __pyx_string_tab[57]
-#define __pyx_n_u_kernels __pyx_string_tab[58]
-#define __pyx_n_u_linear __pyx_string_tab[59]
-#define __pyx_n_u_log_loss __pyx_string_tab[60]
-#define __pyx_n_u_loss __pyx_string_tab[61]
-#define __pyx_n_u_main __pyx_string_tab[62]
-#define __pyx_n_u_mantissa __pyx_string_tab[63]
-#define __pyx_n_u_mask __pyx_string_tab[64]
-#define __pyx_n_u_mcc __pyx_string_tab[65]
-#define __pyx_n_u_mcc_den_sq __pyx_string_tab[66]
-#define __pyx_n_u_mcc_num __pyx_string_tab[67]
-#define __pyx_n_u_model_param __pyx_string_tab[68]
-#define __pyx_n_u_model_sel_bits __pyx_string_tab[69]
-#define __pyx_n_u_model_selection __pyx_string_tab[70]
-#define __pyx_n_u_module __pyx_string_tab[71]
-#define __pyx_n_u_mutation_rate __pyx_string_tab[72]
-#define __pyx_n_u_n __pyx_string_tab[73]
-#define __pyx_n_u_n_bits __pyx_string_tab[74]
-#define __pyx_n_u_n_bytes __pyx_string_tab[75]
-#define __pyx_n_u_n_estimators __pyx_string_tab[76]
-#define __pyx_n_u_n_offspring __pyx_string_tab[77]
-#define __pyx_n_u_n_pop __pyx_string_tab[78]
-#define __pyx_n_u_name __pyx_string_tab[79]
-#define __pyx_n_u_np __pyx_string_tab[80]
-#define __pyx_n_u_numpy __pyx_string_tab[81]
-#define __pyx_n_u_offspring __pyx_string_tab[82]
-#define __pyx_n_u_offspring_pool __pyx_string_tab[83]
-#define __pyx_n_u_original_n __pyx_string_tab[84]
-#define __pyx_n_u_p1 __pyx_string_tab[85]
-#define __pyx_n_u_p1_indices __pyx_string_tab[86]
-#define __pyx_n_u_p2 __pyx_string_tab[87]
-#define __pyx_n_u_p2_indices __pyx_string_tab[88]
-#define __pyx_n_u_pack_bits __pyx_string_tab[89]
-#define __pyx_n_u_packed __pyx_string_tab[90]
-#define __pyx_n_u_packed_n __pyx_string_tab[91]
-#define __pyx_n_u_param_start __pyx_string_tab[92]
-#define __pyx_n_u_parent1 __pyx_string_tab[93]
-#define __pyx_n_u_parent2 __pyx_string_tab[94]
-#define __pyx_n_u_parents_pool __pyx_string_tab[95]
-#define __pyx_n_u_poly __pyx_string_tab[96]
-#define __pyx_n_u_pop __pyx_string_tab[97]
-#define __pyx_n_u_prec __pyx_string_tab[98]
-#define __pyx_n_u_qualname __pyx_string_tab[99]
-#define __pyx_n_u_random_matrix __pyx_string_tab[100]
-#define __pyx_n_u_random_values __pyx_string_tab[101]
-#define __pyx_n_u_rbf __pyx_string_tab[102]
-#define __pyx_n_u_recall __pyx_string_tab[103]
-#define __pyx_n_u_res __pyx_string_tab[104]
-#define __pyx_n_u_segno __pyx_string_tab[105]
-#define __pyx_n_u_set_name __pyx_string_tab[106]
-#define __pyx_n_u_setdefault __pyx_string_tab[107]
-#define __pyx_n_u_sigmoid __pyx_string_tab[108]
-#define __pyx_n_u_squared_error __pyx_string_tab[109]
-#define __pyx_n_u_start_bit __pyx_string_tab[110]
-#define __pyx_n_u_test __pyx_string_tab[111]
-#define __pyx_n_u_tn __pyx_string_tab[112]
-#define __pyx_n_u_total_bits __pyx_string_tab[113]
-#define __pyx_n_u_tp __pyx_string_tab[114]
-#define __pyx_n_u_uint8 __pyx_string_tab[115]
-#define __pyx_n_u_unpack_bits __pyx_string_tab[116]
-#define __pyx_n_u_unpacked __pyx_string_tab[117]
-#define __pyx_n_u_values __pyx_string_tab[118]
-#define __pyx_n_u_y_pred __pyx_string_tab[119]
-#define __pyx_n_u_y_true __pyx_string_tab[120]
-#define __pyx_n_u_zeros __pyx_string_tab[121]
-#define __pyx_kp_b_iso88591_1_V2Q_E_aq_6_KuAQ_2Rq_r_1_y_Bb __pyx_string_tab[122]
-#define __pyx_kp_b_iso88591_6_V1A_q_U_1_Cr_r_A_b_3nBd_Ba_1 __pyx_string_tab[123]
-#define __pyx_kp_b_iso88591_F_U_1_t3c_6_1 __pyx_string_tab[124]
-#define __pyx_kp_b_iso88591_Qa_d_1_AX_PQ_Rq_A_s_4AX_1_6m2WA __pyx_string_tab[125]
-#define __pyx_kp_b_iso88591_U_1_Ba_r_A_b_4r_1_1 __pyx_string_tab[126]
-#define __pyx_kp_b_iso88591_U_1_Jb_3a_Rs_A_t3c_V1Jd_Bj_1 __pyx_string_tab[127]
-#define __pyx_kp_b_iso88591_V1A_6_2_F_M_SYY_q_q_3a_as_A_5_B __pyx_string_tab[128]
-#define __pyx_kp_b_iso88591_aq_RvQc_r_U_1_Qe7_1_U_A_Qe7_1_1 __pyx_string_tab[129]
-#define __pyx_kp_b_iso88591_fAQ_U_1_Ba_r_5_1 __pyx_string_tab[130]
-#define __pyx_kp_b_iso88591_q_2S_1_r_q_E_Cq_1_E_aq_xq_2Rq_R __pyx_string_tab[131]
-#define __pyx_kp_b_iso88591_r_q_b_ay_b_1_r_U_1_Qe2Qa_A_uD_A __pyx_string_tab[132]
-#define __pyx_kp_b_iso88591_vQa_E_aq_vQc_A_6_S_6_S_a_q_Q_a __pyx_string_tab[133]
-#define __pyx_float_0_1 __pyx_number_tab[0]
-#define __pyx_int_0 __pyx_number_tab[1]
-#define __pyx_int_1 __pyx_number_tab[2]
-#define __pyx_int_2 __pyx_number_tab[3]
-#define __pyx_int_3 __pyx_number_tab[4]
-#define __pyx_int_9 __pyx_number_tab[5]
+#define __pyx_n_u_evo_core __pyx_string_tab[31]
+#define __pyx_n_u_f1 __pyx_string_tab[32]
+#define __pyx_n_u_fast_binary_metrics __pyx_string_tab[33]
+#define __pyx_n_u_fast_binary_to_decimal __pyx_string_tab[34]
+#define __pyx_n_u_fast_binary_to_decimal_packed __pyx_string_tab[35]
+#define __pyx_n_u_fast_crossover __pyx_string_tab[36]
+#define __pyx_n_u_fast_crossover_packed __pyx_string_tab[37]
+#define __pyx_n_u_fast_mutation __pyx_string_tab[38]
+#define __pyx_n_u_fast_mutation_packed __pyx_string_tab[39]
+#define __pyx_n_u_feat_bits __pyx_string_tab[40]
+#define __pyx_n_u_fn __pyx_string_tab[41]
+#define __pyx_n_u_fp __pyx_string_tab[42]
+#define __pyx_n_u_func __pyx_string_tab[43]
+#define __pyx_n_u_genes __pyx_string_tab[44]
+#define __pyx_n_u_i __pyx_string_tab[45]
+#define __pyx_n_u_int8 __pyx_string_tab[46]
+#define __pyx_n_u_is_coroutine __pyx_string_tab[47]
+#define __pyx_n_u_items __pyx_string_tab[48]
+#define __pyx_n_u_j __pyx_string_tab[49]
+#define __pyx_n_u_m_val __pyx_string_tab[50]
+#define __pyx_n_u_main __pyx_string_tab[51]
+#define __pyx_n_u_mask __pyx_string_tab[52]
+#define __pyx_n_u_mcc __pyx_string_tab[53]
+#define __pyx_n_u_mcc_den_sq __pyx_string_tab[54]
+#define __pyx_n_u_mcc_num __pyx_string_tab[55]
+#define __pyx_n_u_model_layouts __pyx_string_tab[56]
+#define __pyx_n_u_model_param __pyx_string_tab[57]
+#define __pyx_n_u_model_sel_bits __pyx_string_tab[58]
+#define __pyx_n_u_model_selection __pyx_string_tab[59]
+#define __pyx_n_u_module __pyx_string_tab[60]
+#define __pyx_n_u_mutation_rate __pyx_string_tab[61]
+#define __pyx_n_u_n __pyx_string_tab[62]
+#define __pyx_n_u_n_bits __pyx_string_tab[63]
+#define __pyx_n_u_n_bytes __pyx_string_tab[64]
+#define __pyx_n_u_n_offspring __pyx_string_tab[65]
+#define __pyx_n_u_n_pop __pyx_string_tab[66]
+#define __pyx_n_u_name __pyx_string_tab[67]
+#define __pyx_n_u_name_idx __pyx_string_tab[68]
+#define __pyx_n_u_np __pyx_string_tab[69]
+#define __pyx_n_u_num_params __pyx_string_tab[70]
+#define __pyx_n_u_numpy __pyx_string_tab[71]
+#define __pyx_n_u_offspring __pyx_string_tab[72]
+#define __pyx_n_u_offspring_pool __pyx_string_tab[73]
+#define __pyx_n_u_original_n __pyx_string_tab[74]
+#define __pyx_n_u_p1 __pyx_string_tab[75]
+#define __pyx_n_u_p1_indices __pyx_string_tab[76]
+#define __pyx_n_u_p2 __pyx_string_tab[77]
+#define __pyx_n_u_p2_indices __pyx_string_tab[78]
+#define __pyx_n_u_p_bits __pyx_string_tab[79]
+#define __pyx_n_u_p_type __pyx_string_tab[80]
+#define __pyx_n_u_pack_bits __pyx_string_tab[81]
+#define __pyx_n_u_packed __pyx_string_tab[82]
+#define __pyx_n_u_packed_n __pyx_string_tab[83]
+#define __pyx_n_u_param_categories __pyx_string_tab[84]
+#define __pyx_n_u_param_names __pyx_string_tab[85]
+#define __pyx_n_u_param_start __pyx_string_tab[86]
+#define __pyx_n_u_parent1 __pyx_string_tab[87]
+#define __pyx_n_u_parent2 __pyx_string_tab[88]
+#define __pyx_n_u_parents_pool __pyx_string_tab[89]
+#define __pyx_n_u_pop __pyx_string_tab[90]
+#define __pyx_n_u_prec __pyx_string_tab[91]
+#define __pyx_n_u_qualname __pyx_string_tab[92]
+#define __pyx_n_u_random_matrix __pyx_string_tab[93]
+#define __pyx_n_u_random_values __pyx_string_tab[94]
+#define __pyx_n_u_recall __pyx_string_tab[95]
+#define __pyx_n_u_res __pyx_string_tab[96]
+#define __pyx_n_u_s_bit __pyx_string_tab[97]
+#define __pyx_n_u_s_val __pyx_string_tab[98]
+#define __pyx_n_u_set_name __pyx_string_tab[99]
+#define __pyx_n_u_setdefault __pyx_string_tab[100]
+#define __pyx_n_u_start_bit __pyx_string_tab[101]
+#define __pyx_n_u_test __pyx_string_tab[102]
+#define __pyx_n_u_tn __pyx_string_tab[103]
+#define __pyx_n_u_total_bits __pyx_string_tab[104]
+#define __pyx_n_u_tp __pyx_string_tab[105]
+#define __pyx_n_u_uint8 __pyx_string_tab[106]
+#define __pyx_n_u_unpack_bits __pyx_string_tab[107]
+#define __pyx_n_u_unpacked __pyx_string_tab[108]
+#define __pyx_n_u_val __pyx_string_tab[109]
+#define __pyx_n_u_values __pyx_string_tab[110]
+#define __pyx_n_u_y_pred __pyx_string_tab[111]
+#define __pyx_n_u_y_true __pyx_string_tab[112]
+#define __pyx_n_u_zeros __pyx_string_tab[113]
+#define __pyx_kp_b_iso88591_1_V2Q_E_aq_6_KuAQ_2Rq_r_1_y_Bb __pyx_string_tab[114]
+#define __pyx_kp_b_iso88591_6_V1A_q_U_1_Cr_r_A_b_3nBd_Ba_1 __pyx_string_tab[115]
+#define __pyx_kp_b_iso88591_F_U_1_t3c_6_1 __pyx_string_tab[116]
+#define __pyx_kp_b_iso88591_U_1_Ba_r_A_b_4r_1_1 __pyx_string_tab[117]
+#define __pyx_kp_b_iso88591_U_1_Jb_3a_Rs_A_t3c_V1Jd_Bj_1 __pyx_string_tab[118]
+#define __pyx_kp_b_iso88591_V1A_6_2_F_M_SYY_q_q_3a_as_A_5_B __pyx_string_tab[119]
+#define __pyx_kp_b_iso88591_aq_RvQc_r_U_1_Qe7_1_U_A_Qe7_1_1 __pyx_string_tab[120]
+#define __pyx_kp_b_iso88591_fAQ_U_1_Ba_r_5_1 __pyx_string_tab[121]
+#define __pyx_kp_b_iso88591_q_2S_1_r_q_E_Cq_1_E_aq_xq_2Rq_R __pyx_string_tab[122]
+#define __pyx_kp_b_iso88591_q_b_7q_1_s_vQa_q_9_A_Rq_1_U_1_2 __pyx_string_tab[123]
+#define __pyx_kp_b_iso88591_r_q_b_ay_b_1_r_U_1_Qe2Qa_A_uD_A __pyx_string_tab[124]
+#define __pyx_kp_b_iso88591_vQa_E_aq_vQc_A_6_S_6_S_a_q_Q_a __pyx_string_tab[125]
 /* #### Code section: module_state_clear ### */
 #if CYTHON_USE_MODULE_STATE
 static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
@@ -3139,8 +3108,7 @@ static CYTHON_SMALL_CODE int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_ptype_5numpy_character);
   Py_CLEAR(clear_module_state->__pyx_ptype_5numpy_ufunc);
   for (int i=0; i<12; ++i) { Py_CLEAR(clear_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<134; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
-  for (int i=0; i<6; ++i) { Py_CLEAR(clear_module_state->__pyx_number_tab[i]); }
+  for (int i=0; i<126; ++i) { Py_CLEAR(clear_module_state->__pyx_string_tab[i]); }
 /* #### Code section: module_state_clear_contents ### */
 /* CommonTypesMetaclass.module_state_clear */
 Py_CLEAR(clear_module_state->__pyx_CommonTypesMetaclassType);
@@ -3180,8 +3148,7 @@ static CYTHON_SMALL_CODE int __pyx_m_traverse(PyObject *m, visitproc visit, void
   Py_VISIT(traverse_module_state->__pyx_ptype_5numpy_character);
   Py_VISIT(traverse_module_state->__pyx_ptype_5numpy_ufunc);
   for (int i=0; i<12; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_codeobj_tab[i]); }
-  for (int i=0; i<134; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
-  for (int i=0; i<6; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_number_tab[i]); }
+  for (int i=0; i<126; ++i) { __Pyx_VISIT_CONST(traverse_module_state->__pyx_string_tab[i]); }
 /* #### Code section: module_state_traverse_contents ### */
 /* CommonTypesMetaclass.module_state_traverse */
 Py_VISIT(traverse_module_state->__pyx_CommonTypesMetaclassType);
@@ -5526,7 +5493,7 @@ static PyObject *__pyx_pf_3evo_4core_4fast_binary_to_decimal_packed(CYTHON_UNUSE
  * 
  *     return res             # <<<<<<<<<<<<<<
  * 
- * # --- Unified Decoder ---
+ * # --- Unified Dynamic Decoder ---
 */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_6 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_res); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 70, __pyx_L1_error)
@@ -5564,11 +5531,11 @@ static PyObject *__pyx_pf_3evo_4core_4fast_binary_to_decimal_packed(CYTHON_UNUSE
 }
 
 /* "evo/core.pyx":74
- * # --- Unified Decoder ---
+ * # --- Unified Dynamic Decoder ---
  * 
- * def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed, dict bits):             # <<<<<<<<<<<<<<
- *     """
- *     Decodes all phenotype parameters from a bit-packed array in one pass.
+ * def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed,             # <<<<<<<<<<<<<<
+ *                       int feat_bits,
+ *                       int model_sel_bits,
 */
 
 /* Python wrapper */
@@ -5579,7 +5546,7 @@ PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-PyDoc_STRVAR(__pyx_doc_3evo_4core_6decode_individual, "\n    Decodes all phenotype parameters from a bit-packed array in one pass.\n    ");
+PyDoc_STRVAR(__pyx_doc_3evo_4core_6decode_individual, "\n    Decodes phenotype parameters dynamically based on a layout array.\n    model_layouts structure: [num_params, p1_name_idx, p1_bits, p1_type, p1_e1, p1_e2, p1_e3, ...]\n    ");
 static PyMethodDef __pyx_mdef_3evo_4core_7decode_individual = {"decode_individual", (PyCFunction)(void(*)(void))(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_3evo_4core_7decode_individual, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_3evo_4core_6decode_individual};
 static PyObject *__pyx_pw_3evo_4core_7decode_individual(PyObject *__pyx_self, 
 #if CYTHON_METH_FASTCALL
@@ -5589,12 +5556,16 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ) {
   PyArrayObject *__pyx_v_packed = 0;
-  PyObject *__pyx_v_bits = 0;
+  int __pyx_v_feat_bits;
+  int __pyx_v_model_sel_bits;
+  PyObject *__pyx_v_param_names = 0;
+  PyObject *__pyx_v_param_categories = 0;
+  PyArrayObject *__pyx_v_model_layouts = 0;
   #if !CYTHON_METH_FASTCALL
   CYTHON_UNUSED Py_ssize_t __pyx_nargs;
   #endif
   CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
-  PyObject* values[2] = {0,0};
+  PyObject* values[6] = {0,0,0,0,0,0};
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -5610,11 +5581,27 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   #endif
   __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
   {
-    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_packed,&__pyx_mstate_global->__pyx_n_u_bits,0};
+    PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_packed,&__pyx_mstate_global->__pyx_n_u_feat_bits,&__pyx_mstate_global->__pyx_n_u_model_sel_bits,&__pyx_mstate_global->__pyx_n_u_param_names,&__pyx_mstate_global->__pyx_n_u_param_categories,&__pyx_mstate_global->__pyx_n_u_model_layouts,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
     if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 74, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
+        case  6:
+        values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 74, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  5:
+        values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 74, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  4:
+        values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 74, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
+        case  3:
+        values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 74, __pyx_L3_error)
+        CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
         if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 74, __pyx_L3_error)
@@ -5628,23 +5615,35 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
       if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "decode_individual", 0) < (0)) __PYX_ERR(0, 74, __pyx_L3_error)
-      for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("decode_individual", 1, 2, 2, i); __PYX_ERR(0, 74, __pyx_L3_error) }
+      for (Py_ssize_t i = __pyx_nargs; i < 6; i++) {
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("decode_individual", 1, 6, 6, i); __PYX_ERR(0, 74, __pyx_L3_error) }
       }
-    } else if (unlikely(__pyx_nargs != 2)) {
+    } else if (unlikely(__pyx_nargs != 6)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
       if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 74, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
       if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 74, __pyx_L3_error)
+      values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 74, __pyx_L3_error)
+      values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 74, __pyx_L3_error)
+      values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 74, __pyx_L3_error)
+      values[5] = __Pyx_ArgRef_FASTCALL(__pyx_args, 5);
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[5])) __PYX_ERR(0, 74, __pyx_L3_error)
     }
     __pyx_v_packed = ((PyArrayObject *)values[0]);
-    __pyx_v_bits = ((PyObject*)values[1]);
+    __pyx_v_feat_bits = __Pyx_PyLong_As_int(values[1]); if (unlikely((__pyx_v_feat_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 75, __pyx_L3_error)
+    __pyx_v_model_sel_bits = __Pyx_PyLong_As_int(values[2]); if (unlikely((__pyx_v_model_sel_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 76, __pyx_L3_error)
+    __pyx_v_param_names = ((PyObject*)values[3]);
+    __pyx_v_param_categories = ((PyObject*)values[4]);
+    __pyx_v_model_layouts = ((PyArrayObject *)values[5]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("decode_individual", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 74, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("decode_individual", 1, 6, 6, __pyx_nargs); __PYX_ERR(0, 74, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -5656,8 +5655,10 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_packed), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "packed", 0))) __PYX_ERR(0, 74, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_bits), (&PyDict_Type), 1, "bits", 1))) __PYX_ERR(0, 74, __pyx_L1_error)
-  __pyx_r = __pyx_pf_3evo_4core_6decode_individual(__pyx_self, __pyx_v_packed, __pyx_v_bits);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_param_names), (&PyList_Type), 1, "param_names", 1))) __PYX_ERR(0, 77, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_param_categories), (&PyList_Type), 1, "param_categories", 1))) __PYX_ERR(0, 78, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_model_layouts), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "model_layouts", 0))) __PYX_ERR(0, 79, __pyx_L1_error)
+  __pyx_r = __pyx_pf_3evo_4core_6decode_individual(__pyx_self, __pyx_v_packed, __pyx_v_feat_bits, __pyx_v_model_sel_bits, __pyx_v_param_names, __pyx_v_param_categories, __pyx_v_model_layouts);
 
   /* function exit code */
   goto __pyx_L0;
@@ -5676,33 +5677,48 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_3evo_4core_6decode_individual(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, PyObject *__pyx_v_bits) {
-  int __pyx_v_feat_bits;
-  int __pyx_v_model_sel_bits;
+static PyObject *__pyx_pf_3evo_4core_6decode_individual(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_packed, int __pyx_v_feat_bits, int __pyx_v_model_sel_bits, PyObject *__pyx_v_param_names, PyObject *__pyx_v_param_categories, PyArrayObject *__pyx_v_model_layouts) {
   int __pyx_v_model_selection;
-  int __pyx_v_param_start;
+  int __pyx_v_num_params;
   PyObject *__pyx_v_model_param = 0;
-  int __pyx_v_n_estimators;
-  int __pyx_v_criterion_selector;
-  int __pyx_v_kernel_selector;
-  double __pyx_v_mantissa;
-  double __pyx_v_segno;
-  double __pyx_v_esponente;
-  PyObject *__pyx_v_kernels = NULL;
+  int __pyx_v_param_start;
+  int __pyx_v_i;
+  int __pyx_v_name_idx;
+  int __pyx_v_p_bits;
+  int __pyx_v_p_type;
+  int __pyx_v_e1;
+  int __pyx_v_e2;
+  int __pyx_v_e3;
+  PY_LONG_LONG __pyx_v_val;
+  PY_LONG_LONG __pyx_v_m_val;
+  PY_LONG_LONG __pyx_v_e_val;
+  PY_LONG_LONG __pyx_v_s_bit;
+  double __pyx_v_s_val;
+  PyObject *__pyx_v_cat_list = 0;
+  int __pyx_v_current_bit;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_model_layouts;
+  __Pyx_Buffer __pyx_pybuffer_model_layouts;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_packed;
   __Pyx_Buffer __pyx_pybuffer_packed;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  int __pyx_t_2;
+  int __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   size_t __pyx_t_7;
   int __pyx_t_8;
-  int __pyx_t_9;
-  double __pyx_t_10;
+  npy_intp *__pyx_t_9;
+  Py_ssize_t __pyx_t_10;
+  Py_ssize_t __pyx_t_11;
+  int __pyx_t_12;
+  int __pyx_t_13;
+  int __pyx_t_14;
+  PY_LONG_LONG __pyx_t_15;
+  Py_ssize_t __pyx_t_16;
+  double __pyx_t_17;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -5711,829 +5727,820 @@ static PyObject *__pyx_pf_3evo_4core_6decode_individual(CYTHON_UNUSED PyObject *
   __pyx_pybuffer_packed.refcount = 0;
   __pyx_pybuffernd_packed.data = NULL;
   __pyx_pybuffernd_packed.rcbuffer = &__pyx_pybuffer_packed;
+  __pyx_pybuffer_model_layouts.pybuffer.buf = NULL;
+  __pyx_pybuffer_model_layouts.refcount = 0;
+  __pyx_pybuffernd_model_layouts.data = NULL;
+  __pyx_pybuffernd_model_layouts.rcbuffer = &__pyx_pybuffer_model_layouts;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_packed.rcbuffer->pybuffer, (PyObject*)__pyx_v_packed, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 74, __pyx_L1_error)
   }
   __pyx_pybuffernd_packed.diminfo[0].strides = __pyx_pybuffernd_packed.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_packed.diminfo[0].shape = __pyx_pybuffernd_packed.rcbuffer->pybuffer.shape[0];
-
-  /* "evo/core.pyx":78
- *     Decodes all phenotype parameters from a bit-packed array in one pass.
- *     """
- *     cdef int feat_bits = bits['features']             # <<<<<<<<<<<<<<
- *     cdef int model_sel_bits = bits['model_selection']
- * 
-*/
-  if (unlikely(__pyx_v_bits == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    __PYX_ERR(0, 78, __pyx_L1_error)
-  }
-  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_bits, __pyx_mstate_global->__pyx_n_u_features); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 78, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_feat_bits = __pyx_t_2;
-
-  /* "evo/core.pyx":79
- *     """
- *     cdef int feat_bits = bits['features']
- *     cdef int model_sel_bits = bits['model_selection']             # <<<<<<<<<<<<<<
- * 
- *     # 1. Model Selection
-*/
-  if (unlikely(__pyx_v_bits == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    __PYX_ERR(0, 79, __pyx_L1_error)
-  }
-  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_bits, __pyx_mstate_global->__pyx_n_u_model_selection); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 79, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 79, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_model_sel_bits = __pyx_t_2;
-
-  /* "evo/core.pyx":82
- * 
- *     # 1. Model Selection
- *     cdef int model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)             # <<<<<<<<<<<<<<
- * 
- *     # 2. Model Parameters
-*/
-  __pyx_t_3 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 82, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_feat_bits); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 82, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_model_sel_bits); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 82, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = 1;
-  #if CYTHON_UNPACK_METHODS
-  if (unlikely(PyMethod_Check(__pyx_t_4))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_4);
-    assert(__pyx_t_3);
-    PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_4);
-    __Pyx_INCREF(__pyx_t_3);
-    __Pyx_INCREF(__pyx__function);
-    __Pyx_DECREF_SET(__pyx_t_4, __pyx__function);
-    __pyx_t_7 = 0;
-  }
-  #endif
   {
-    PyObject *__pyx_callargs[4] = {__pyx_t_3, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_6};
-    __pyx_t_1 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_4, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_model_layouts.rcbuffer->pybuffer, (PyObject*)__pyx_v_model_layouts, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 74, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 82, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_model_selection = __pyx_t_2;
+  __pyx_pybuffernd_model_layouts.diminfo[0].strides = __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_model_layouts.diminfo[0].shape = __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_model_layouts.diminfo[1].strides = __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_model_layouts.diminfo[1].shape = __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.shape[1];
 
   /* "evo/core.pyx":85
+ *     """
+ *     # 1. Model Selection
+ *     cdef int model_selection = 0             # <<<<<<<<<<<<<<
+ *     if model_sel_bits > 0:
+ *         model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)
+*/
+  __pyx_v_model_selection = 0;
+
+  /* "evo/core.pyx":86
+ *     # 1. Model Selection
+ *     cdef int model_selection = 0
+ *     if model_sel_bits > 0:             # <<<<<<<<<<<<<<
+ *         model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)
  * 
- *     # 2. Model Parameters
- *     cdef int param_start = feat_bits + model_sel_bits             # <<<<<<<<<<<<<<
+*/
+  __pyx_t_1 = (__pyx_v_model_sel_bits > 0);
+  if (__pyx_t_1) {
+
+    /* "evo/core.pyx":87
+ *     cdef int model_selection = 0
+ *     if model_sel_bits > 0:
+ *         model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)             # <<<<<<<<<<<<<<
+ * 
+ *     # 2. Extract layout for the selected model
+*/
+    __pyx_t_3 = NULL;
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_feat_bits); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_model_sel_bits); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_7 = 1;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_4);
+      assert(__pyx_t_3);
+      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(__pyx__function);
+      __Pyx_DECREF_SET(__pyx_t_4, __pyx__function);
+      __pyx_t_7 = 0;
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[4] = {__pyx_t_3, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_6};
+      __pyx_t_2 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_4, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+      __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+    }
+    __pyx_t_8 = __Pyx_PyLong_As_int(__pyx_t_2); if (unlikely((__pyx_t_8 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_v_model_selection = __pyx_t_8;
+
+    /* "evo/core.pyx":86
+ *     # 1. Model Selection
+ *     cdef int model_selection = 0
+ *     if model_sel_bits > 0:             # <<<<<<<<<<<<<<
+ *         model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)
+ * 
+*/
+  }
+
+  /* "evo/core.pyx":90
+ * 
+ *     # 2. Extract layout for the selected model
+ *     if model_selection >= model_layouts.shape[0]:             # <<<<<<<<<<<<<<
+ *         model_selection = 0 # Fallback
+ * 
+*/
+  __pyx_t_9 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_model_layouts)); if (unlikely(__pyx_t_9 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 90, __pyx_L1_error)
+  __pyx_t_1 = (__pyx_v_model_selection >= (__pyx_t_9[0]));
+  if (__pyx_t_1) {
+
+    /* "evo/core.pyx":91
+ *     # 2. Extract layout for the selected model
+ *     if model_selection >= model_layouts.shape[0]:
+ *         model_selection = 0 # Fallback             # <<<<<<<<<<<<<<
+ * 
+ *     cdef int num_params = model_layouts[model_selection, 0]
+*/
+    __pyx_v_model_selection = 0;
+
+    /* "evo/core.pyx":90
+ * 
+ *     # 2. Extract layout for the selected model
+ *     if model_selection >= model_layouts.shape[0]:             # <<<<<<<<<<<<<<
+ *         model_selection = 0 # Fallback
+ * 
+*/
+  }
+
+  /* "evo/core.pyx":93
+ *         model_selection = 0 # Fallback
+ * 
+ *     cdef int num_params = model_layouts[model_selection, 0]             # <<<<<<<<<<<<<<
  *     cdef dict model_param = {}
- *     cdef int n_estimators, criterion_selector, kernel_selector, degree_bits
+ *     cdef int param_start = feat_bits + model_sel_bits
+*/
+  __pyx_t_10 = __pyx_v_model_selection;
+  __pyx_t_11 = 0;
+  __pyx_t_8 = -1;
+  if (__pyx_t_10 < 0) {
+    __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+    if (unlikely(__pyx_t_10 < 0)) __pyx_t_8 = 0;
+  } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_8 = 0;
+  if (__pyx_t_11 < 0) {
+    __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+    if (unlikely(__pyx_t_11 < 0)) __pyx_t_8 = 1;
+  } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_8 = 1;
+  if (unlikely(__pyx_t_8 != -1)) {
+    __Pyx_RaiseBufferIndexError(__pyx_t_8);
+    __PYX_ERR(0, 93, __pyx_L1_error)
+  }
+  __pyx_v_num_params = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
+
+  /* "evo/core.pyx":94
+ * 
+ *     cdef int num_params = model_layouts[model_selection, 0]
+ *     cdef dict model_param = {}             # <<<<<<<<<<<<<<
+ *     cdef int param_start = feat_bits + model_sel_bits
+ * 
+*/
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_v_model_param = ((PyObject*)__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "evo/core.pyx":95
+ *     cdef int num_params = model_layouts[model_selection, 0]
+ *     cdef dict model_param = {}
+ *     cdef int param_start = feat_bits + model_sel_bits             # <<<<<<<<<<<<<<
+ * 
+ *     cdef int i, name_idx, p_bits, p_type, e1, e2, e3
 */
   __pyx_v_param_start = (__pyx_v_feat_bits + __pyx_v_model_sel_bits);
 
-  /* "evo/core.pyx":86
- *     # 2. Model Parameters
- *     cdef int param_start = feat_bits + model_sel_bits
- *     cdef dict model_param = {}             # <<<<<<<<<<<<<<
- *     cdef int n_estimators, criterion_selector, kernel_selector, degree_bits
- *     cdef double mantissa, segno, esponente
-*/
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 86, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_model_param = ((PyObject*)__pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "evo/core.pyx":90
- *     cdef double mantissa, segno, esponente
+  /* "evo/core.pyx":102
+ *     cdef list cat_list
  * 
- *     if model_selection == 0: # RandomForest             # <<<<<<<<<<<<<<
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-*/
-  switch (__pyx_v_model_selection) {
-    case 0:
-
-    /* "evo/core.pyx":91
+ *     cdef int current_bit = param_start             # <<<<<<<<<<<<<<
  * 
- *     if model_selection == 0: # RandomForest
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)             # <<<<<<<<<<<<<<
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
+ *     for i in range(num_params):
 */
-    __pyx_t_4 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 91, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_param_start); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 91, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_6))) {
-      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_6);
-      assert(__pyx_t_4);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
-      __Pyx_INCREF(__pyx_t_4);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_4, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_mstate_global->__pyx_int_9};
-      __pyx_t_1 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_6, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 91, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-    }
-    __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_v_n_estimators = __pyx_t_2;
+  __pyx_v_current_bit = __pyx_v_param_start;
 
-    /* "evo/core.pyx":92
- *     if model_selection == 0: # RandomForest
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2             # <<<<<<<<<<<<<<
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
-*/
-    __pyx_t_8 = (__pyx_v_n_estimators > 2);
-    if (__pyx_t_8) {
-      __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_n_estimators); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 92, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_1 = __pyx_t_6;
-      __pyx_t_6 = 0;
-    } else {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_int_2);
-      __pyx_t_1 = __pyx_mstate_global->__pyx_int_2;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_n_estimators, __pyx_t_1) < 0))) __PYX_ERR(0, 92, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-    /* "evo/core.pyx":93
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)             # <<<<<<<<<<<<<<
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
+  /* "evo/core.pyx":104
+ *     cdef int current_bit = param_start
  * 
+ *     for i in range(num_params):             # <<<<<<<<<<<<<<
+ *         name_idx = model_layouts[model_selection, 1 + i * 6]
+ *         p_bits = model_layouts[model_selection, 2 + i * 6]
 */
-    __pyx_t_6 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyLong_From_long((__pyx_v_param_start + 9)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 93, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_5))) {
-      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
-      assert(__pyx_t_6);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_6);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_5, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_6, ((PyObject *)__pyx_v_packed), __pyx_t_4, __pyx_mstate_global->__pyx_int_2};
-      __pyx_t_1 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_5, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 93, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-    }
-    __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_1); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 93, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_v_criterion_selector = __pyx_t_2;
-
-    /* "evo/core.pyx":94
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')             # <<<<<<<<<<<<<<
- * 
- *     elif model_selection == 1: # SVC
-*/
-    __pyx_t_8 = (__pyx_v_criterion_selector == 0);
-    if (__pyx_t_8) {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_gini);
-      __pyx_t_1 = __pyx_mstate_global->__pyx_n_u_gini;
-    } else {
-      __pyx_t_9 = (__pyx_v_criterion_selector == 1);
-      if (__pyx_t_9) {
-        __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_entropy);
-        __pyx_t_5 = __pyx_mstate_global->__pyx_n_u_entropy;
-      } else {
-        __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_log_loss);
-        __pyx_t_5 = __pyx_mstate_global->__pyx_n_u_log_loss;
-      }
-      __pyx_t_1 = __pyx_t_5;
-      __pyx_t_5 = 0;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_criterion, __pyx_t_1) < 0))) __PYX_ERR(0, 94, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-    /* "evo/core.pyx":90
- *     cdef double mantissa, segno, esponente
- * 
- *     if model_selection == 0: # RandomForest             # <<<<<<<<<<<<<<
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-*/
-    break;
-    case 1:
-
-    /* "evo/core.pyx":97
- * 
- *     elif model_selection == 1: # SVC
- *         mantissa = fast_binary_to_decimal_packed(packed, param_start, 3) * 0.1             # <<<<<<<<<<<<<<
- *         segno = 1.0 if fast_binary_to_decimal_packed(packed, param_start + 3, 1) == 0 else -1.0
- *         esponente = fast_binary_to_decimal_packed(packed, param_start + 4, 3)
-*/
-    __pyx_t_5 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 97, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_param_start); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 97, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_4))) {
-      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
-      assert(__pyx_t_5);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_5);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_4, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_5, ((PyObject *)__pyx_v_packed), __pyx_t_6, __pyx_mstate_global->__pyx_int_3};
-      __pyx_t_1 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_4, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 97, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-    }
-    __pyx_t_4 = PyNumber_Multiply(__pyx_t_1, __pyx_mstate_global->__pyx_float_0_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 97, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_10 = __Pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_10 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 97, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_v_mantissa = __pyx_t_10;
-
-    /* "evo/core.pyx":98
- *     elif model_selection == 1: # SVC
- *         mantissa = fast_binary_to_decimal_packed(packed, param_start, 3) * 0.1
- *         segno = 1.0 if fast_binary_to_decimal_packed(packed, param_start + 3, 1) == 0 else -1.0             # <<<<<<<<<<<<<<
- *         esponente = fast_binary_to_decimal_packed(packed, param_start + 4, 3)
- *         model_param['C'] = (1.0 + mantissa) * (10 ** (segno * esponente))
-*/
-    __pyx_t_1 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 98, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = __Pyx_PyLong_From_long((__pyx_v_param_start + 3)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 98, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_6))) {
-      __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_6);
-      assert(__pyx_t_1);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
-      __Pyx_INCREF(__pyx_t_1);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_1, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_mstate_global->__pyx_int_1};
-      __pyx_t_4 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_6, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 98, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-    }
-    __pyx_t_8 = (__Pyx_PyLong_BoolEqObjC(__pyx_t_4, __pyx_mstate_global->__pyx_int_0, 0, 0)); if (unlikely((__pyx_t_8 < 0))) __PYX_ERR(0, 98, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (__pyx_t_8) {
-      __pyx_t_10 = 1.0;
-    } else {
-      __pyx_t_10 = -1.0;
-    }
-    __pyx_v_segno = __pyx_t_10;
-
-    /* "evo/core.pyx":99
- *         mantissa = fast_binary_to_decimal_packed(packed, param_start, 3) * 0.1
- *         segno = 1.0 if fast_binary_to_decimal_packed(packed, param_start + 3, 1) == 0 else -1.0
- *         esponente = fast_binary_to_decimal_packed(packed, param_start + 4, 3)             # <<<<<<<<<<<<<<
- *         model_param['C'] = (1.0 + mantissa) * (10 ** (segno * esponente))
- * 
-*/
-    __pyx_t_6 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 99, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_1 = __Pyx_PyLong_From_long((__pyx_v_param_start + 4)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_5))) {
-      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
-      assert(__pyx_t_6);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_6);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_5, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_6, ((PyObject *)__pyx_v_packed), __pyx_t_1, __pyx_mstate_global->__pyx_int_3};
-      __pyx_t_4 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_5, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 99, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-    }
-    __pyx_t_10 = __Pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_10 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 99, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_v_esponente = __pyx_t_10;
-
-    /* "evo/core.pyx":100
- *         segno = 1.0 if fast_binary_to_decimal_packed(packed, param_start + 3, 1) == 0 else -1.0
- *         esponente = fast_binary_to_decimal_packed(packed, param_start + 4, 3)
- *         model_param['C'] = (1.0 + mantissa) * (10 ** (segno * esponente))             # <<<<<<<<<<<<<<
- * 
- *         kernel_selector = fast_binary_to_decimal_packed(packed, param_start + 8, 2)
-*/
-    __pyx_t_4 = PyFloat_FromDouble(((1.0 + __pyx_v_mantissa) * pow(10.0, (__pyx_v_segno * __pyx_v_esponente)))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 100, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_C, __pyx_t_4) < 0))) __PYX_ERR(0, 100, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-
-    /* "evo/core.pyx":102
- *         model_param['C'] = (1.0 + mantissa) * (10 ** (segno * esponente))
- * 
- *         kernel_selector = fast_binary_to_decimal_packed(packed, param_start + 8, 2)             # <<<<<<<<<<<<<<
- *         kernels = ['linear', 'poly', 'rbf', 'sigmoid']
- *         model_param['kernel'] = kernels[kernel_selector] if kernel_selector < 4 else 'rbf'
-*/
-    __pyx_t_5 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = __Pyx_PyLong_From_long((__pyx_v_param_start + 8)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 102, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_1))) {
-      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_1);
-      assert(__pyx_t_5);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_5);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_1, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_5, ((PyObject *)__pyx_v_packed), __pyx_t_6, __pyx_mstate_global->__pyx_int_2};
-      __pyx_t_4 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_1, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 102, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-    }
-    __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_4); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 102, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_v_kernel_selector = __pyx_t_2;
-
-    /* "evo/core.pyx":103
- * 
- *         kernel_selector = fast_binary_to_decimal_packed(packed, param_start + 8, 2)
- *         kernels = ['linear', 'poly', 'rbf', 'sigmoid']             # <<<<<<<<<<<<<<
- *         model_param['kernel'] = kernels[kernel_selector] if kernel_selector < 4 else 'rbf'
- *         model_param['degree'] = fast_binary_to_decimal_packed(packed, param_start + 10, 3) + 1 # Assuming 3 bits for degree if available
-*/
-    __pyx_t_4 = PyList_New(4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 103, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_linear);
-    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_n_u_linear);
-    if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 0, __pyx_mstate_global->__pyx_n_u_linear) != (0)) __PYX_ERR(0, 103, __pyx_L1_error);
-    __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_poly);
-    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_n_u_poly);
-    if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 1, __pyx_mstate_global->__pyx_n_u_poly) != (0)) __PYX_ERR(0, 103, __pyx_L1_error);
-    __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_rbf);
-    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_n_u_rbf);
-    if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 2, __pyx_mstate_global->__pyx_n_u_rbf) != (0)) __PYX_ERR(0, 103, __pyx_L1_error);
-    __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_sigmoid);
-    __Pyx_GIVEREF(__pyx_mstate_global->__pyx_n_u_sigmoid);
-    if (__Pyx_PyList_SET_ITEM(__pyx_t_4, 3, __pyx_mstate_global->__pyx_n_u_sigmoid) != (0)) __PYX_ERR(0, 103, __pyx_L1_error);
-    __pyx_v_kernels = ((PyObject*)__pyx_t_4);
-    __pyx_t_4 = 0;
-
-    /* "evo/core.pyx":104
- *         kernel_selector = fast_binary_to_decimal_packed(packed, param_start + 8, 2)
- *         kernels = ['linear', 'poly', 'rbf', 'sigmoid']
- *         model_param['kernel'] = kernels[kernel_selector] if kernel_selector < 4 else 'rbf'             # <<<<<<<<<<<<<<
- *         model_param['degree'] = fast_binary_to_decimal_packed(packed, param_start + 10, 3) + 1 # Assuming 3 bits for degree if available
- * 
-*/
-    __pyx_t_8 = (__pyx_v_kernel_selector < 4);
-    if (__pyx_t_8) {
-      __pyx_t_1 = __Pyx_GetItemInt_List(__pyx_v_kernels, __pyx_v_kernel_selector, int, 1, __Pyx_PyLong_From_int, 1, 1, 1, 1, __Pyx_ReferenceSharing_OwnStrongReference); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_4 = __pyx_t_1;
-      __pyx_t_1 = 0;
-    } else {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_rbf);
-      __pyx_t_4 = __pyx_mstate_global->__pyx_n_u_rbf;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_kernel, __pyx_t_4) < 0))) __PYX_ERR(0, 104, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_8 = __pyx_v_num_params;
+  __pyx_t_12 = __pyx_t_8;
+  for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
+    __pyx_v_i = __pyx_t_13;
 
     /* "evo/core.pyx":105
- *         kernels = ['linear', 'poly', 'rbf', 'sigmoid']
- *         model_param['kernel'] = kernels[kernel_selector] if kernel_selector < 4 else 'rbf'
- *         model_param['degree'] = fast_binary_to_decimal_packed(packed, param_start + 10, 3) + 1 # Assuming 3 bits for degree if available             # <<<<<<<<<<<<<<
  * 
- *     elif model_selection == 2: # GradientBoosting
+ *     for i in range(num_params):
+ *         name_idx = model_layouts[model_selection, 1 + i * 6]             # <<<<<<<<<<<<<<
+ *         p_bits = model_layouts[model_selection, 2 + i * 6]
+ *         p_type = model_layouts[model_selection, 3 + i * 6]
 */
-    __pyx_t_1 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = __Pyx_PyLong_From_long((__pyx_v_param_start + 10)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_6))) {
-      __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_6);
-      assert(__pyx_t_1);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
-      __Pyx_INCREF(__pyx_t_1);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
-      __pyx_t_7 = 0;
+    __pyx_t_11 = __pyx_v_model_selection;
+    __pyx_t_10 = (1 + (__pyx_v_i * 6));
+    __pyx_t_14 = -1;
+    if (__pyx_t_11 < 0) {
+      __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+      if (unlikely(__pyx_t_11 < 0)) __pyx_t_14 = 0;
+    } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_14 = 0;
+    if (__pyx_t_10 < 0) {
+      __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+      if (unlikely(__pyx_t_10 < 0)) __pyx_t_14 = 1;
+    } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_14 = 1;
+    if (unlikely(__pyx_t_14 != -1)) {
+      __Pyx_RaiseBufferIndexError(__pyx_t_14);
+      __PYX_ERR(0, 105, __pyx_L1_error)
     }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_1, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_mstate_global->__pyx_int_3};
-      __pyx_t_4 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_6, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 105, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-    }
-    __pyx_t_6 = __Pyx_PyLong_AddObjC(__pyx_t_4, __pyx_mstate_global->__pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_degree, __pyx_t_6) < 0))) __PYX_ERR(0, 105, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_v_name_idx = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
 
-    /* "evo/core.pyx":96
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
- * 
- *     elif model_selection == 1: # SVC             # <<<<<<<<<<<<<<
- *         mantissa = fast_binary_to_decimal_packed(packed, param_start, 3) * 0.1
- *         segno = 1.0 if fast_binary_to_decimal_packed(packed, param_start + 3, 1) == 0 else -1.0
+    /* "evo/core.pyx":106
+ *     for i in range(num_params):
+ *         name_idx = model_layouts[model_selection, 1 + i * 6]
+ *         p_bits = model_layouts[model_selection, 2 + i * 6]             # <<<<<<<<<<<<<<
+ *         p_type = model_layouts[model_selection, 3 + i * 6]
+ *         e1 = model_layouts[model_selection, 4 + i * 6]
 */
-    break;
-    case 2:
-
-    /* "evo/core.pyx":108
- * 
- *     elif model_selection == 2: # GradientBoosting
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)             # <<<<<<<<<<<<<<
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         model_param['criterion'] = 'friedman_mse' if fast_binary_to_decimal_packed(packed, param_start + 9, 1) == 0 else 'squared_error'
-*/
-    __pyx_t_4 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_v_param_start); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_5))) {
-      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_5);
-      assert(__pyx_t_4);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_4);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_5, __pyx__function);
-      __pyx_t_7 = 0;
+    __pyx_t_10 = __pyx_v_model_selection;
+    __pyx_t_11 = (2 + (__pyx_v_i * 6));
+    __pyx_t_14 = -1;
+    if (__pyx_t_10 < 0) {
+      __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+      if (unlikely(__pyx_t_10 < 0)) __pyx_t_14 = 0;
+    } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_14 = 0;
+    if (__pyx_t_11 < 0) {
+      __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+      if (unlikely(__pyx_t_11 < 0)) __pyx_t_14 = 1;
+    } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_14 = 1;
+    if (unlikely(__pyx_t_14 != -1)) {
+      __Pyx_RaiseBufferIndexError(__pyx_t_14);
+      __PYX_ERR(0, 106, __pyx_L1_error)
     }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_4, ((PyObject *)__pyx_v_packed), __pyx_t_1, __pyx_mstate_global->__pyx_int_9};
-      __pyx_t_6 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_5, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 108, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-    }
-    __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_v_n_estimators = __pyx_t_2;
-
-    /* "evo/core.pyx":109
- *     elif model_selection == 2: # GradientBoosting
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2             # <<<<<<<<<<<<<<
- *         model_param['criterion'] = 'friedman_mse' if fast_binary_to_decimal_packed(packed, param_start + 9, 1) == 0 else 'squared_error'
- *         model_param['loss'] = 'log_loss' if fast_binary_to_decimal_packed(packed, param_start + 10, 1) == 0 else 'exponential'
-*/
-    __pyx_t_8 = (__pyx_v_n_estimators > 2);
-    if (__pyx_t_8) {
-      __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_n_estimators); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 109, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_6 = __pyx_t_5;
-      __pyx_t_5 = 0;
-    } else {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_int_2);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_int_2;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_n_estimators, __pyx_t_6) < 0))) __PYX_ERR(0, 109, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-    /* "evo/core.pyx":110
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         model_param['criterion'] = 'friedman_mse' if fast_binary_to_decimal_packed(packed, param_start + 9, 1) == 0 else 'squared_error'             # <<<<<<<<<<<<<<
- *         model_param['loss'] = 'log_loss' if fast_binary_to_decimal_packed(packed, param_start + 10, 1) == 0 else 'exponential'
- * 
-*/
-    __pyx_t_1 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 110, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = __Pyx_PyLong_From_long((__pyx_v_param_start + 9)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_4))) {
-      __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_4);
-      assert(__pyx_t_1);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_1);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_4, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_1, ((PyObject *)__pyx_v_packed), __pyx_t_3, __pyx_mstate_global->__pyx_int_1};
-      __pyx_t_5 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_4, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 110, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_5);
-    }
-    __pyx_t_8 = (__Pyx_PyLong_BoolEqObjC(__pyx_t_5, __pyx_mstate_global->__pyx_int_0, 0, 0)); if (unlikely((__pyx_t_8 < 0))) __PYX_ERR(0, 110, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (__pyx_t_8) {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_friedman_mse);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_n_u_friedman_mse;
-    } else {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_squared_error);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_n_u_squared_error;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_criterion, __pyx_t_6) < 0))) __PYX_ERR(0, 110, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-    /* "evo/core.pyx":111
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         model_param['criterion'] = 'friedman_mse' if fast_binary_to_decimal_packed(packed, param_start + 9, 1) == 0 else 'squared_error'
- *         model_param['loss'] = 'log_loss' if fast_binary_to_decimal_packed(packed, param_start + 10, 1) == 0 else 'exponential'             # <<<<<<<<<<<<<<
- * 
- *     elif model_selection == 3: # ExtraTrees
-*/
-    __pyx_t_4 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyLong_From_long((__pyx_v_param_start + 10)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_3))) {
-      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
-      assert(__pyx_t_4);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_3);
-      __Pyx_INCREF(__pyx_t_4);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_3, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_4, ((PyObject *)__pyx_v_packed), __pyx_t_1, __pyx_mstate_global->__pyx_int_1};
-      __pyx_t_5 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_3, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 111, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_5);
-    }
-    __pyx_t_8 = (__Pyx_PyLong_BoolEqObjC(__pyx_t_5, __pyx_mstate_global->__pyx_int_0, 0, 0)); if (unlikely((__pyx_t_8 < 0))) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (__pyx_t_8) {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_log_loss);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_n_u_log_loss;
-    } else {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_exponential);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_n_u_exponential;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_loss, __pyx_t_6) < 0))) __PYX_ERR(0, 111, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_v_p_bits = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
 
     /* "evo/core.pyx":107
- *         model_param['degree'] = fast_binary_to_decimal_packed(packed, param_start + 10, 3) + 1 # Assuming 3 bits for degree if available
- * 
- *     elif model_selection == 2: # GradientBoosting             # <<<<<<<<<<<<<<
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
+ *         name_idx = model_layouts[model_selection, 1 + i * 6]
+ *         p_bits = model_layouts[model_selection, 2 + i * 6]
+ *         p_type = model_layouts[model_selection, 3 + i * 6]             # <<<<<<<<<<<<<<
+ *         e1 = model_layouts[model_selection, 4 + i * 6]
+ *         e2 = model_layouts[model_selection, 5 + i * 6]
 */
-    break;
-    case 3:
-
-    /* "evo/core.pyx":114
- * 
- *     elif model_selection == 3: # ExtraTrees
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)             # <<<<<<<<<<<<<<
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
-*/
-    __pyx_t_5 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 114, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyLong_From_int(__pyx_v_param_start); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_3))) {
-      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_3);
-      assert(__pyx_t_5);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_3);
-      __Pyx_INCREF(__pyx_t_5);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_3, __pyx__function);
-      __pyx_t_7 = 0;
+    __pyx_t_11 = __pyx_v_model_selection;
+    __pyx_t_10 = (3 + (__pyx_v_i * 6));
+    __pyx_t_14 = -1;
+    if (__pyx_t_11 < 0) {
+      __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+      if (unlikely(__pyx_t_11 < 0)) __pyx_t_14 = 0;
+    } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_14 = 0;
+    if (__pyx_t_10 < 0) {
+      __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+      if (unlikely(__pyx_t_10 < 0)) __pyx_t_14 = 1;
+    } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_14 = 1;
+    if (unlikely(__pyx_t_14 != -1)) {
+      __Pyx_RaiseBufferIndexError(__pyx_t_14);
+      __PYX_ERR(0, 107, __pyx_L1_error)
     }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_5, ((PyObject *)__pyx_v_packed), __pyx_t_1, __pyx_mstate_global->__pyx_int_9};
-      __pyx_t_6 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_3, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
+    __pyx_v_p_type = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
+
+    /* "evo/core.pyx":108
+ *         p_bits = model_layouts[model_selection, 2 + i * 6]
+ *         p_type = model_layouts[model_selection, 3 + i * 6]
+ *         e1 = model_layouts[model_selection, 4 + i * 6]             # <<<<<<<<<<<<<<
+ *         e2 = model_layouts[model_selection, 5 + i * 6]
+ *         e3 = model_layouts[model_selection, 6 + i * 6]
+*/
+    __pyx_t_10 = __pyx_v_model_selection;
+    __pyx_t_11 = (4 + (__pyx_v_i * 6));
+    __pyx_t_14 = -1;
+    if (__pyx_t_10 < 0) {
+      __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+      if (unlikely(__pyx_t_10 < 0)) __pyx_t_14 = 0;
+    } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_14 = 0;
+    if (__pyx_t_11 < 0) {
+      __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+      if (unlikely(__pyx_t_11 < 0)) __pyx_t_14 = 1;
+    } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_14 = 1;
+    if (unlikely(__pyx_t_14 != -1)) {
+      __Pyx_RaiseBufferIndexError(__pyx_t_14);
+      __PYX_ERR(0, 108, __pyx_L1_error)
+    }
+    __pyx_v_e1 = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
+
+    /* "evo/core.pyx":109
+ *         p_type = model_layouts[model_selection, 3 + i * 6]
+ *         e1 = model_layouts[model_selection, 4 + i * 6]
+ *         e2 = model_layouts[model_selection, 5 + i * 6]             # <<<<<<<<<<<<<<
+ *         e3 = model_layouts[model_selection, 6 + i * 6]
+ * 
+*/
+    __pyx_t_11 = __pyx_v_model_selection;
+    __pyx_t_10 = (5 + (__pyx_v_i * 6));
+    __pyx_t_14 = -1;
+    if (__pyx_t_11 < 0) {
+      __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+      if (unlikely(__pyx_t_11 < 0)) __pyx_t_14 = 0;
+    } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_14 = 0;
+    if (__pyx_t_10 < 0) {
+      __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+      if (unlikely(__pyx_t_10 < 0)) __pyx_t_14 = 1;
+    } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_14 = 1;
+    if (unlikely(__pyx_t_14 != -1)) {
+      __Pyx_RaiseBufferIndexError(__pyx_t_14);
+      __PYX_ERR(0, 109, __pyx_L1_error)
+    }
+    __pyx_v_e2 = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
+
+    /* "evo/core.pyx":110
+ *         e1 = model_layouts[model_selection, 4 + i * 6]
+ *         e2 = model_layouts[model_selection, 5 + i * 6]
+ *         e3 = model_layouts[model_selection, 6 + i * 6]             # <<<<<<<<<<<<<<
+ * 
+ *         # 0 = INT (e1 is min_val)
+*/
+    __pyx_t_10 = __pyx_v_model_selection;
+    __pyx_t_11 = (6 + (__pyx_v_i * 6));
+    __pyx_t_14 = -1;
+    if (__pyx_t_10 < 0) {
+      __pyx_t_10 += __pyx_pybuffernd_model_layouts.diminfo[0].shape;
+      if (unlikely(__pyx_t_10 < 0)) __pyx_t_14 = 0;
+    } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_model_layouts.diminfo[0].shape)) __pyx_t_14 = 0;
+    if (__pyx_t_11 < 0) {
+      __pyx_t_11 += __pyx_pybuffernd_model_layouts.diminfo[1].shape;
+      if (unlikely(__pyx_t_11 < 0)) __pyx_t_14 = 1;
+    } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_model_layouts.diminfo[1].shape)) __pyx_t_14 = 1;
+    if (unlikely(__pyx_t_14 != -1)) {
+      __Pyx_RaiseBufferIndexError(__pyx_t_14);
+      __PYX_ERR(0, 110, __pyx_L1_error)
+    }
+    __pyx_v_e3 = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_model_layouts.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_model_layouts.diminfo[0].strides, __pyx_t_11, __pyx_pybuffernd_model_layouts.diminfo[1].strides));
+
+    /* "evo/core.pyx":113
+ * 
+ *         # 0 = INT (e1 is min_val)
+ *         if p_type == 0:             # <<<<<<<<<<<<<<
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             model_param[param_names[name_idx]] = val + e1
+*/
+    switch (__pyx_v_p_type) {
+      case 0:
+
+      /* "evo/core.pyx":114
+ *         # 0 = INT (e1 is min_val)
+ *         if p_type == 0:
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)             # <<<<<<<<<<<<<<
+ *             model_param[param_names[name_idx]] = val + e1
+ *             current_bit += p_bits
+*/
+      __pyx_t_4 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-    }
-    __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 114, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_v_n_estimators = __pyx_t_2;
-
-    /* "evo/core.pyx":115
- *     elif model_selection == 3: # ExtraTrees
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2             # <<<<<<<<<<<<<<
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
-*/
-    __pyx_t_8 = (__pyx_v_n_estimators > 2);
-    if (__pyx_t_8) {
-      __pyx_t_3 = __Pyx_PyLong_From_int(__pyx_v_n_estimators); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 115, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_current_bit); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 114, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_3 = __Pyx_PyLong_From_int(__pyx_v_p_bits); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_6 = __pyx_t_3;
-      __pyx_t_3 = 0;
-    } else {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_int_2);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_int_2;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_n_estimators, __pyx_t_6) < 0))) __PYX_ERR(0, 115, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __pyx_t_7 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_6))) {
+        __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_6);
+        assert(__pyx_t_4);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
+        __Pyx_INCREF(__pyx_t_4);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
+        __pyx_t_7 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[4] = {__pyx_t_4, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_3};
+        __pyx_t_2 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_6, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __pyx_t_15 = __Pyx_PyLong_As_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_15 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 114, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_val = __pyx_t_15;
 
-    /* "evo/core.pyx":116
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)             # <<<<<<<<<<<<<<
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
+      /* "evo/core.pyx":115
+ *         if p_type == 0:
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             model_param[param_names[name_idx]] = val + e1             # <<<<<<<<<<<<<<
+ *             current_bit += p_bits
  * 
 */
-    __pyx_t_3 = NULL;
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = __Pyx_PyLong_From_long((__pyx_v_param_start + 9)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 116, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_7 = 1;
-    #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_1))) {
-      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-      assert(__pyx_t_3);
-      PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(__pyx__function);
-      __Pyx_DECREF_SET(__pyx_t_1, __pyx__function);
-      __pyx_t_7 = 0;
-    }
-    #endif
-    {
-      PyObject *__pyx_callargs[4] = {__pyx_t_3, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_mstate_global->__pyx_int_2};
-      __pyx_t_6 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_1, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
-      __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 116, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyLong_From_PY_LONG_LONG((__pyx_v_val + __pyx_v_e1)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      if (unlikely(__pyx_v_param_names == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+        __PYX_ERR(0, 115, __pyx_L1_error)
+      }
+      __pyx_t_6 = __Pyx_GetItemInt_List(__pyx_v_param_names, __pyx_v_name_idx, int, 1, __Pyx_PyLong_From_int, 1, 1, 1, 1, __Pyx_ReferenceSharing_FunctionArgument); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 115, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-    }
-    __pyx_t_2 = __Pyx_PyLong_As_int(__pyx_t_6); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 116, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_v_criterion_selector = __pyx_t_2;
+      if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_t_6, __pyx_t_2) < 0))) __PYX_ERR(0, 115, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "evo/core.pyx":117
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
- *         criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')             # <<<<<<<<<<<<<<
+      /* "evo/core.pyx":116
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             model_param[param_names[name_idx]] = val + e1
+ *             current_bit += p_bits             # <<<<<<<<<<<<<<
+ * 
+ *         # 1 = CATEGORICAL (e1 is category_list_idx)
+*/
+      __pyx_v_current_bit = (__pyx_v_current_bit + __pyx_v_p_bits);
+
+      /* "evo/core.pyx":113
+ * 
+ *         # 0 = INT (e1 is min_val)
+ *         if p_type == 0:             # <<<<<<<<<<<<<<
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             model_param[param_names[name_idx]] = val + e1
+*/
+      break;
+      case 1:
+
+      /* "evo/core.pyx":120
+ *         # 1 = CATEGORICAL (e1 is category_list_idx)
+ *         elif p_type == 1:
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)             # <<<<<<<<<<<<<<
+ *             cat_list = param_categories[e1]
+ *             if val < len(cat_list):
+*/
+      __pyx_t_6 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 120, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_current_bit); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_p_bits); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 120, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_4);
+      __pyx_t_7 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_3))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_3);
+        assert(__pyx_t_6);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_3, __pyx__function);
+        __pyx_t_7 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[4] = {__pyx_t_6, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_4};
+        __pyx_t_2 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_3, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __pyx_t_15 = __Pyx_PyLong_As_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_15 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 120, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_val = __pyx_t_15;
+
+      /* "evo/core.pyx":121
+ *         elif p_type == 1:
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             cat_list = param_categories[e1]             # <<<<<<<<<<<<<<
+ *             if val < len(cat_list):
+ *                 model_param[param_names[name_idx]] = cat_list[val]
+*/
+      if (unlikely(__pyx_v_param_categories == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+        __PYX_ERR(0, 121, __pyx_L1_error)
+      }
+      __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_param_categories, __pyx_v_e1, int, 1, __Pyx_PyLong_From_int, 1, 1, 1, 1, __Pyx_ReferenceSharing_FunctionArgument); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      if (!(likely(PyList_CheckExact(__pyx_t_2))||((__pyx_t_2) == Py_None) || __Pyx_RaiseUnexpectedTypeError("list", __pyx_t_2))) __PYX_ERR(0, 121, __pyx_L1_error)
+      __Pyx_XDECREF_SET(__pyx_v_cat_list, ((PyObject*)__pyx_t_2));
+      __pyx_t_2 = 0;
+
+      /* "evo/core.pyx":122
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             cat_list = param_categories[e1]
+ *             if val < len(cat_list):             # <<<<<<<<<<<<<<
+ *                 model_param[param_names[name_idx]] = cat_list[val]
+ *             else:
+*/
+      if (unlikely(__pyx_v_cat_list == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "object of type 'NoneType' has no len()");
+        __PYX_ERR(0, 122, __pyx_L1_error)
+      }
+      __pyx_t_16 = __Pyx_PyList_GET_SIZE(__pyx_v_cat_list); if (unlikely(__pyx_t_16 == ((Py_ssize_t)-1))) __PYX_ERR(0, 122, __pyx_L1_error)
+      __pyx_t_1 = (__pyx_v_val < __pyx_t_16);
+      if (__pyx_t_1) {
+
+        /* "evo/core.pyx":123
+ *             cat_list = param_categories[e1]
+ *             if val < len(cat_list):
+ *                 model_param[param_names[name_idx]] = cat_list[val]             # <<<<<<<<<<<<<<
+ *             else:
+ *                 model_param[param_names[name_idx]] = cat_list[0]
+*/
+        if (unlikely(__pyx_v_cat_list == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 123, __pyx_L1_error)
+        }
+        __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_cat_list, __pyx_v_val, PY_LONG_LONG, 1, __Pyx_PyLong_From_PY_LONG_LONG, 1, 1, 1, 1, __Pyx_ReferenceSharing_OwnStrongReference); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        if (unlikely(__pyx_v_param_names == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 123, __pyx_L1_error)
+        }
+        __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_param_names, __pyx_v_name_idx, int, 1, __Pyx_PyLong_From_int, 1, 1, 1, 1, __Pyx_ReferenceSharing_FunctionArgument); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_t_3, __pyx_t_2) < 0))) __PYX_ERR(0, 123, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+        /* "evo/core.pyx":122
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             cat_list = param_categories[e1]
+ *             if val < len(cat_list):             # <<<<<<<<<<<<<<
+ *                 model_param[param_names[name_idx]] = cat_list[val]
+ *             else:
+*/
+        goto __pyx_L7;
+      }
+
+      /* "evo/core.pyx":125
+ *                 model_param[param_names[name_idx]] = cat_list[val]
+ *             else:
+ *                 model_param[param_names[name_idx]] = cat_list[0]             # <<<<<<<<<<<<<<
+ *             current_bit += p_bits
+ * 
+*/
+      /*else*/ {
+        if (unlikely(__pyx_v_cat_list == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 125, __pyx_L1_error)
+        }
+        __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_cat_list, 0, long, 1, __Pyx_PyLong_From_long, 1, 0, 1, 1, __Pyx_ReferenceSharing_OwnStrongReference); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        if (unlikely(__pyx_v_param_names == Py_None)) {
+          PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+          __PYX_ERR(0, 125, __pyx_L1_error)
+        }
+        __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_param_names, __pyx_v_name_idx, int, 1, __Pyx_PyLong_From_int, 1, 1, 1, 1, __Pyx_ReferenceSharing_FunctionArgument); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_t_3, __pyx_t_2) < 0))) __PYX_ERR(0, 125, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      }
+      __pyx_L7:;
+
+      /* "evo/core.pyx":126
+ *             else:
+ *                 model_param[param_names[name_idx]] = cat_list[0]
+ *             current_bit += p_bits             # <<<<<<<<<<<<<<
+ * 
+ *         # 2 = FLOAT (e1=m_bits, e2=e_bits, e3=s_bits)
+*/
+      __pyx_v_current_bit = (__pyx_v_current_bit + __pyx_v_p_bits);
+
+      /* "evo/core.pyx":119
+ * 
+ *         # 1 = CATEGORICAL (e1 is category_list_idx)
+ *         elif p_type == 1:             # <<<<<<<<<<<<<<
+ *             val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+ *             cat_list = param_categories[e1]
+*/
+      break;
+      case 2:
+
+      /* "evo/core.pyx":130
+ *         # 2 = FLOAT (e1=m_bits, e2=e_bits, e3=s_bits)
+ *         elif p_type == 2:
+ *             m_val = fast_binary_to_decimal_packed(packed, current_bit, e1)             # <<<<<<<<<<<<<<
+ *             current_bit += e1
+ *             s_val = 1.0
+*/
+      __pyx_t_3 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 130, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_4);
+      __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_current_bit); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 130, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_e1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 130, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_7 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_4))) {
+        __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_4);
+        assert(__pyx_t_3);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_4);
+        __Pyx_INCREF(__pyx_t_3);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_4, __pyx__function);
+        __pyx_t_7 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[4] = {__pyx_t_3, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_6};
+        __pyx_t_2 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_4, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __pyx_t_15 = __Pyx_PyLong_As_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_15 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 130, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_m_val = __pyx_t_15;
+
+      /* "evo/core.pyx":131
+ *         elif p_type == 2:
+ *             m_val = fast_binary_to_decimal_packed(packed, current_bit, e1)
+ *             current_bit += e1             # <<<<<<<<<<<<<<
+ *             s_val = 1.0
+ *             if e3 > 0:
+*/
+      __pyx_v_current_bit = (__pyx_v_current_bit + __pyx_v_e1);
+
+      /* "evo/core.pyx":132
+ *             m_val = fast_binary_to_decimal_packed(packed, current_bit, e1)
+ *             current_bit += e1
+ *             s_val = 1.0             # <<<<<<<<<<<<<<
+ *             if e3 > 0:
+ *                 s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)
+*/
+      __pyx_v_s_val = 1.0;
+
+      /* "evo/core.pyx":133
+ *             current_bit += e1
+ *             s_val = 1.0
+ *             if e3 > 0:             # <<<<<<<<<<<<<<
+ *                 s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)
+ *                 s_val = 1.0 if s_bit == 0 else -1.0
+*/
+      __pyx_t_1 = (__pyx_v_e3 > 0);
+      if (__pyx_t_1) {
+
+        /* "evo/core.pyx":134
+ *             s_val = 1.0
+ *             if e3 > 0:
+ *                 s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)             # <<<<<<<<<<<<<<
+ *                 s_val = 1.0 if s_bit == 0 else -1.0
+ *                 current_bit += e3
+*/
+        __pyx_t_4 = NULL;
+        __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 134, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_current_bit); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 134, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_5);
+        __pyx_t_3 = __Pyx_PyLong_From_int(__pyx_v_e3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 134, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
+        __pyx_t_7 = 1;
+        #if CYTHON_UNPACK_METHODS
+        if (unlikely(PyMethod_Check(__pyx_t_6))) {
+          __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_6);
+          assert(__pyx_t_4);
+          PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_6);
+          __Pyx_INCREF(__pyx_t_4);
+          __Pyx_INCREF(__pyx__function);
+          __Pyx_DECREF_SET(__pyx_t_6, __pyx__function);
+          __pyx_t_7 = 0;
+        }
+        #endif
+        {
+          PyObject *__pyx_callargs[4] = {__pyx_t_4, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_3};
+          __pyx_t_2 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_6, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+          __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+          __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+          __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_2);
+        }
+        __pyx_t_15 = __Pyx_PyLong_As_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_15 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 134, __pyx_L1_error)
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+        __pyx_v_s_bit = __pyx_t_15;
+
+        /* "evo/core.pyx":135
+ *             if e3 > 0:
+ *                 s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)
+ *                 s_val = 1.0 if s_bit == 0 else -1.0             # <<<<<<<<<<<<<<
+ *                 current_bit += e3
+ *             e_val = fast_binary_to_decimal_packed(packed, current_bit, e2)
+*/
+        __pyx_t_1 = (__pyx_v_s_bit == 0);
+        if (__pyx_t_1) {
+          __pyx_t_17 = 1.0;
+        } else {
+          __pyx_t_17 = -1.0;
+        }
+        __pyx_v_s_val = __pyx_t_17;
+
+        /* "evo/core.pyx":136
+ *                 s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)
+ *                 s_val = 1.0 if s_bit == 0 else -1.0
+ *                 current_bit += e3             # <<<<<<<<<<<<<<
+ *             e_val = fast_binary_to_decimal_packed(packed, current_bit, e2)
+ *             current_bit += e2
+*/
+        __pyx_v_current_bit = (__pyx_v_current_bit + __pyx_v_e3);
+
+        /* "evo/core.pyx":133
+ *             current_bit += e1
+ *             s_val = 1.0
+ *             if e3 > 0:             # <<<<<<<<<<<<<<
+ *                 s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)
+ *                 s_val = 1.0 if s_bit == 0 else -1.0
+*/
+      }
+
+      /* "evo/core.pyx":137
+ *                 s_val = 1.0 if s_bit == 0 else -1.0
+ *                 current_bit += e3
+ *             e_val = fast_binary_to_decimal_packed(packed, current_bit, e2)             # <<<<<<<<<<<<<<
+ *             current_bit += e2
+ *             model_param[param_names[name_idx]] = (1.0 + m_val * 0.1) * (10.0 ** (s_val * e_val))
+*/
+      __pyx_t_6 = NULL;
+      __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal_packed); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 137, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __pyx_t_5 = __Pyx_PyLong_From_int(__pyx_v_current_bit); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 137, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_e2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 137, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_4);
+      __pyx_t_7 = 1;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_3))) {
+        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_3);
+        assert(__pyx_t_6);
+        PyObject* __pyx__function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(__pyx__function);
+        __Pyx_DECREF_SET(__pyx_t_3, __pyx__function);
+        __pyx_t_7 = 0;
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[4] = {__pyx_t_6, ((PyObject *)__pyx_v_packed), __pyx_t_5, __pyx_t_4};
+        __pyx_t_2 = __Pyx_PyObject_FastCall((PyObject*)__pyx_t_3, __pyx_callargs+__pyx_t_7, (4-__pyx_t_7) | (__pyx_t_7*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET));
+        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+        __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 137, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __pyx_t_15 = __Pyx_PyLong_As_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_15 == (PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 137, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_e_val = __pyx_t_15;
+
+      /* "evo/core.pyx":138
+ *                 current_bit += e3
+ *             e_val = fast_binary_to_decimal_packed(packed, current_bit, e2)
+ *             current_bit += e2             # <<<<<<<<<<<<<<
+ *             model_param[param_names[name_idx]] = (1.0 + m_val * 0.1) * (10.0 ** (s_val * e_val))
+ * 
+*/
+      __pyx_v_current_bit = (__pyx_v_current_bit + __pyx_v_e2);
+
+      /* "evo/core.pyx":139
+ *             e_val = fast_binary_to_decimal_packed(packed, current_bit, e2)
+ *             current_bit += e2
+ *             model_param[param_names[name_idx]] = (1.0 + m_val * 0.1) * (10.0 ** (s_val * e_val))             # <<<<<<<<<<<<<<
  * 
  *     return model_selection, model_param
 */
-    __pyx_t_8 = (__pyx_v_criterion_selector == 0);
-    if (__pyx_t_8) {
-      __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_gini);
-      __pyx_t_6 = __pyx_mstate_global->__pyx_n_u_gini;
-    } else {
-      __pyx_t_9 = (__pyx_v_criterion_selector == 1);
-      if (__pyx_t_9) {
-        __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_entropy);
-        __pyx_t_1 = __pyx_mstate_global->__pyx_n_u_entropy;
-      } else {
-        __Pyx_INCREF(__pyx_mstate_global->__pyx_n_u_log_loss);
-        __pyx_t_1 = __pyx_mstate_global->__pyx_n_u_log_loss;
+      __pyx_t_2 = PyFloat_FromDouble(((1.0 + (__pyx_v_m_val * 0.1)) * pow(10.0, (__pyx_v_s_val * __pyx_v_e_val)))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      if (unlikely(__pyx_v_param_names == Py_None)) {
+        PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+        __PYX_ERR(0, 139, __pyx_L1_error)
       }
-      __pyx_t_6 = __pyx_t_1;
-      __pyx_t_1 = 0;
-    }
-    if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_mstate_global->__pyx_n_u_criterion, __pyx_t_6) < 0))) __PYX_ERR(0, 117, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_param_names, __pyx_v_name_idx, int, 1, __Pyx_PyLong_From_int, 1, 1, 1, 1, __Pyx_ReferenceSharing_FunctionArgument); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 139, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      if (unlikely((PyDict_SetItem(__pyx_v_model_param, __pyx_t_3, __pyx_t_2) < 0))) __PYX_ERR(0, 139, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "evo/core.pyx":113
- *         model_param['loss'] = 'log_loss' if fast_binary_to_decimal_packed(packed, param_start + 10, 1) == 0 else 'exponential'
+      /* "evo/core.pyx":129
  * 
- *     elif model_selection == 3: # ExtraTrees             # <<<<<<<<<<<<<<
- *         n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
- *         model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
+ *         # 2 = FLOAT (e1=m_bits, e2=e_bits, e3=s_bits)
+ *         elif p_type == 2:             # <<<<<<<<<<<<<<
+ *             m_val = fast_binary_to_decimal_packed(packed, current_bit, e1)
+ *             current_bit += e1
 */
-    break;
-    default: break;
+      break;
+      default: break;
+    }
   }
 
-  /* "evo/core.pyx":119
- *         model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
+  /* "evo/core.pyx":141
+ *             model_param[param_names[name_idx]] = (1.0 + m_val * 0.1) * (10.0 ** (s_val * e_val))
  * 
  *     return model_selection, model_param             # <<<<<<<<<<<<<<
  * 
  * # --- Evolution Operations on Packed Data ---
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_model_selection); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 119, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 119, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_GIVEREF(__pyx_t_6);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_6) != (0)) __PYX_ERR(0, 119, __pyx_L1_error);
+  __pyx_t_2 = __Pyx_PyLong_From_int(__pyx_v_model_selection); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_2);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2) != (0)) __PYX_ERR(0, 141, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_model_param);
   __Pyx_GIVEREF(__pyx_v_model_param);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_model_param) != (0)) __PYX_ERR(0, 119, __pyx_L1_error);
-  __pyx_t_6 = 0;
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_v_model_param) != (0)) __PYX_ERR(0, 141, __pyx_L1_error);
+  __pyx_t_2 = 0;
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
   goto __pyx_L0;
 
   /* "evo/core.pyx":74
- * # --- Unified Decoder ---
+ * # --- Unified Dynamic Decoder ---
  * 
- * def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed, dict bits):             # <<<<<<<<<<<<<<
- *     """
- *     Decodes all phenotype parameters from a bit-packed array in one pass.
+ * def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed,             # <<<<<<<<<<<<<<
+ *                       int feat_bits,
+ *                       int model_sel_bits,
 */
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
@@ -6542,22 +6549,24 @@ static PyObject *__pyx_pf_3evo_4core_6decode_individual(CYTHON_UNUSED PyObject *
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_model_layouts.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_packed.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
   __Pyx_AddTraceback("evo.core.decode_individual", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_model_layouts.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_packed.rcbuffer->pybuffer);
   __pyx_L2:;
   __Pyx_XDECREF(__pyx_v_model_param);
-  __Pyx_XDECREF(__pyx_v_kernels);
+  __Pyx_XDECREF(__pyx_v_cat_list);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "evo/core.pyx":123
+/* "evo/core.pyx":145
  * # --- Evolution Operations on Packed Data ---
  * 
  * def fast_crossover_packed(cnp.ndarray[uint8_t, ndim=1] p1,             # <<<<<<<<<<<<<<
@@ -6608,53 +6617,53 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_p1,&__pyx_mstate_global->__pyx_n_u_p2,&__pyx_mstate_global->__pyx_n_u_crossover_bit,&__pyx_mstate_global->__pyx_n_u_total_bits,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 123, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 145, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 123, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 145, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 123, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 145, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 123, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 145, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 123, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 145, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_crossover_packed", 0) < (0)) __PYX_ERR(0, 123, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_crossover_packed", 0) < (0)) __PYX_ERR(0, 145, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_crossover_packed", 1, 4, 4, i); __PYX_ERR(0, 123, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_crossover_packed", 1, 4, 4, i); __PYX_ERR(0, 145, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 123, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 145, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 123, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 145, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 123, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 145, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 123, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 145, __pyx_L3_error)
     }
     __pyx_v_p1 = ((PyArrayObject *)values[0]);
     __pyx_v_p2 = ((PyArrayObject *)values[1]);
-    __pyx_v_crossover_bit = __Pyx_PyLong_As_int(values[2]); if (unlikely((__pyx_v_crossover_bit == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L3_error)
-    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 126, __pyx_L3_error)
+    __pyx_v_crossover_bit = __Pyx_PyLong_As_int(values[2]); if (unlikely((__pyx_v_crossover_bit == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 147, __pyx_L3_error)
+    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 148, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("fast_crossover_packed", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 123, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("fast_crossover_packed", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 145, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6665,8 +6674,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p1), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p1", 0))) __PYX_ERR(0, 123, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p2), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p2", 0))) __PYX_ERR(0, 124, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p1), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p1", 0))) __PYX_ERR(0, 145, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p2), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p2", 0))) __PYX_ERR(0, 146, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_8fast_crossover_packed(__pyx_self, __pyx_v_p1, __pyx_v_p2, __pyx_v_crossover_bit, __pyx_v_total_bits);
 
   /* function exit code */
@@ -6735,26 +6744,26 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   __pyx_pybuffernd_p2.rcbuffer = &__pyx_pybuffer_p2;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p1.rcbuffer->pybuffer, (PyObject*)__pyx_v_p1, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 123, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p1.rcbuffer->pybuffer, (PyObject*)__pyx_v_p1, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 145, __pyx_L1_error)
   }
   __pyx_pybuffernd_p1.diminfo[0].strides = __pyx_pybuffernd_p1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_p1.diminfo[0].shape = __pyx_pybuffernd_p1.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p2.rcbuffer->pybuffer, (PyObject*)__pyx_v_p2, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 123, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p2.rcbuffer->pybuffer, (PyObject*)__pyx_v_p2, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 145, __pyx_L1_error)
   }
   __pyx_pybuffernd_p2.diminfo[0].strides = __pyx_pybuffernd_p2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_p2.diminfo[0].shape = __pyx_pybuffernd_p2.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":130
+  /* "evo/core.pyx":152
  *     Fast bit-level crossover on packed uint8 arrays.
  *     """
  *     cdef int n_bytes = p1.shape[0]             # <<<<<<<<<<<<<<
  *     cdef cnp.ndarray[uint8_t, ndim=1] child = np.empty(n_bytes, dtype=np.uint8)
  *     cdef int i, byte_idx, bit_idx
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_p1)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_p1)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 152, __pyx_L1_error)
   __pyx_v_n_bytes = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":131
+  /* "evo/core.pyx":153
  *     """
  *     cdef int n_bytes = p1.shape[0]
  *     cdef cnp.ndarray[uint8_t, ndim=1] child = np.empty(n_bytes, dtype=np.uint8)             # <<<<<<<<<<<<<<
@@ -6762,16 +6771,16 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
  *     cdef int cross_byte = crossover_bit // 8
 */
   __pyx_t_3 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_empty); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_empty); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n_bytes); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n_bytes); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_uint8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_uint8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 153, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_8 = 1;
@@ -6788,31 +6797,31 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   #endif
   {
     PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_3, __pyx_t_4};
-    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 131, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 153, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_7, __pyx_t_6, __pyx_callargs+2, 0) < (0)) __PYX_ERR(0, 131, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_7, __pyx_t_6, __pyx_callargs+2, 0) < (0)) __PYX_ERR(0, 153, __pyx_L1_error)
     __pyx_t_2 = __Pyx_Object_Vectorcall_CallFromBuilder((PyObject*)__pyx_t_5, __pyx_callargs+__pyx_t_8, (2-__pyx_t_8) | (__pyx_t_8*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_6);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 153, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
   }
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 131, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 153, __pyx_L1_error)
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_child.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_child = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_child.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 131, __pyx_L1_error)
+      __PYX_ERR(0, 153, __pyx_L1_error)
     } else {__pyx_pybuffernd_child.diminfo[0].strides = __pyx_pybuffernd_child.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_child.diminfo[0].shape = __pyx_pybuffernd_child.rcbuffer->pybuffer.shape[0];
     }
   }
   __pyx_v_child = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":133
+  /* "evo/core.pyx":155
  *     cdef cnp.ndarray[uint8_t, ndim=1] child = np.empty(n_bytes, dtype=np.uint8)
  *     cdef int i, byte_idx, bit_idx
  *     cdef int cross_byte = crossover_bit // 8             # <<<<<<<<<<<<<<
@@ -6821,7 +6830,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
 */
   __pyx_v_cross_byte = __Pyx_div_long(__pyx_v_crossover_bit, 8, 1);
 
-  /* "evo/core.pyx":134
+  /* "evo/core.pyx":156
  *     cdef int i, byte_idx, bit_idx
  *     cdef int cross_byte = crossover_bit // 8
  *     cdef int cross_bit = crossover_bit % 8             # <<<<<<<<<<<<<<
@@ -6830,7 +6839,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
 */
   __pyx_v_cross_bit = __Pyx_mod_long(__pyx_v_crossover_bit, 8, 1);
 
-  /* "evo/core.pyx":138
+  /* "evo/core.pyx":160
  * 
  *     # 1. Bytes before crossover byte
  *     for i in range(cross_byte):             # <<<<<<<<<<<<<<
@@ -6842,7 +6851,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
     __pyx_v_i = __pyx_t_11;
 
-    /* "evo/core.pyx":139
+    /* "evo/core.pyx":161
  *     # 1. Bytes before crossover byte
  *     for i in range(cross_byte):
  *         child[i] = p1[i]             # <<<<<<<<<<<<<<
@@ -6857,7 +6866,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_p1.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 139, __pyx_L1_error)
+      __PYX_ERR(0, 161, __pyx_L1_error)
     }
     __pyx_t_14 = __pyx_v_i;
     __pyx_t_13 = -1;
@@ -6867,12 +6876,12 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_child.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 139, __pyx_L1_error)
+      __PYX_ERR(0, 161, __pyx_L1_error)
     }
     *__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_child.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_child.diminfo[0].strides) = (*__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_p1.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_p1.diminfo[0].strides));
   }
 
-  /* "evo/core.pyx":142
+  /* "evo/core.pyx":164
  * 
  *     # 2. The crossover byte itself
  *     if cross_byte < n_bytes:             # <<<<<<<<<<<<<<
@@ -6882,7 +6891,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   __pyx_t_15 = (__pyx_v_cross_byte < __pyx_v_n_bytes);
   if (__pyx_t_15) {
 
-    /* "evo/core.pyx":143
+    /* "evo/core.pyx":165
  *     # 2. The crossover byte itself
  *     if cross_byte < n_bytes:
  *         mask = 0xFF << (8 - cross_bit)             # <<<<<<<<<<<<<<
@@ -6891,7 +6900,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
 */
     __pyx_v_mask = (0xFF << (8 - __pyx_v_cross_bit));
 
-    /* "evo/core.pyx":144
+    /* "evo/core.pyx":166
  *     if cross_byte < n_bytes:
  *         mask = 0xFF << (8 - cross_bit)
  *         child[cross_byte] = (p1[cross_byte] & mask) | (p2[cross_byte] & ~mask)             # <<<<<<<<<<<<<<
@@ -6906,7 +6915,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_p1.diminfo[0].shape)) __pyx_t_9 = 0;
     if (unlikely(__pyx_t_9 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_9);
-      __PYX_ERR(0, 144, __pyx_L1_error)
+      __PYX_ERR(0, 166, __pyx_L1_error)
     }
     __pyx_t_14 = __pyx_v_cross_byte;
     __pyx_t_9 = -1;
@@ -6916,7 +6925,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_p2.diminfo[0].shape)) __pyx_t_9 = 0;
     if (unlikely(__pyx_t_9 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_9);
-      __PYX_ERR(0, 144, __pyx_L1_error)
+      __PYX_ERR(0, 166, __pyx_L1_error)
     }
     __pyx_t_16 = __pyx_v_cross_byte;
     __pyx_t_9 = -1;
@@ -6926,11 +6935,11 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_16 >= __pyx_pybuffernd_child.diminfo[0].shape)) __pyx_t_9 = 0;
     if (unlikely(__pyx_t_9 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_9);
-      __PYX_ERR(0, 144, __pyx_L1_error)
+      __PYX_ERR(0, 166, __pyx_L1_error)
     }
     *__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_child.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_child.diminfo[0].strides) = (((*__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_p1.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_p1.diminfo[0].strides)) & __pyx_v_mask) | ((*__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_p2.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_p2.diminfo[0].strides)) & (~__pyx_v_mask)));
 
-    /* "evo/core.pyx":142
+    /* "evo/core.pyx":164
  * 
  *     # 2. The crossover byte itself
  *     if cross_byte < n_bytes:             # <<<<<<<<<<<<<<
@@ -6939,7 +6948,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
 */
   }
 
-  /* "evo/core.pyx":147
+  /* "evo/core.pyx":169
  * 
  *     # 3. Bytes after crossover byte
  *     for i in range(cross_byte + 1, n_bytes):             # <<<<<<<<<<<<<<
@@ -6951,7 +6960,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   for (__pyx_t_11 = (__pyx_v_cross_byte + 1); __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
     __pyx_v_i = __pyx_t_11;
 
-    /* "evo/core.pyx":148
+    /* "evo/core.pyx":170
  *     # 3. Bytes after crossover byte
  *     for i in range(cross_byte + 1, n_bytes):
  *         child[i] = p2[i]             # <<<<<<<<<<<<<<
@@ -6966,7 +6975,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_p2.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 148, __pyx_L1_error)
+      __PYX_ERR(0, 170, __pyx_L1_error)
     }
     __pyx_t_12 = __pyx_v_i;
     __pyx_t_13 = -1;
@@ -6976,12 +6985,12 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_child.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 148, __pyx_L1_error)
+      __PYX_ERR(0, 170, __pyx_L1_error)
     }
     *__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_child.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_child.diminfo[0].strides) = (*__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_p2.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_p2.diminfo[0].strides));
   }
 
-  /* "evo/core.pyx":150
+  /* "evo/core.pyx":172
  *         child[i] = p2[i]
  * 
  *     return child             # <<<<<<<<<<<<<<
@@ -6993,7 +7002,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   __pyx_r = ((PyObject *)__pyx_v_child);
   goto __pyx_L0;
 
-  /* "evo/core.pyx":123
+  /* "evo/core.pyx":145
  * # --- Evolution Operations on Packed Data ---
  * 
  * def fast_crossover_packed(cnp.ndarray[uint8_t, ndim=1] p1,             # <<<<<<<<<<<<<<
@@ -7031,7 +7040,7 @@ static PyObject *__pyx_pf_3evo_4core_8fast_crossover_packed(CYTHON_UNUSED PyObje
   return __pyx_r;
 }
 
-/* "evo/core.pyx":152
+/* "evo/core.pyx":174
  *     return child
  * 
  * def fast_mutation_packed(cnp.ndarray[uint8_t, ndim=1] packed,             # <<<<<<<<<<<<<<
@@ -7082,53 +7091,53 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_packed,&__pyx_mstate_global->__pyx_n_u_mutation_rate,&__pyx_mstate_global->__pyx_n_u_random_values,&__pyx_mstate_global->__pyx_n_u_total_bits,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 152, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 174, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 152, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 174, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 152, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 174, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 152, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 174, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 152, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 174, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_mutation_packed", 0) < (0)) __PYX_ERR(0, 152, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_mutation_packed", 0) < (0)) __PYX_ERR(0, 174, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_mutation_packed", 1, 4, 4, i); __PYX_ERR(0, 152, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_mutation_packed", 1, 4, 4, i); __PYX_ERR(0, 174, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 152, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 174, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 152, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 174, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 152, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 174, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 152, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 174, __pyx_L3_error)
     }
     __pyx_v_packed = ((PyArrayObject *)values[0]);
-    __pyx_v_mutation_rate = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_mutation_rate == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 153, __pyx_L3_error)
+    __pyx_v_mutation_rate = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_mutation_rate == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L3_error)
     __pyx_v_random_values = ((PyArrayObject *)values[2]);
-    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 155, __pyx_L3_error)
+    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 177, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("fast_mutation_packed", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 152, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("fast_mutation_packed", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 174, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -7139,8 +7148,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_packed), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "packed", 0))) __PYX_ERR(0, 152, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_random_values), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "random_values", 0))) __PYX_ERR(0, 154, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_packed), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "packed", 0))) __PYX_ERR(0, 174, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_random_values), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "random_values", 0))) __PYX_ERR(0, 176, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_10fast_mutation_packed(__pyx_self, __pyx_v_packed, __pyx_v_mutation_rate, __pyx_v_random_values, __pyx_v_total_bits);
 
   /* function exit code */
@@ -7190,16 +7199,16 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
   __pyx_pybuffernd_random_values.rcbuffer = &__pyx_pybuffer_random_values;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_packed.rcbuffer->pybuffer, (PyObject*)__pyx_v_packed, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 152, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_packed.rcbuffer->pybuffer, (PyObject*)__pyx_v_packed, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 174, __pyx_L1_error)
   }
   __pyx_pybuffernd_packed.diminfo[0].strides = __pyx_pybuffernd_packed.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_packed.diminfo[0].shape = __pyx_pybuffernd_packed.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_random_values.rcbuffer->pybuffer, (PyObject*)__pyx_v_random_values, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 152, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_random_values.rcbuffer->pybuffer, (PyObject*)__pyx_v_random_values, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 174, __pyx_L1_error)
   }
   __pyx_pybuffernd_random_values.diminfo[0].strides = __pyx_pybuffernd_random_values.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_random_values.diminfo[0].shape = __pyx_pybuffernd_random_values.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":161
+  /* "evo/core.pyx":183
  *     cdef int i, byte_idx, bit_idx
  * 
  *     for i in range(total_bits):             # <<<<<<<<<<<<<<
@@ -7211,7 +7220,7 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "evo/core.pyx":162
+    /* "evo/core.pyx":184
  * 
  *     for i in range(total_bits):
  *         if random_values[i] < mutation_rate:             # <<<<<<<<<<<<<<
@@ -7226,12 +7235,12 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
     } else if (unlikely(__pyx_t_4 >= __pyx_pybuffernd_random_values.diminfo[0].shape)) __pyx_t_5 = 0;
     if (unlikely(__pyx_t_5 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_5);
-      __PYX_ERR(0, 162, __pyx_L1_error)
+      __PYX_ERR(0, 184, __pyx_L1_error)
     }
     __pyx_t_6 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_random_values.rcbuffer->pybuffer.buf, __pyx_t_4, __pyx_pybuffernd_random_values.diminfo[0].strides)) < __pyx_v_mutation_rate);
     if (__pyx_t_6) {
 
-      /* "evo/core.pyx":163
+      /* "evo/core.pyx":185
  *     for i in range(total_bits):
  *         if random_values[i] < mutation_rate:
  *             byte_idx = i // 8             # <<<<<<<<<<<<<<
@@ -7240,7 +7249,7 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
 */
       __pyx_v_byte_idx = __Pyx_div_long(__pyx_v_i, 8, 1);
 
-      /* "evo/core.pyx":164
+      /* "evo/core.pyx":186
  *         if random_values[i] < mutation_rate:
  *             byte_idx = i // 8
  *             bit_idx = i % 8             # <<<<<<<<<<<<<<
@@ -7249,7 +7258,7 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
 */
       __pyx_v_bit_idx = __Pyx_mod_long(__pyx_v_i, 8, 1);
 
-      /* "evo/core.pyx":165
+      /* "evo/core.pyx":187
  *             byte_idx = i // 8
  *             bit_idx = i % 8
  *             packed[byte_idx] ^= (1 << (7 - bit_idx))             # <<<<<<<<<<<<<<
@@ -7264,11 +7273,11 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
       } else if (unlikely(__pyx_t_4 >= __pyx_pybuffernd_packed.diminfo[0].shape)) __pyx_t_5 = 0;
       if (unlikely(__pyx_t_5 != -1)) {
         __Pyx_RaiseBufferIndexError(__pyx_t_5);
-        __PYX_ERR(0, 165, __pyx_L1_error)
+        __PYX_ERR(0, 187, __pyx_L1_error)
       }
       *__Pyx_BufPtrStrided1d(uint8_t *, __pyx_pybuffernd_packed.rcbuffer->pybuffer.buf, __pyx_t_4, __pyx_pybuffernd_packed.diminfo[0].strides) ^= (1 << (7 - __pyx_v_bit_idx));
 
-      /* "evo/core.pyx":162
+      /* "evo/core.pyx":184
  * 
  *     for i in range(total_bits):
  *         if random_values[i] < mutation_rate:             # <<<<<<<<<<<<<<
@@ -7278,7 +7287,7 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
     }
   }
 
-  /* "evo/core.pyx":167
+  /* "evo/core.pyx":189
  *             packed[byte_idx] ^= (1 << (7 - bit_idx))
  * 
  *     return packed             # <<<<<<<<<<<<<<
@@ -7290,7 +7299,7 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
   __pyx_r = ((PyObject *)__pyx_v_packed);
   goto __pyx_L0;
 
-  /* "evo/core.pyx":152
+  /* "evo/core.pyx":174
  *     return child
  * 
  * def fast_mutation_packed(cnp.ndarray[uint8_t, ndim=1] packed,             # <<<<<<<<<<<<<<
@@ -7319,7 +7328,7 @@ static PyObject *__pyx_pf_3evo_4core_10fast_mutation_packed(CYTHON_UNUSED PyObje
   return __pyx_r;
 }
 
-/* "evo/core.pyx":171
+/* "evo/core.pyx":193
  * # --- Parallel Batch Operations (OpenMP) ---
  * 
  * def batch_crossover_packed(cnp.ndarray[uint8_t, ndim=2] parents_pool,             # <<<<<<<<<<<<<<
@@ -7371,60 +7380,60 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_parents_pool,&__pyx_mstate_global->__pyx_n_u_p1_indices,&__pyx_mstate_global->__pyx_n_u_p2_indices,&__pyx_mstate_global->__pyx_n_u_crossover_bits,&__pyx_mstate_global->__pyx_n_u_total_bits,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 171, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 193, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  5:
         values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 171, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 193, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 171, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 193, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 171, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 193, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 171, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 193, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 171, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 193, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "batch_crossover_packed", 0) < (0)) __PYX_ERR(0, 171, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "batch_crossover_packed", 0) < (0)) __PYX_ERR(0, 193, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 5; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("batch_crossover_packed", 1, 5, 5, i); __PYX_ERR(0, 171, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("batch_crossover_packed", 1, 5, 5, i); __PYX_ERR(0, 193, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 5)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 171, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 193, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 171, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 193, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 171, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 193, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 171, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 193, __pyx_L3_error)
       values[4] = __Pyx_ArgRef_FASTCALL(__pyx_args, 4);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 171, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[4])) __PYX_ERR(0, 193, __pyx_L3_error)
     }
     __pyx_v_parents_pool = ((PyArrayObject *)values[0]);
     __pyx_v_p1_indices = ((PyArrayObject *)values[1]);
     __pyx_v_p2_indices = ((PyArrayObject *)values[2]);
     __pyx_v_crossover_bits = ((PyArrayObject *)values[3]);
-    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[4]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 175, __pyx_L3_error)
+    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[4]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 197, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("batch_crossover_packed", 1, 5, 5, __pyx_nargs); __PYX_ERR(0, 171, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("batch_crossover_packed", 1, 5, 5, __pyx_nargs); __PYX_ERR(0, 193, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -7435,10 +7444,10 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_parents_pool), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "parents_pool", 0))) __PYX_ERR(0, 171, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p1_indices), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p1_indices", 0))) __PYX_ERR(0, 172, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p2_indices), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p2_indices", 0))) __PYX_ERR(0, 173, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_crossover_bits), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "crossover_bits", 0))) __PYX_ERR(0, 174, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_parents_pool), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "parents_pool", 0))) __PYX_ERR(0, 193, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p1_indices), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p1_indices", 0))) __PYX_ERR(0, 194, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_p2_indices), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "p2_indices", 0))) __PYX_ERR(0, 195, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_crossover_bits), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "crossover_bits", 0))) __PYX_ERR(0, 196, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_12batch_crossover_packed(__pyx_self, __pyx_v_parents_pool, __pyx_v_p1_indices, __pyx_v_p2_indices, __pyx_v_crossover_bits, __pyx_v_total_bits);
 
   /* function exit code */
@@ -7529,46 +7538,46 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
   __pyx_pybuffernd_crossover_bits.rcbuffer = &__pyx_pybuffer_crossover_bits;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_parents_pool.rcbuffer->pybuffer, (PyObject*)__pyx_v_parents_pool, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_parents_pool.rcbuffer->pybuffer, (PyObject*)__pyx_v_parents_pool, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 193, __pyx_L1_error)
   }
   __pyx_pybuffernd_parents_pool.diminfo[0].strides = __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_parents_pool.diminfo[0].shape = __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_parents_pool.diminfo[1].strides = __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_parents_pool.diminfo[1].shape = __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p1_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_p1_indices, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p1_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_p1_indices, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 193, __pyx_L1_error)
   }
   __pyx_pybuffernd_p1_indices.diminfo[0].strides = __pyx_pybuffernd_p1_indices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_p1_indices.diminfo[0].shape = __pyx_pybuffernd_p1_indices.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p2_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_p2_indices, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_p2_indices.rcbuffer->pybuffer, (PyObject*)__pyx_v_p2_indices, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 193, __pyx_L1_error)
   }
   __pyx_pybuffernd_p2_indices.diminfo[0].strides = __pyx_pybuffernd_p2_indices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_p2_indices.diminfo[0].shape = __pyx_pybuffernd_p2_indices.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_crossover_bits.rcbuffer->pybuffer, (PyObject*)__pyx_v_crossover_bits, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_crossover_bits.rcbuffer->pybuffer, (PyObject*)__pyx_v_crossover_bits, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int32_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 193, __pyx_L1_error)
   }
   __pyx_pybuffernd_crossover_bits.diminfo[0].strides = __pyx_pybuffernd_crossover_bits.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_crossover_bits.diminfo[0].shape = __pyx_pybuffernd_crossover_bits.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":179
+  /* "evo/core.pyx":201
  *     Parallel crossover of the entire population using OpenMP.
  *     """
  *     cdef int n_offspring = p1_indices.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int n_bytes = parents_pool.shape[1]
  *     cdef cnp.ndarray[uint8_t, ndim=2] offspring = np.empty((n_offspring, n_bytes), dtype=np.uint8)
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_p1_indices)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_p1_indices)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 201, __pyx_L1_error)
   __pyx_v_n_offspring = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":180
+  /* "evo/core.pyx":202
  *     """
  *     cdef int n_offspring = p1_indices.shape[0]
  *     cdef int n_bytes = parents_pool.shape[1]             # <<<<<<<<<<<<<<
  *     cdef cnp.ndarray[uint8_t, ndim=2] offspring = np.empty((n_offspring, n_bytes), dtype=np.uint8)
  * 
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_parents_pool)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 180, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_parents_pool)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 202, __pyx_L1_error)
   __pyx_v_n_bytes = (__pyx_t_1[1]);
 
-  /* "evo/core.pyx":181
+  /* "evo/core.pyx":203
  *     cdef int n_offspring = p1_indices.shape[0]
  *     cdef int n_bytes = parents_pool.shape[1]
  *     cdef cnp.ndarray[uint8_t, ndim=2] offspring = np.empty((n_offspring, n_bytes), dtype=np.uint8)             # <<<<<<<<<<<<<<
@@ -7576,26 +7585,26 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
  *     cdef int i, j, cross_byte, cross_bit
 */
   __pyx_t_3 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_empty); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_empty); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n_offspring); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n_offspring); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_n_bytes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyLong_From_int(__pyx_v_n_bytes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_GIVEREF(__pyx_t_4);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_4) != (0)) __PYX_ERR(0, 181, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_4) != (0)) __PYX_ERR(0, 203, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_6);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_6) != (0)) __PYX_ERR(0, 181, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_6) != (0)) __PYX_ERR(0, 203, __pyx_L1_error);
   __pyx_t_4 = 0;
   __pyx_t_6 = 0;
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_uint8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_uint8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_8 = 1;
@@ -7612,31 +7621,31 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
   #endif
   {
     PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_3, __pyx_t_7};
-    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 181, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 203, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_4, __pyx_t_6, __pyx_callargs+2, 0) < (0)) __PYX_ERR(0, 181, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_4, __pyx_t_6, __pyx_callargs+2, 0) < (0)) __PYX_ERR(0, 203, __pyx_L1_error)
     __pyx_t_2 = __Pyx_Object_Vectorcall_CallFromBuilder((PyObject*)__pyx_t_5, __pyx_callargs+__pyx_t_8, (2-__pyx_t_8) | (__pyx_t_8*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_6);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 181, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 203, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
   }
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 181, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 203, __pyx_L1_error)
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_offspring.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_offspring = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_offspring.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 181, __pyx_L1_error)
+      __PYX_ERR(0, 203, __pyx_L1_error)
     } else {__pyx_pybuffernd_offspring.diminfo[0].strides = __pyx_pybuffernd_offspring.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_offspring.diminfo[0].shape = __pyx_pybuffernd_offspring.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_offspring.diminfo[1].strides = __pyx_pybuffernd_offspring.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_offspring.diminfo[1].shape = __pyx_pybuffernd_offspring.rcbuffer->pybuffer.shape[1];
     }
   }
   __pyx_v_offspring = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":187
+  /* "evo/core.pyx":209
  * 
  *     # We release the GIL to let OpenMP threads run in parallel
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -7649,7 +7658,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
       __Pyx_FastGIL_Remember();
       /*try:*/ {
 
-        /* "evo/core.pyx":188
+        /* "evo/core.pyx":210
  *     # We release the GIL to let OpenMP threads run in parallel
  *     with nogil:
  *         for i in prange(n_offspring, schedule='static'):             # <<<<<<<<<<<<<<
@@ -7690,7 +7699,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                         {
                             __pyx_v_i = (int)(0 + 1 * __pyx_t_10);
 
-                            /* "evo/core.pyx":189
+                            /* "evo/core.pyx":211
  *     with nogil:
  *         for i in prange(n_offspring, schedule='static'):
  *             cross_byte = crossover_bits[i] // 8             # <<<<<<<<<<<<<<
@@ -7705,11 +7714,11 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                             } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_crossover_bits.diminfo[0].shape)) __pyx_t_13 = 0;
                             if (unlikely(__pyx_t_13 != -1)) {
                               __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                              __PYX_ERR(0, 189, __pyx_L8_error)
+                              __PYX_ERR(0, 211, __pyx_L8_error)
                             }
                             __pyx_v_cross_byte = __Pyx_div_long((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_crossover_bits.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_crossover_bits.diminfo[0].strides)), 8, 1);
 
-                            /* "evo/core.pyx":190
+                            /* "evo/core.pyx":212
  *         for i in prange(n_offspring, schedule='static'):
  *             cross_byte = crossover_bits[i] // 8
  *             cross_bit = crossover_bits[i] % 8             # <<<<<<<<<<<<<<
@@ -7724,11 +7733,11 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                             } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_crossover_bits.diminfo[0].shape)) __pyx_t_13 = 0;
                             if (unlikely(__pyx_t_13 != -1)) {
                               __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                              __PYX_ERR(0, 190, __pyx_L8_error)
+                              __PYX_ERR(0, 212, __pyx_L8_error)
                             }
                             __pyx_v_cross_bit = __Pyx_mod_long((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_crossover_bits.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_crossover_bits.diminfo[0].strides)), 8, 1);
 
-                            /* "evo/core.pyx":191
+                            /* "evo/core.pyx":213
  *             cross_byte = crossover_bits[i] // 8
  *             cross_bit = crossover_bits[i] % 8
  *             mask = 0xFF << (8 - cross_bit)             # <<<<<<<<<<<<<<
@@ -7737,7 +7746,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
 */
                             __pyx_v_mask = (0xFF << (8 - __pyx_v_cross_bit));
 
-                            /* "evo/core.pyx":194
+                            /* "evo/core.pyx":216
  * 
  *             # 1. Bytes before crossover
  *             for j in range(cross_byte):             # <<<<<<<<<<<<<<
@@ -7749,7 +7758,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                             for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
                               __pyx_v_j = __pyx_t_15;
 
-                              /* "evo/core.pyx":195
+                              /* "evo/core.pyx":217
  *             # 1. Bytes before crossover
  *             for j in range(cross_byte):
  *                 offspring[i, j] = parents_pool[p1_indices[i], j]             # <<<<<<<<<<<<<<
@@ -7764,7 +7773,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_p1_indices.diminfo[0].shape)) __pyx_t_16 = 0;
                               if (unlikely(__pyx_t_16 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_16);
-                                __PYX_ERR(0, 195, __pyx_L8_error)
+                                __PYX_ERR(0, 217, __pyx_L8_error)
                               }
                               __pyx_t_17 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_p1_indices.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_p1_indices.diminfo[0].strides));
                               __pyx_t_18 = __pyx_v_j;
@@ -7779,7 +7788,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_18 >= __pyx_pybuffernd_parents_pool.diminfo[1].shape)) __pyx_t_16 = 1;
                               if (unlikely(__pyx_t_16 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_16);
-                                __PYX_ERR(0, 195, __pyx_L8_error)
+                                __PYX_ERR(0, 217, __pyx_L8_error)
                               }
                               __pyx_t_19 = __pyx_v_i;
                               __pyx_t_20 = __pyx_v_j;
@@ -7794,12 +7803,12 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_20 >= __pyx_pybuffernd_offspring.diminfo[1].shape)) __pyx_t_16 = 1;
                               if (unlikely(__pyx_t_16 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_16);
-                                __PYX_ERR(0, 195, __pyx_L8_error)
+                                __PYX_ERR(0, 217, __pyx_L8_error)
                               }
                               *__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_offspring.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_offspring.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_offspring.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_parents_pool.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_parents_pool.diminfo[1].strides));
                             }
 
-                            /* "evo/core.pyx":198
+                            /* "evo/core.pyx":220
  * 
  *             # 2. Crossover byte
  *             if cross_byte < n_bytes:             # <<<<<<<<<<<<<<
@@ -7809,7 +7818,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                             __pyx_t_21 = (__pyx_v_cross_byte < __pyx_v_n_bytes);
                             if (__pyx_t_21) {
 
-                              /* "evo/core.pyx":199
+                              /* "evo/core.pyx":221
  *             # 2. Crossover byte
  *             if cross_byte < n_bytes:
  *                 offspring[i, cross_byte] = (parents_pool[p1_indices[i], cross_byte] & mask) | \             # <<<<<<<<<<<<<<
@@ -7824,7 +7833,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_p1_indices.diminfo[0].shape)) __pyx_t_13 = 0;
                               if (unlikely(__pyx_t_13 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                                __PYX_ERR(0, 199, __pyx_L8_error)
+                                __PYX_ERR(0, 221, __pyx_L8_error)
                               }
                               __pyx_t_18 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_p1_indices.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_p1_indices.diminfo[0].strides));
                               __pyx_t_17 = __pyx_v_cross_byte;
@@ -7839,10 +7848,10 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_17 >= __pyx_pybuffernd_parents_pool.diminfo[1].shape)) __pyx_t_13 = 1;
                               if (unlikely(__pyx_t_13 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                                __PYX_ERR(0, 199, __pyx_L8_error)
+                                __PYX_ERR(0, 221, __pyx_L8_error)
                               }
 
-                              /* "evo/core.pyx":200
+                              /* "evo/core.pyx":222
  *             if cross_byte < n_bytes:
  *                 offspring[i, cross_byte] = (parents_pool[p1_indices[i], cross_byte] & mask) | \
  *                                             (parents_pool[p2_indices[i], cross_byte] & ~mask)             # <<<<<<<<<<<<<<
@@ -7857,7 +7866,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_20 >= __pyx_pybuffernd_p2_indices.diminfo[0].shape)) __pyx_t_13 = 0;
                               if (unlikely(__pyx_t_13 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                                __PYX_ERR(0, 200, __pyx_L8_error)
+                                __PYX_ERR(0, 222, __pyx_L8_error)
                               }
                               __pyx_t_19 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_p2_indices.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_p2_indices.diminfo[0].strides));
                               __pyx_t_22 = __pyx_v_cross_byte;
@@ -7872,10 +7881,10 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_22 >= __pyx_pybuffernd_parents_pool.diminfo[1].shape)) __pyx_t_13 = 1;
                               if (unlikely(__pyx_t_13 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                                __PYX_ERR(0, 200, __pyx_L8_error)
+                                __PYX_ERR(0, 222, __pyx_L8_error)
                               }
 
-                              /* "evo/core.pyx":199
+                              /* "evo/core.pyx":221
  *             # 2. Crossover byte
  *             if cross_byte < n_bytes:
  *                 offspring[i, cross_byte] = (parents_pool[p1_indices[i], cross_byte] & mask) | \             # <<<<<<<<<<<<<<
@@ -7895,11 +7904,11 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_24 >= __pyx_pybuffernd_offspring.diminfo[1].shape)) __pyx_t_13 = 1;
                               if (unlikely(__pyx_t_13 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_13);
-                                __PYX_ERR(0, 199, __pyx_L8_error)
+                                __PYX_ERR(0, 221, __pyx_L8_error)
                               }
                               *__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_offspring.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_offspring.diminfo[0].strides, __pyx_t_24, __pyx_pybuffernd_offspring.diminfo[1].strides) = (((*__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_parents_pool.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_parents_pool.diminfo[1].strides)) & __pyx_v_mask) | ((*__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_parents_pool.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_parents_pool.diminfo[1].strides)) & (~__pyx_v_mask)));
 
-                              /* "evo/core.pyx":198
+                              /* "evo/core.pyx":220
  * 
  *             # 2. Crossover byte
  *             if cross_byte < n_bytes:             # <<<<<<<<<<<<<<
@@ -7908,7 +7917,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
 */
                             }
 
-                            /* "evo/core.pyx":203
+                            /* "evo/core.pyx":225
  * 
  *             # 3. Bytes after crossover
  *             for j in range(cross_byte + 1, n_bytes):             # <<<<<<<<<<<<<<
@@ -7920,7 +7929,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                             for (__pyx_t_15 = (__pyx_v_cross_byte + 1); __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
                               __pyx_v_j = __pyx_t_15;
 
-                              /* "evo/core.pyx":204
+                              /* "evo/core.pyx":226
  *             # 3. Bytes after crossover
  *             for j in range(cross_byte + 1, n_bytes):
  *                 offspring[i, j] = parents_pool[p2_indices[i], j]             # <<<<<<<<<<<<<<
@@ -7935,7 +7944,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_20 >= __pyx_pybuffernd_p2_indices.diminfo[0].shape)) __pyx_t_16 = 0;
                               if (unlikely(__pyx_t_16 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_16);
-                                __PYX_ERR(0, 204, __pyx_L8_error)
+                                __PYX_ERR(0, 226, __pyx_L8_error)
                               }
                               __pyx_t_22 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int32_t *, __pyx_pybuffernd_p2_indices.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_p2_indices.diminfo[0].strides));
                               __pyx_t_19 = __pyx_v_j;
@@ -7950,7 +7959,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_19 >= __pyx_pybuffernd_parents_pool.diminfo[1].shape)) __pyx_t_16 = 1;
                               if (unlikely(__pyx_t_16 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_16);
-                                __PYX_ERR(0, 204, __pyx_L8_error)
+                                __PYX_ERR(0, 226, __pyx_L8_error)
                               }
                               __pyx_t_12 = __pyx_v_i;
                               __pyx_t_17 = __pyx_v_j;
@@ -7965,7 +7974,7 @@ static PyObject *__pyx_pf_3evo_4core_12batch_crossover_packed(CYTHON_UNUSED PyOb
                               } else if (unlikely(__pyx_t_17 >= __pyx_pybuffernd_offspring.diminfo[1].shape)) __pyx_t_16 = 1;
                               if (unlikely(__pyx_t_16 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_16);
-                                __PYX_ERR(0, 204, __pyx_L8_error)
+                                __PYX_ERR(0, 226, __pyx_L8_error)
                               }
                               *__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_offspring.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_offspring.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_offspring.diminfo[1].strides) = (*__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_parents_pool.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_parents_pool.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_parents_pool.diminfo[1].strides));
                             }
@@ -8042,7 +8051,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
         #endif
       }
 
-      /* "evo/core.pyx":187
+      /* "evo/core.pyx":209
  * 
  *     # We release the GIL to let OpenMP threads run in parallel
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -8064,7 +8073,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
       }
   }
 
-  /* "evo/core.pyx":206
+  /* "evo/core.pyx":228
  *                 offspring[i, j] = parents_pool[p2_indices[i], j]
  * 
  *     return offspring             # <<<<<<<<<<<<<<
@@ -8076,7 +8085,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
   __pyx_r = ((PyObject *)__pyx_v_offspring);
   goto __pyx_L0;
 
-  /* "evo/core.pyx":171
+  /* "evo/core.pyx":193
  * # --- Parallel Batch Operations (OpenMP) ---
  * 
  * def batch_crossover_packed(cnp.ndarray[uint8_t, ndim=2] parents_pool,             # <<<<<<<<<<<<<<
@@ -8118,7 +8127,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
   return __pyx_r;
 }
 
-/* "evo/core.pyx":208
+/* "evo/core.pyx":230
  *     return offspring
  * 
  * def batch_mutation_packed(cnp.ndarray[uint8_t, ndim=2] offspring_pool,             # <<<<<<<<<<<<<<
@@ -8169,53 +8178,53 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_offspring_pool,&__pyx_mstate_global->__pyx_n_u_mutation_rate,&__pyx_mstate_global->__pyx_n_u_random_matrix,&__pyx_mstate_global->__pyx_n_u_total_bits,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 208, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 230, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  4:
         values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 208, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 230, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 208, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 230, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 208, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 230, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 208, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 230, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "batch_mutation_packed", 0) < (0)) __PYX_ERR(0, 208, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "batch_mutation_packed", 0) < (0)) __PYX_ERR(0, 230, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 4; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("batch_mutation_packed", 1, 4, 4, i); __PYX_ERR(0, 208, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("batch_mutation_packed", 1, 4, 4, i); __PYX_ERR(0, 230, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 4)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 208, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 230, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 208, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 230, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 208, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 230, __pyx_L3_error)
       values[3] = __Pyx_ArgRef_FASTCALL(__pyx_args, 3);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 208, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[3])) __PYX_ERR(0, 230, __pyx_L3_error)
     }
     __pyx_v_offspring_pool = ((PyArrayObject *)values[0]);
-    __pyx_v_mutation_rate = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_mutation_rate == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 209, __pyx_L3_error)
+    __pyx_v_mutation_rate = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_mutation_rate == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 231, __pyx_L3_error)
     __pyx_v_random_matrix = ((PyArrayObject *)values[2]);
-    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 211, __pyx_L3_error)
+    __pyx_v_total_bits = __Pyx_PyLong_As_int(values[3]); if (unlikely((__pyx_v_total_bits == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 233, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("batch_mutation_packed", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 208, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("batch_mutation_packed", 1, 4, 4, __pyx_nargs); __PYX_ERR(0, 230, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8226,8 +8235,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_offspring_pool), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "offspring_pool", 0))) __PYX_ERR(0, 208, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_random_matrix), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "random_matrix", 0))) __PYX_ERR(0, 210, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_offspring_pool), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "offspring_pool", 0))) __PYX_ERR(0, 230, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_random_matrix), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "random_matrix", 0))) __PYX_ERR(0, 232, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_14batch_mutation_packed(__pyx_self, __pyx_v_offspring_pool, __pyx_v_mutation_rate, __pyx_v_random_matrix, __pyx_v_total_bits);
 
   /* function exit code */
@@ -8285,36 +8294,36 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
   __pyx_pybuffernd_random_matrix.rcbuffer = &__pyx_pybuffer_random_matrix;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer, (PyObject*)__pyx_v_offspring_pool, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 208, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer, (PyObject*)__pyx_v_offspring_pool, &__Pyx_TypeInfo_nn_uint8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 230, __pyx_L1_error)
   }
   __pyx_pybuffernd_offspring_pool.diminfo[0].strides = __pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_offspring_pool.diminfo[0].shape = __pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_offspring_pool.diminfo[1].strides = __pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_offspring_pool.diminfo[1].shape = __pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_random_matrix.rcbuffer->pybuffer, (PyObject*)__pyx_v_random_matrix, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 208, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_random_matrix.rcbuffer->pybuffer, (PyObject*)__pyx_v_random_matrix, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 230, __pyx_L1_error)
   }
   __pyx_pybuffernd_random_matrix.diminfo[0].strides = __pyx_pybuffernd_random_matrix.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_random_matrix.diminfo[0].shape = __pyx_pybuffernd_random_matrix.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_random_matrix.diminfo[1].strides = __pyx_pybuffernd_random_matrix.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_random_matrix.diminfo[1].shape = __pyx_pybuffernd_random_matrix.rcbuffer->pybuffer.shape[1];
 
-  /* "evo/core.pyx":215
+  /* "evo/core.pyx":237
  *     Parallel mutation of the entire population using OpenMP.
  *     """
  *     cdef int n_pop = offspring_pool.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int n_bytes = offspring_pool.shape[1]
  * 
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_offspring_pool)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 215, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_offspring_pool)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 237, __pyx_L1_error)
   __pyx_v_n_pop = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":216
+  /* "evo/core.pyx":238
  *     """
  *     cdef int n_pop = offspring_pool.shape[0]
  *     cdef int n_bytes = offspring_pool.shape[1]             # <<<<<<<<<<<<<<
  * 
  *     cdef int i, j, byte_idx, bit_idx
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_offspring_pool)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 216, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_offspring_pool)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 238, __pyx_L1_error)
   __pyx_v_n_bytes = (__pyx_t_1[1]);
 
-  /* "evo/core.pyx":220
+  /* "evo/core.pyx":242
  *     cdef int i, j, byte_idx, bit_idx
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -8327,7 +8336,7 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
       __Pyx_FastGIL_Remember();
       /*try:*/ {
 
-        /* "evo/core.pyx":221
+        /* "evo/core.pyx":243
  * 
  *     with nogil:
  *         for i in prange(n_pop, schedule='static'):             # <<<<<<<<<<<<<<
@@ -8368,7 +8377,7 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
                         {
                             __pyx_v_i = (int)(0 + 1 * __pyx_t_3);
 
-                            /* "evo/core.pyx":222
+                            /* "evo/core.pyx":244
  *     with nogil:
  *         for i in prange(n_pop, schedule='static'):
  *             for j in range(total_bits):             # <<<<<<<<<<<<<<
@@ -8380,7 +8389,7 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
                             for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
                               __pyx_v_j = __pyx_t_7;
 
-                              /* "evo/core.pyx":223
+                              /* "evo/core.pyx":245
  *         for i in prange(n_pop, schedule='static'):
  *             for j in range(total_bits):
  *                 if random_matrix[i, j] < mutation_rate:             # <<<<<<<<<<<<<<
@@ -8400,12 +8409,12 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
                               } else if (unlikely(__pyx_t_9 >= __pyx_pybuffernd_random_matrix.diminfo[1].shape)) __pyx_t_10 = 1;
                               if (unlikely(__pyx_t_10 != -1)) {
                                 __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_10);
-                                __PYX_ERR(0, 223, __pyx_L8_error)
+                                __PYX_ERR(0, 245, __pyx_L8_error)
                               }
                               __pyx_t_11 = ((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_random_matrix.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_random_matrix.diminfo[0].strides, __pyx_t_9, __pyx_pybuffernd_random_matrix.diminfo[1].strides)) < __pyx_v_mutation_rate);
                               if (__pyx_t_11) {
 
-                                /* "evo/core.pyx":224
+                                /* "evo/core.pyx":246
  *             for j in range(total_bits):
  *                 if random_matrix[i, j] < mutation_rate:
  *                     byte_idx = j // 8             # <<<<<<<<<<<<<<
@@ -8414,7 +8423,7 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
 */
                                 __pyx_v_byte_idx = __Pyx_div_long(__pyx_v_j, 8, 1);
 
-                                /* "evo/core.pyx":225
+                                /* "evo/core.pyx":247
  *                 if random_matrix[i, j] < mutation_rate:
  *                     byte_idx = j // 8
  *                     bit_idx = j % 8             # <<<<<<<<<<<<<<
@@ -8423,7 +8432,7 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
 */
                                 __pyx_v_bit_idx = __Pyx_mod_long(__pyx_v_j, 8, 1);
 
-                                /* "evo/core.pyx":226
+                                /* "evo/core.pyx":248
  *                     byte_idx = j // 8
  *                     bit_idx = j % 8
  *                     offspring_pool[i, byte_idx] ^= (1 << (7 - bit_idx))             # <<<<<<<<<<<<<<
@@ -8443,11 +8452,11 @@ static PyObject *__pyx_pf_3evo_4core_14batch_mutation_packed(CYTHON_UNUSED PyObj
                                 } else if (unlikely(__pyx_t_8 >= __pyx_pybuffernd_offspring_pool.diminfo[1].shape)) __pyx_t_10 = 1;
                                 if (unlikely(__pyx_t_10 != -1)) {
                                   __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_10);
-                                  __PYX_ERR(0, 226, __pyx_L8_error)
+                                  __PYX_ERR(0, 248, __pyx_L8_error)
                                 }
                                 *__Pyx_BufPtrStrided2d(uint8_t *, __pyx_pybuffernd_offspring_pool.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_offspring_pool.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_offspring_pool.diminfo[1].strides) ^= (1 << (7 - __pyx_v_bit_idx));
 
-                                /* "evo/core.pyx":223
+                                /* "evo/core.pyx":245
  *         for i in prange(n_pop, schedule='static'):
  *             for j in range(total_bits):
  *                 if random_matrix[i, j] < mutation_rate:             # <<<<<<<<<<<<<<
@@ -8529,7 +8538,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
         #endif
       }
 
-      /* "evo/core.pyx":220
+      /* "evo/core.pyx":242
  *     cdef int i, j, byte_idx, bit_idx
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -8551,7 +8560,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
       }
   }
 
-  /* "evo/core.pyx":228
+  /* "evo/core.pyx":250
  *                     offspring_pool[i, byte_idx] ^= (1 << (7 - bit_idx))
  * 
  *     return offspring_pool             # <<<<<<<<<<<<<<
@@ -8563,7 +8572,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
   __pyx_r = ((PyObject *)__pyx_v_offspring_pool);
   goto __pyx_L0;
 
-  /* "evo/core.pyx":208
+  /* "evo/core.pyx":230
  *     return offspring
  * 
  * def batch_mutation_packed(cnp.ndarray[uint8_t, ndim=2] offspring_pool,             # <<<<<<<<<<<<<<
@@ -8592,7 +8601,7 @@ PyGILState_STATE __pyx_gilstate_save = __Pyx_PyGILState_Ensure();
   return __pyx_r;
 }
 
-/* "evo/core.pyx":232
+/* "evo/core.pyx":254
  * # --- Original int8 Helpers (for backward compatibility) ---
  * 
  * def fast_binary_to_decimal(cnp.ndarray[int8_t, ndim=1] binary):             # <<<<<<<<<<<<<<
@@ -8639,32 +8648,32 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_binary,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 232, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 254, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 232, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 254, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_binary_to_decimal", 0) < (0)) __PYX_ERR(0, 232, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_binary_to_decimal", 0) < (0)) __PYX_ERR(0, 254, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 1; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_binary_to_decimal", 1, 1, 1, i); __PYX_ERR(0, 232, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_binary_to_decimal", 1, 1, 1, i); __PYX_ERR(0, 254, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 1)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 232, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 254, __pyx_L3_error)
     }
     __pyx_v_binary = ((PyArrayObject *)values[0]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("fast_binary_to_decimal", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 232, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("fast_binary_to_decimal", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 254, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8675,7 +8684,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_binary), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "binary", 0))) __PYX_ERR(0, 232, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_binary), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "binary", 0))) __PYX_ERR(0, 254, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_16fast_binary_to_decimal(__pyx_self, __pyx_v_binary);
 
   /* function exit code */
@@ -8720,11 +8729,11 @@ static PyObject *__pyx_pf_3evo_4core_16fast_binary_to_decimal(CYTHON_UNUSED PyOb
   __pyx_pybuffernd_binary.rcbuffer = &__pyx_pybuffer_binary;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_binary.rcbuffer->pybuffer, (PyObject*)__pyx_v_binary, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 232, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_binary.rcbuffer->pybuffer, (PyObject*)__pyx_v_binary, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 254, __pyx_L1_error)
   }
   __pyx_pybuffernd_binary.diminfo[0].strides = __pyx_pybuffernd_binary.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_binary.diminfo[0].shape = __pyx_pybuffernd_binary.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":233
+  /* "evo/core.pyx":255
  * 
  * def fast_binary_to_decimal(cnp.ndarray[int8_t, ndim=1] binary):
  *     cdef long long res = 0             # <<<<<<<<<<<<<<
@@ -8733,17 +8742,17 @@ static PyObject *__pyx_pf_3evo_4core_16fast_binary_to_decimal(CYTHON_UNUSED PyOb
 */
   __pyx_v_res = 0;
 
-  /* "evo/core.pyx":234
+  /* "evo/core.pyx":256
  * def fast_binary_to_decimal(cnp.ndarray[int8_t, ndim=1] binary):
  *     cdef long long res = 0
  *     cdef int i, n = binary.shape[0]             # <<<<<<<<<<<<<<
  *     for i in range(n):
  *         res = (res << 1) | binary[i]
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_binary)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 234, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_binary)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L1_error)
   __pyx_v_n = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":235
+  /* "evo/core.pyx":257
  *     cdef long long res = 0
  *     cdef int i, n = binary.shape[0]
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -8755,7 +8764,7 @@ static PyObject *__pyx_pf_3evo_4core_16fast_binary_to_decimal(CYTHON_UNUSED PyOb
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "evo/core.pyx":236
+    /* "evo/core.pyx":258
  *     cdef int i, n = binary.shape[0]
  *     for i in range(n):
  *         res = (res << 1) | binary[i]             # <<<<<<<<<<<<<<
@@ -8770,12 +8779,12 @@ static PyObject *__pyx_pf_3evo_4core_16fast_binary_to_decimal(CYTHON_UNUSED PyOb
     } else if (unlikely(__pyx_t_5 >= __pyx_pybuffernd_binary.diminfo[0].shape)) __pyx_t_6 = 0;
     if (unlikely(__pyx_t_6 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_6);
-      __PYX_ERR(0, 236, __pyx_L1_error)
+      __PYX_ERR(0, 258, __pyx_L1_error)
     }
     __pyx_v_res = ((__pyx_v_res << 1) | (*__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_binary.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_binary.diminfo[0].strides)));
   }
 
-  /* "evo/core.pyx":237
+  /* "evo/core.pyx":259
  *     for i in range(n):
  *         res = (res << 1) | binary[i]
  *     return res             # <<<<<<<<<<<<<<
@@ -8783,13 +8792,13 @@ static PyObject *__pyx_pf_3evo_4core_16fast_binary_to_decimal(CYTHON_UNUSED PyOb
  * def fast_crossover(cnp.ndarray[int8_t, ndim=1] parent1,
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_7 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_res); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 237, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_res); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 259, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __pyx_r = __pyx_t_7;
   __pyx_t_7 = 0;
   goto __pyx_L0;
 
-  /* "evo/core.pyx":232
+  /* "evo/core.pyx":254
  * # --- Original int8 Helpers (for backward compatibility) ---
  * 
  * def fast_binary_to_decimal(cnp.ndarray[int8_t, ndim=1] binary):             # <<<<<<<<<<<<<<
@@ -8817,7 +8826,7 @@ static PyObject *__pyx_pf_3evo_4core_16fast_binary_to_decimal(CYTHON_UNUSED PyOb
   return __pyx_r;
 }
 
-/* "evo/core.pyx":239
+/* "evo/core.pyx":261
  *     return res
  * 
  * def fast_crossover(cnp.ndarray[int8_t, ndim=1] parent1,             # <<<<<<<<<<<<<<
@@ -8866,46 +8875,46 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_parent1,&__pyx_mstate_global->__pyx_n_u_parent2,&__pyx_mstate_global->__pyx_n_u_crossover_point,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 239, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 261, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 239, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 261, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 239, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 261, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 239, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 261, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_crossover", 0) < (0)) __PYX_ERR(0, 239, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_crossover", 0) < (0)) __PYX_ERR(0, 261, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 3; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_crossover", 1, 3, 3, i); __PYX_ERR(0, 239, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_crossover", 1, 3, 3, i); __PYX_ERR(0, 261, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 3)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 239, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 261, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 239, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 261, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 239, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 261, __pyx_L3_error)
     }
     __pyx_v_parent1 = ((PyArrayObject *)values[0]);
     __pyx_v_parent2 = ((PyArrayObject *)values[1]);
-    __pyx_v_crossover_point = __Pyx_PyLong_As_int(values[2]); if (unlikely((__pyx_v_crossover_point == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 241, __pyx_L3_error)
+    __pyx_v_crossover_point = __Pyx_PyLong_As_int(values[2]); if (unlikely((__pyx_v_crossover_point == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 263, __pyx_L3_error)
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("fast_crossover", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 239, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("fast_crossover", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 261, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -8916,8 +8925,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_parent1), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "parent1", 0))) __PYX_ERR(0, 239, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_parent2), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "parent2", 0))) __PYX_ERR(0, 240, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_parent1), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "parent1", 0))) __PYX_ERR(0, 261, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_parent2), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "parent2", 0))) __PYX_ERR(0, 262, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_18fast_crossover(__pyx_self, __pyx_v_parent1, __pyx_v_parent2, __pyx_v_crossover_point);
 
   /* function exit code */
@@ -8981,26 +8990,26 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
   __pyx_pybuffernd_parent2.rcbuffer = &__pyx_pybuffer_parent2;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_parent1.rcbuffer->pybuffer, (PyObject*)__pyx_v_parent1, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 239, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_parent1.rcbuffer->pybuffer, (PyObject*)__pyx_v_parent1, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 261, __pyx_L1_error)
   }
   __pyx_pybuffernd_parent1.diminfo[0].strides = __pyx_pybuffernd_parent1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_parent1.diminfo[0].shape = __pyx_pybuffernd_parent1.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_parent2.rcbuffer->pybuffer, (PyObject*)__pyx_v_parent2, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 239, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_parent2.rcbuffer->pybuffer, (PyObject*)__pyx_v_parent2, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 261, __pyx_L1_error)
   }
   __pyx_pybuffernd_parent2.diminfo[0].strides = __pyx_pybuffernd_parent2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_parent2.diminfo[0].shape = __pyx_pybuffernd_parent2.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":242
+  /* "evo/core.pyx":264
  *                    cnp.ndarray[int8_t, ndim=1] parent2,
  *                    int crossover_point):
  *     cdef int n = parent1.shape[0]             # <<<<<<<<<<<<<<
  *     cdef cnp.ndarray[int8_t, ndim=1] child = np.empty(n, dtype=np.int8)
  *     cdef int i
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_parent1)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 242, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_parent1)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 264, __pyx_L1_error)
   __pyx_v_n = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":243
+  /* "evo/core.pyx":265
  *                    int crossover_point):
  *     cdef int n = parent1.shape[0]
  *     cdef cnp.ndarray[int8_t, ndim=1] child = np.empty(n, dtype=np.int8)             # <<<<<<<<<<<<<<
@@ -9008,16 +9017,16 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
  *     for i in range(crossover_point):
 */
   __pyx_t_3 = NULL;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 243, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 265, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_empty); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 243, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_mstate_global->__pyx_n_u_empty); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 265, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 243, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyLong_From_int(__pyx_v_n); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 265, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 265, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_int8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 243, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_mstate_global->__pyx_n_u_int8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 265, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_8 = 1;
@@ -9034,31 +9043,31 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
   #endif
   {
     PyObject *__pyx_callargs[2 + ((CYTHON_VECTORCALL) ? 1 : 0)] = {__pyx_t_3, __pyx_t_4};
-    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_MakeVectorcallBuilderKwds(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 265, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_7, __pyx_t_6, __pyx_callargs+2, 0) < (0)) __PYX_ERR(0, 243, __pyx_L1_error)
+    if (__Pyx_VectorcallBuilder_AddArg(__pyx_mstate_global->__pyx_n_u_dtype, __pyx_t_7, __pyx_t_6, __pyx_callargs+2, 0) < (0)) __PYX_ERR(0, 265, __pyx_L1_error)
     __pyx_t_2 = __Pyx_Object_Vectorcall_CallFromBuilder((PyObject*)__pyx_t_5, __pyx_callargs+__pyx_t_8, (2-__pyx_t_8) | (__pyx_t_8*__Pyx_PY_VECTORCALL_ARGUMENTS_OFFSET), __pyx_t_6);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 243, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 265, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
   }
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 243, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_mstate_global->__pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 265, __pyx_L1_error)
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_child.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_2), &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_child = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_child.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 243, __pyx_L1_error)
+      __PYX_ERR(0, 265, __pyx_L1_error)
     } else {__pyx_pybuffernd_child.diminfo[0].strides = __pyx_pybuffernd_child.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_child.diminfo[0].shape = __pyx_pybuffernd_child.rcbuffer->pybuffer.shape[0];
     }
   }
   __pyx_v_child = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":245
+  /* "evo/core.pyx":267
  *     cdef cnp.ndarray[int8_t, ndim=1] child = np.empty(n, dtype=np.int8)
  *     cdef int i
  *     for i in range(crossover_point):             # <<<<<<<<<<<<<<
@@ -9070,7 +9079,7 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
   for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
     __pyx_v_i = __pyx_t_11;
 
-    /* "evo/core.pyx":246
+    /* "evo/core.pyx":268
  *     cdef int i
  *     for i in range(crossover_point):
  *         child[i] = parent1[i]             # <<<<<<<<<<<<<<
@@ -9085,7 +9094,7 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_parent1.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 246, __pyx_L1_error)
+      __PYX_ERR(0, 268, __pyx_L1_error)
     }
     __pyx_t_14 = __pyx_v_i;
     __pyx_t_13 = -1;
@@ -9095,12 +9104,12 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
     } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_child.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 246, __pyx_L1_error)
+      __PYX_ERR(0, 268, __pyx_L1_error)
     }
     *__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_child.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_child.diminfo[0].strides) = (*__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_parent1.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_parent1.diminfo[0].strides));
   }
 
-  /* "evo/core.pyx":247
+  /* "evo/core.pyx":269
  *     for i in range(crossover_point):
  *         child[i] = parent1[i]
  *     for i in range(crossover_point, n):             # <<<<<<<<<<<<<<
@@ -9112,7 +9121,7 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
   for (__pyx_t_11 = __pyx_v_crossover_point; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
     __pyx_v_i = __pyx_t_11;
 
-    /* "evo/core.pyx":248
+    /* "evo/core.pyx":270
  *         child[i] = parent1[i]
  *     for i in range(crossover_point, n):
  *         child[i] = parent2[i]             # <<<<<<<<<<<<<<
@@ -9127,7 +9136,7 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
     } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_parent2.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 248, __pyx_L1_error)
+      __PYX_ERR(0, 270, __pyx_L1_error)
     }
     __pyx_t_14 = __pyx_v_i;
     __pyx_t_13 = -1;
@@ -9137,12 +9146,12 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
     } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_child.diminfo[0].shape)) __pyx_t_13 = 0;
     if (unlikely(__pyx_t_13 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_13);
-      __PYX_ERR(0, 248, __pyx_L1_error)
+      __PYX_ERR(0, 270, __pyx_L1_error)
     }
     *__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_child.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_child.diminfo[0].strides) = (*__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_parent2.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_parent2.diminfo[0].strides));
   }
 
-  /* "evo/core.pyx":249
+  /* "evo/core.pyx":271
  *     for i in range(crossover_point, n):
  *         child[i] = parent2[i]
  *     return child             # <<<<<<<<<<<<<<
@@ -9154,7 +9163,7 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
   __pyx_r = ((PyObject *)__pyx_v_child);
   goto __pyx_L0;
 
-  /* "evo/core.pyx":239
+  /* "evo/core.pyx":261
  *     return res
  * 
  * def fast_crossover(cnp.ndarray[int8_t, ndim=1] parent1,             # <<<<<<<<<<<<<<
@@ -9192,7 +9201,7 @@ static PyObject *__pyx_pf_3evo_4core_18fast_crossover(CYTHON_UNUSED PyObject *__
   return __pyx_r;
 }
 
-/* "evo/core.pyx":251
+/* "evo/core.pyx":273
  *     return child
  * 
  * def fast_mutation(cnp.ndarray[int8_t, ndim=1] genes,             # <<<<<<<<<<<<<<
@@ -9241,46 +9250,46 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_genes,&__pyx_mstate_global->__pyx_n_u_mutation_rate,&__pyx_mstate_global->__pyx_n_u_random_values,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 251, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 273, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  3:
         values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 251, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 273, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 251, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 273, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 251, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 273, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_mutation", 0) < (0)) __PYX_ERR(0, 251, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_mutation", 0) < (0)) __PYX_ERR(0, 273, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 3; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_mutation", 1, 3, 3, i); __PYX_ERR(0, 251, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_mutation", 1, 3, 3, i); __PYX_ERR(0, 273, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 3)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 251, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 273, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 251, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 273, __pyx_L3_error)
       values[2] = __Pyx_ArgRef_FASTCALL(__pyx_args, 2);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 251, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[2])) __PYX_ERR(0, 273, __pyx_L3_error)
     }
     __pyx_v_genes = ((PyArrayObject *)values[0]);
-    __pyx_v_mutation_rate = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_mutation_rate == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 252, __pyx_L3_error)
+    __pyx_v_mutation_rate = __Pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_mutation_rate == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 274, __pyx_L3_error)
     __pyx_v_random_values = ((PyArrayObject *)values[2]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("fast_mutation", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 251, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("fast_mutation", 1, 3, 3, __pyx_nargs); __PYX_ERR(0, 273, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -9291,8 +9300,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_genes), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "genes", 0))) __PYX_ERR(0, 251, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_random_values), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "random_values", 0))) __PYX_ERR(0, 253, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_genes), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "genes", 0))) __PYX_ERR(0, 273, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_random_values), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "random_values", 0))) __PYX_ERR(0, 275, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_20fast_mutation(__pyx_self, __pyx_v_genes, __pyx_v_mutation_rate, __pyx_v_random_values);
 
   /* function exit code */
@@ -9343,26 +9352,26 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
   __pyx_pybuffernd_random_values.rcbuffer = &__pyx_pybuffer_random_values;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_genes.rcbuffer->pybuffer, (PyObject*)__pyx_v_genes, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 251, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_genes.rcbuffer->pybuffer, (PyObject*)__pyx_v_genes, &__Pyx_TypeInfo_nn_int8_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 273, __pyx_L1_error)
   }
   __pyx_pybuffernd_genes.diminfo[0].strides = __pyx_pybuffernd_genes.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_genes.diminfo[0].shape = __pyx_pybuffernd_genes.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_random_values.rcbuffer->pybuffer, (PyObject*)__pyx_v_random_values, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 251, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_random_values.rcbuffer->pybuffer, (PyObject*)__pyx_v_random_values, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 273, __pyx_L1_error)
   }
   __pyx_pybuffernd_random_values.diminfo[0].strides = __pyx_pybuffernd_random_values.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_random_values.diminfo[0].shape = __pyx_pybuffernd_random_values.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":254
+  /* "evo/core.pyx":276
  *                   double mutation_rate,
  *                   cnp.ndarray[cnp.float64_t, ndim=1] random_values):
  *     cdef int n = genes.shape[0]             # <<<<<<<<<<<<<<
  *     cdef int i
  *     for i in range(n):
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_genes)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 254, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_genes)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 276, __pyx_L1_error)
   __pyx_v_n = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":256
+  /* "evo/core.pyx":278
  *     cdef int n = genes.shape[0]
  *     cdef int i
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -9374,7 +9383,7 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "evo/core.pyx":257
+    /* "evo/core.pyx":279
  *     cdef int i
  *     for i in range(n):
  *         if random_values[i] < mutation_rate:             # <<<<<<<<<<<<<<
@@ -9389,12 +9398,12 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
     } else if (unlikely(__pyx_t_5 >= __pyx_pybuffernd_random_values.diminfo[0].shape)) __pyx_t_6 = 0;
     if (unlikely(__pyx_t_6 != -1)) {
       __Pyx_RaiseBufferIndexError(__pyx_t_6);
-      __PYX_ERR(0, 257, __pyx_L1_error)
+      __PYX_ERR(0, 279, __pyx_L1_error)
     }
     __pyx_t_7 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_random_values.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_random_values.diminfo[0].strides)) < __pyx_v_mutation_rate);
     if (__pyx_t_7) {
 
-      /* "evo/core.pyx":258
+      /* "evo/core.pyx":280
  *     for i in range(n):
  *         if random_values[i] < mutation_rate:
  *             genes[i] = 1 - genes[i]             # <<<<<<<<<<<<<<
@@ -9409,7 +9418,7 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
       } else if (unlikely(__pyx_t_5 >= __pyx_pybuffernd_genes.diminfo[0].shape)) __pyx_t_6 = 0;
       if (unlikely(__pyx_t_6 != -1)) {
         __Pyx_RaiseBufferIndexError(__pyx_t_6);
-        __PYX_ERR(0, 258, __pyx_L1_error)
+        __PYX_ERR(0, 280, __pyx_L1_error)
       }
       __pyx_t_8 = __pyx_v_i;
       __pyx_t_6 = -1;
@@ -9419,11 +9428,11 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
       } else if (unlikely(__pyx_t_8 >= __pyx_pybuffernd_genes.diminfo[0].shape)) __pyx_t_6 = 0;
       if (unlikely(__pyx_t_6 != -1)) {
         __Pyx_RaiseBufferIndexError(__pyx_t_6);
-        __PYX_ERR(0, 258, __pyx_L1_error)
+        __PYX_ERR(0, 280, __pyx_L1_error)
       }
       *__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_genes.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_genes.diminfo[0].strides) = (1 - (*__Pyx_BufPtrStrided1d(int8_t *, __pyx_pybuffernd_genes.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_genes.diminfo[0].strides)));
 
-      /* "evo/core.pyx":257
+      /* "evo/core.pyx":279
  *     cdef int i
  *     for i in range(n):
  *         if random_values[i] < mutation_rate:             # <<<<<<<<<<<<<<
@@ -9433,7 +9442,7 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
     }
   }
 
-  /* "evo/core.pyx":259
+  /* "evo/core.pyx":281
  *         if random_values[i] < mutation_rate:
  *             genes[i] = 1 - genes[i]
  *     return genes             # <<<<<<<<<<<<<<
@@ -9445,7 +9454,7 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
   __pyx_r = ((PyObject *)__pyx_v_genes);
   goto __pyx_L0;
 
-  /* "evo/core.pyx":251
+  /* "evo/core.pyx":273
  *     return child
  * 
  * def fast_mutation(cnp.ndarray[int8_t, ndim=1] genes,             # <<<<<<<<<<<<<<
@@ -9474,7 +9483,7 @@ static PyObject *__pyx_pf_3evo_4core_20fast_mutation(CYTHON_UNUSED PyObject *__p
   return __pyx_r;
 }
 
-/* "evo/core.pyx":263
+/* "evo/core.pyx":285
  * from libc.math cimport sqrt
  * 
  * def fast_binary_metrics(cnp.ndarray[cnp.int64_t, ndim=1] y_true, cnp.ndarray[cnp.int64_t, ndim=1] y_pred):             # <<<<<<<<<<<<<<
@@ -9523,39 +9532,39 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   {
     PyObject ** const __pyx_pyargnames[] = {&__pyx_mstate_global->__pyx_n_u_y_true,&__pyx_mstate_global->__pyx_n_u_y_pred,0};
     const Py_ssize_t __pyx_kwds_len = (__pyx_kwds) ? __Pyx_NumKwargs_FASTCALL(__pyx_kwds) : 0;
-    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 263, __pyx_L3_error)
+    if (unlikely(__pyx_kwds_len) < 0) __PYX_ERR(0, 285, __pyx_L3_error)
     if (__pyx_kwds_len > 0) {
       switch (__pyx_nargs) {
         case  2:
         values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 263, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 285, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  1:
         values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 263, __pyx_L3_error)
+        if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 285, __pyx_L3_error)
         CYTHON_FALLTHROUGH;
         case  0: break;
         default: goto __pyx_L5_argtuple_error;
       }
       const Py_ssize_t kwd_pos_args = __pyx_nargs;
-      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_binary_metrics", 0) < (0)) __PYX_ERR(0, 263, __pyx_L3_error)
+      if (__Pyx_ParseKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values, kwd_pos_args, __pyx_kwds_len, "fast_binary_metrics", 0) < (0)) __PYX_ERR(0, 285, __pyx_L3_error)
       for (Py_ssize_t i = __pyx_nargs; i < 2; i++) {
-        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_binary_metrics", 1, 2, 2, i); __PYX_ERR(0, 263, __pyx_L3_error) }
+        if (unlikely(!values[i])) { __Pyx_RaiseArgtupleInvalid("fast_binary_metrics", 1, 2, 2, i); __PYX_ERR(0, 285, __pyx_L3_error) }
       }
     } else if (unlikely(__pyx_nargs != 2)) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = __Pyx_ArgRef_FASTCALL(__pyx_args, 0);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 263, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[0])) __PYX_ERR(0, 285, __pyx_L3_error)
       values[1] = __Pyx_ArgRef_FASTCALL(__pyx_args, 1);
-      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 263, __pyx_L3_error)
+      if (!CYTHON_ASSUME_SAFE_MACROS && unlikely(!values[1])) __PYX_ERR(0, 285, __pyx_L3_error)
     }
     __pyx_v_y_true = ((PyArrayObject *)values[0]);
     __pyx_v_y_pred = ((PyArrayObject *)values[1]);
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("fast_binary_metrics", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 263, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("fast_binary_metrics", 1, 2, 2, __pyx_nargs); __PYX_ERR(0, 285, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -9566,8 +9575,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y_true), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "y_true", 0))) __PYX_ERR(0, 263, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y_pred), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "y_pred", 0))) __PYX_ERR(0, 263, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y_true), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "y_true", 0))) __PYX_ERR(0, 285, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y_pred), __pyx_mstate_global->__pyx_ptype_5numpy_ndarray, 1, "y_pred", 0))) __PYX_ERR(0, 285, __pyx_L1_error)
   __pyx_r = __pyx_pf_3evo_4core_22fast_binary_metrics(__pyx_self, __pyx_v_y_true, __pyx_v_y_pred);
 
   /* function exit code */
@@ -9640,26 +9649,26 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_pybuffernd_y_pred.rcbuffer = &__pyx_pybuffer_y_pred;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_true.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_true, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 263, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_true.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_true, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 285, __pyx_L1_error)
   }
   __pyx_pybuffernd_y_true.diminfo[0].strides = __pyx_pybuffernd_y_true.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_y_true.diminfo[0].shape = __pyx_pybuffernd_y_true.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_pred.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_pred, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 263, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_pred.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_pred, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 285, __pyx_L1_error)
   }
   __pyx_pybuffernd_y_pred.diminfo[0].strides = __pyx_pybuffernd_y_pred.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_y_pred.diminfo[0].shape = __pyx_pybuffernd_y_pred.rcbuffer->pybuffer.shape[0];
 
-  /* "evo/core.pyx":270
+  /* "evo/core.pyx":292
  *     Returns: mcc, acc, f1, prec, recall, confusion_matrix
  *     """
  *     cdef int n = y_true.shape[0]             # <<<<<<<<<<<<<<
  *     cdef long long tp = 0, tn = 0, fp = 0, fn = 0
  *     cdef int i
 */
-  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_y_true)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 270, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_y_true)); if (unlikely(__pyx_t_1 == ((void *)NULL) && PyErr_Occurred())) __PYX_ERR(0, 292, __pyx_L1_error)
   __pyx_v_n = (__pyx_t_1[0]);
 
-  /* "evo/core.pyx":271
+  /* "evo/core.pyx":293
  *     """
  *     cdef int n = y_true.shape[0]
  *     cdef long long tp = 0, tn = 0, fp = 0, fn = 0             # <<<<<<<<<<<<<<
@@ -9671,7 +9680,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_v_fp = 0;
   __pyx_v_fn = 0;
 
-  /* "evo/core.pyx":274
+  /* "evo/core.pyx":296
  *     cdef int i
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -9684,7 +9693,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
       __Pyx_FastGIL_Remember();
       /*try:*/ {
 
-        /* "evo/core.pyx":275
+        /* "evo/core.pyx":297
  * 
  *     with nogil:
  *         for i in range(n):             # <<<<<<<<<<<<<<
@@ -9696,7 +9705,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
         for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
           __pyx_v_i = __pyx_t_4;
 
-          /* "evo/core.pyx":276
+          /* "evo/core.pyx":298
  *     with nogil:
  *         for i in range(n):
  *             if y_true[i] == 1:             # <<<<<<<<<<<<<<
@@ -9711,12 +9720,12 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
           } else if (unlikely(__pyx_t_5 >= __pyx_pybuffernd_y_true.diminfo[0].shape)) __pyx_t_6 = 0;
           if (unlikely(__pyx_t_6 != -1)) {
             __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_6);
-            __PYX_ERR(0, 276, __pyx_L4_error)
+            __PYX_ERR(0, 298, __pyx_L4_error)
           }
           __pyx_t_7 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int64_t *, __pyx_pybuffernd_y_true.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_y_true.diminfo[0].strides)) == 1);
           if (__pyx_t_7) {
 
-            /* "evo/core.pyx":277
+            /* "evo/core.pyx":299
  *         for i in range(n):
  *             if y_true[i] == 1:
  *                 if y_pred[i] == 1:             # <<<<<<<<<<<<<<
@@ -9731,12 +9740,12 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
             } else if (unlikely(__pyx_t_5 >= __pyx_pybuffernd_y_pred.diminfo[0].shape)) __pyx_t_6 = 0;
             if (unlikely(__pyx_t_6 != -1)) {
               __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_6);
-              __PYX_ERR(0, 277, __pyx_L4_error)
+              __PYX_ERR(0, 299, __pyx_L4_error)
             }
             __pyx_t_7 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int64_t *, __pyx_pybuffernd_y_pred.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_y_pred.diminfo[0].strides)) == 1);
             if (__pyx_t_7) {
 
-              /* "evo/core.pyx":278
+              /* "evo/core.pyx":300
  *             if y_true[i] == 1:
  *                 if y_pred[i] == 1:
  *                     tp += 1             # <<<<<<<<<<<<<<
@@ -9745,7 +9754,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
               __pyx_v_tp = (__pyx_v_tp + 1);
 
-              /* "evo/core.pyx":277
+              /* "evo/core.pyx":299
  *         for i in range(n):
  *             if y_true[i] == 1:
  *                 if y_pred[i] == 1:             # <<<<<<<<<<<<<<
@@ -9755,7 +9764,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
               goto __pyx_L9;
             }
 
-            /* "evo/core.pyx":280
+            /* "evo/core.pyx":302
  *                     tp += 1
  *                 else:
  *                     fn += 1             # <<<<<<<<<<<<<<
@@ -9767,7 +9776,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
             }
             __pyx_L9:;
 
-            /* "evo/core.pyx":276
+            /* "evo/core.pyx":298
  *     with nogil:
  *         for i in range(n):
  *             if y_true[i] == 1:             # <<<<<<<<<<<<<<
@@ -9777,7 +9786,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
             goto __pyx_L8;
           }
 
-          /* "evo/core.pyx":282
+          /* "evo/core.pyx":304
  *                     fn += 1
  *             else:
  *                 if y_pred[i] == 1:             # <<<<<<<<<<<<<<
@@ -9793,12 +9802,12 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
             } else if (unlikely(__pyx_t_5 >= __pyx_pybuffernd_y_pred.diminfo[0].shape)) __pyx_t_6 = 0;
             if (unlikely(__pyx_t_6 != -1)) {
               __Pyx_RaiseBufferIndexErrorNogil(__pyx_t_6);
-              __PYX_ERR(0, 282, __pyx_L4_error)
+              __PYX_ERR(0, 304, __pyx_L4_error)
             }
             __pyx_t_7 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int64_t *, __pyx_pybuffernd_y_pred.rcbuffer->pybuffer.buf, __pyx_t_5, __pyx_pybuffernd_y_pred.diminfo[0].strides)) == 1);
             if (__pyx_t_7) {
 
-              /* "evo/core.pyx":283
+              /* "evo/core.pyx":305
  *             else:
  *                 if y_pred[i] == 1:
  *                     fp += 1             # <<<<<<<<<<<<<<
@@ -9807,7 +9816,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
               __pyx_v_fp = (__pyx_v_fp + 1);
 
-              /* "evo/core.pyx":282
+              /* "evo/core.pyx":304
  *                     fn += 1
  *             else:
  *                 if y_pred[i] == 1:             # <<<<<<<<<<<<<<
@@ -9817,7 +9826,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
               goto __pyx_L10;
             }
 
-            /* "evo/core.pyx":285
+            /* "evo/core.pyx":307
  *                     fp += 1
  *                 else:
  *                     tn += 1             # <<<<<<<<<<<<<<
@@ -9833,7 +9842,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
         }
       }
 
-      /* "evo/core.pyx":274
+      /* "evo/core.pyx":296
  *     cdef int i
  * 
  *     with nogil:             # <<<<<<<<<<<<<<
@@ -9855,7 +9864,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
       }
   }
 
-  /* "evo/core.pyx":287
+  /* "evo/core.pyx":309
  *                     tn += 1
  * 
  *     cdef double acc = 0.0             # <<<<<<<<<<<<<<
@@ -9864,7 +9873,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_acc = 0.0;
 
-  /* "evo/core.pyx":288
+  /* "evo/core.pyx":310
  * 
  *     cdef double acc = 0.0
  *     cdef double prec = 0.0             # <<<<<<<<<<<<<<
@@ -9873,7 +9882,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_prec = 0.0;
 
-  /* "evo/core.pyx":289
+  /* "evo/core.pyx":311
  *     cdef double acc = 0.0
  *     cdef double prec = 0.0
  *     cdef double recall = 0.0             # <<<<<<<<<<<<<<
@@ -9882,7 +9891,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_recall = 0.0;
 
-  /* "evo/core.pyx":290
+  /* "evo/core.pyx":312
  *     cdef double prec = 0.0
  *     cdef double recall = 0.0
  *     cdef double f1 = 0.0             # <<<<<<<<<<<<<<
@@ -9891,7 +9900,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_f1 = 0.0;
 
-  /* "evo/core.pyx":291
+  /* "evo/core.pyx":313
  *     cdef double recall = 0.0
  *     cdef double f1 = 0.0
  *     cdef double mcc = 0.0             # <<<<<<<<<<<<<<
@@ -9900,7 +9909,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_mcc = 0.0;
 
-  /* "evo/core.pyx":294
+  /* "evo/core.pyx":316
  *     cdef double mcc_num, mcc_den_sq
  * 
  *     if n > 0:             # <<<<<<<<<<<<<<
@@ -9910,7 +9919,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_t_7 = (__pyx_v_n > 0);
   if (__pyx_t_7) {
 
-    /* "evo/core.pyx":295
+    /* "evo/core.pyx":317
  * 
  *     if n > 0:
  *         acc = (tp + tn) / float(n)             # <<<<<<<<<<<<<<
@@ -9920,11 +9929,11 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
     __pyx_t_8 = (__pyx_v_tp + __pyx_v_tn);
     if (unlikely(((double)__pyx_v_n) == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 295, __pyx_L1_error)
+      __PYX_ERR(0, 317, __pyx_L1_error)
     }
     __pyx_v_acc = (((double)__pyx_t_8) / ((double)__pyx_v_n));
 
-    /* "evo/core.pyx":294
+    /* "evo/core.pyx":316
  *     cdef double mcc_num, mcc_den_sq
  * 
  *     if n > 0:             # <<<<<<<<<<<<<<
@@ -9933,7 +9942,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   }
 
-  /* "evo/core.pyx":297
+  /* "evo/core.pyx":319
  *         acc = (tp + tn) / float(n)
  * 
  *     if (tp + fp) > 0:             # <<<<<<<<<<<<<<
@@ -9943,7 +9952,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_t_7 = ((__pyx_v_tp + __pyx_v_fp) > 0);
   if (__pyx_t_7) {
 
-    /* "evo/core.pyx":298
+    /* "evo/core.pyx":320
  * 
  *     if (tp + fp) > 0:
  *         prec = tp / float(tp + fp)             # <<<<<<<<<<<<<<
@@ -9952,11 +9961,11 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
     if (unlikely(((double)(__pyx_v_tp + __pyx_v_fp)) == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 298, __pyx_L1_error)
+      __PYX_ERR(0, 320, __pyx_L1_error)
     }
     __pyx_v_prec = (((double)__pyx_v_tp) / ((double)(__pyx_v_tp + __pyx_v_fp)));
 
-    /* "evo/core.pyx":297
+    /* "evo/core.pyx":319
  *         acc = (tp + tn) / float(n)
  * 
  *     if (tp + fp) > 0:             # <<<<<<<<<<<<<<
@@ -9965,7 +9974,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   }
 
-  /* "evo/core.pyx":300
+  /* "evo/core.pyx":322
  *         prec = tp / float(tp + fp)
  * 
  *     if (tp + fn) > 0:             # <<<<<<<<<<<<<<
@@ -9975,7 +9984,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_t_7 = ((__pyx_v_tp + __pyx_v_fn) > 0);
   if (__pyx_t_7) {
 
-    /* "evo/core.pyx":301
+    /* "evo/core.pyx":323
  * 
  *     if (tp + fn) > 0:
  *         recall = tp / float(tp + fn)             # <<<<<<<<<<<<<<
@@ -9984,11 +9993,11 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
     if (unlikely(((double)(__pyx_v_tp + __pyx_v_fn)) == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 301, __pyx_L1_error)
+      __PYX_ERR(0, 323, __pyx_L1_error)
     }
     __pyx_v_recall = (((double)__pyx_v_tp) / ((double)(__pyx_v_tp + __pyx_v_fn)));
 
-    /* "evo/core.pyx":300
+    /* "evo/core.pyx":322
  *         prec = tp / float(tp + fp)
  * 
  *     if (tp + fn) > 0:             # <<<<<<<<<<<<<<
@@ -9997,7 +10006,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   }
 
-  /* "evo/core.pyx":303
+  /* "evo/core.pyx":325
  *         recall = tp / float(tp + fn)
  * 
  *     if (prec + recall) > 0:             # <<<<<<<<<<<<<<
@@ -10007,7 +10016,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_t_7 = ((__pyx_v_prec + __pyx_v_recall) > 0.0);
   if (__pyx_t_7) {
 
-    /* "evo/core.pyx":304
+    /* "evo/core.pyx":326
  * 
  *     if (prec + recall) > 0:
  *         f1 = 2 * (prec * recall) / (prec + recall)             # <<<<<<<<<<<<<<
@@ -10018,11 +10027,11 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
     __pyx_t_10 = (__pyx_v_prec + __pyx_v_recall);
     if (unlikely(__pyx_t_10 == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 304, __pyx_L1_error)
+      __PYX_ERR(0, 326, __pyx_L1_error)
     }
     __pyx_v_f1 = (__pyx_t_9 / __pyx_t_10);
 
-    /* "evo/core.pyx":303
+    /* "evo/core.pyx":325
  *         recall = tp / float(tp + fn)
  * 
  *     if (prec + recall) > 0:             # <<<<<<<<<<<<<<
@@ -10031,7 +10040,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   }
 
-  /* "evo/core.pyx":306
+  /* "evo/core.pyx":328
  *         f1 = 2 * (prec * recall) / (prec + recall)
  * 
  *     mcc_num = (tp * tn) - (fp * fn)             # <<<<<<<<<<<<<<
@@ -10040,7 +10049,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_mcc_num = ((__pyx_v_tp * __pyx_v_tn) - (__pyx_v_fp * __pyx_v_fn));
 
-  /* "evo/core.pyx":307
+  /* "evo/core.pyx":329
  * 
  *     mcc_num = (tp * tn) - (fp * fn)
  *     mcc_den_sq = float(tp + fp) * float(tp + fn) * float(tn + fp) * float(tn + fn)             # <<<<<<<<<<<<<<
@@ -10049,7 +10058,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
 */
   __pyx_v_mcc_den_sq = (((((double)(__pyx_v_tp + __pyx_v_fp)) * ((double)(__pyx_v_tp + __pyx_v_fn))) * ((double)(__pyx_v_tn + __pyx_v_fp))) * ((double)(__pyx_v_tn + __pyx_v_fn)));
 
-  /* "evo/core.pyx":309
+  /* "evo/core.pyx":331
  *     mcc_den_sq = float(tp + fp) * float(tp + fn) * float(tn + fp) * float(tn + fn)
  * 
  *     if mcc_den_sq > 0:             # <<<<<<<<<<<<<<
@@ -10059,7 +10068,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_t_7 = (__pyx_v_mcc_den_sq > 0.0);
   if (__pyx_t_7) {
 
-    /* "evo/core.pyx":310
+    /* "evo/core.pyx":332
  * 
  *     if mcc_den_sq > 0:
  *         mcc = mcc_num / sqrt(mcc_den_sq)             # <<<<<<<<<<<<<<
@@ -10069,11 +10078,11 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
     __pyx_t_10 = sqrt(__pyx_v_mcc_den_sq);
     if (unlikely(__pyx_t_10 == 0)) {
       PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 310, __pyx_L1_error)
+      __PYX_ERR(0, 332, __pyx_L1_error)
     }
     __pyx_v_mcc = (__pyx_v_mcc_num / __pyx_t_10);
 
-    /* "evo/core.pyx":309
+    /* "evo/core.pyx":331
  *     mcc_den_sq = float(tp + fp) * float(tp + fn) * float(tn + fp) * float(tn + fn)
  * 
  *     if mcc_den_sq > 0:             # <<<<<<<<<<<<<<
@@ -10083,7 +10092,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
     goto __pyx_L15;
   }
 
-  /* "evo/core.pyx":312
+  /* "evo/core.pyx":334
  *         mcc = mcc_num / sqrt(mcc_den_sq)
  *     else:
  *         mcc = 0.0             # <<<<<<<<<<<<<<
@@ -10095,68 +10104,68 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   }
   __pyx_L15:;
 
-  /* "evo/core.pyx":315
+  /* "evo/core.pyx":337
  * 
  *     # Return cm as list of lists
  *     return mcc, acc, f1, prec, recall, [[tn, fp], [fn, tp]]             # <<<<<<<<<<<<<<
 */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_11 = PyFloat_FromDouble(__pyx_v_mcc); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_11 = PyFloat_FromDouble(__pyx_v_mcc); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_11);
-  __pyx_t_12 = PyFloat_FromDouble(__pyx_v_acc); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_12 = PyFloat_FromDouble(__pyx_v_acc); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_12);
-  __pyx_t_13 = PyFloat_FromDouble(__pyx_v_f1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_13 = PyFloat_FromDouble(__pyx_v_f1); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_13);
-  __pyx_t_14 = PyFloat_FromDouble(__pyx_v_prec); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_14 = PyFloat_FromDouble(__pyx_v_prec); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_14);
-  __pyx_t_15 = PyFloat_FromDouble(__pyx_v_recall); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_15 = PyFloat_FromDouble(__pyx_v_recall); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_15);
-  __pyx_t_16 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_tn); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_16 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_tn); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_16);
-  __pyx_t_17 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_fp); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_17 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_fp); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_17);
-  __pyx_t_18 = PyList_New(2); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_18 = PyList_New(2); if (unlikely(!__pyx_t_18)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_18);
   __Pyx_GIVEREF(__pyx_t_16);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_18, 0, __pyx_t_16) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_18, 0, __pyx_t_16) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_17);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_18, 1, __pyx_t_17) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_18, 1, __pyx_t_17) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __pyx_t_16 = 0;
   __pyx_t_17 = 0;
-  __pyx_t_17 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_fn); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_17 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_fn); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_17);
-  __pyx_t_16 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_tp); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_16 = __Pyx_PyLong_From_PY_LONG_LONG(__pyx_v_tp); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_16);
-  __pyx_t_19 = PyList_New(2); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_19 = PyList_New(2); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_19);
   __Pyx_GIVEREF(__pyx_t_17);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_19, 0, __pyx_t_17) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_19, 0, __pyx_t_17) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_16);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_19, 1, __pyx_t_16) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_19, 1, __pyx_t_16) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __pyx_t_17 = 0;
   __pyx_t_16 = 0;
-  __pyx_t_16 = PyList_New(2); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_16 = PyList_New(2); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_16);
   __Pyx_GIVEREF(__pyx_t_18);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_16, 0, __pyx_t_18) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_16, 0, __pyx_t_18) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_19);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_16, 1, __pyx_t_19) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_16, 1, __pyx_t_19) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __pyx_t_18 = 0;
   __pyx_t_19 = 0;
-  __pyx_t_19 = PyTuple_New(6); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 315, __pyx_L1_error)
+  __pyx_t_19 = PyTuple_New(6); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 337, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_19);
   __Pyx_GIVEREF(__pyx_t_11);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 0, __pyx_t_11) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 0, __pyx_t_11) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_12);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 1, __pyx_t_12) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 1, __pyx_t_12) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_13);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 2, __pyx_t_13) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 2, __pyx_t_13) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_14);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 3, __pyx_t_14) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 3, __pyx_t_14) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_15);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 4, __pyx_t_15) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 4, __pyx_t_15) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __Pyx_GIVEREF(__pyx_t_16);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 5, __pyx_t_16) != (0)) __PYX_ERR(0, 315, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_19, 5, __pyx_t_16) != (0)) __PYX_ERR(0, 337, __pyx_L1_error);
   __pyx_t_11 = 0;
   __pyx_t_12 = 0;
   __pyx_t_13 = 0;
@@ -10167,7 +10176,7 @@ static PyObject *__pyx_pf_3evo_4core_22fast_binary_metrics(CYTHON_UNUSED PyObjec
   __pyx_t_19 = 0;
   goto __pyx_L0;
 
-  /* "evo/core.pyx":263
+  /* "evo/core.pyx":285
  * from libc.math cimport sqrt
  * 
  * def fast_binary_metrics(cnp.ndarray[cnp.int64_t, ndim=1] y_true, cnp.ndarray[cnp.int64_t, ndim=1] y_pred):             # <<<<<<<<<<<<<<
@@ -10769,11 +10778,11 @@ __Pyx_RefNannySetupContext("PyInit_core", 0);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "evo/core.pyx":74
- * # --- Unified Decoder ---
+ * # --- Unified Dynamic Decoder ---
  * 
- * def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed, dict bits):             # <<<<<<<<<<<<<<
- *     """
- *     Decodes all phenotype parameters from a bit-packed array in one pass.
+ * def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed,             # <<<<<<<<<<<<<<
+ *                       int feat_bits,
+ *                       int model_sel_bits,
 */
   __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_7decode_individual, 0, __pyx_mstate_global->__pyx_n_u_decode_individual, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[3])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -10783,124 +10792,124 @@ __Pyx_RefNannySetupContext("PyInit_core", 0);
   if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_decode_individual, __pyx_t_2) < (0)) __PYX_ERR(0, 74, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":123
+  /* "evo/core.pyx":145
  * # --- Evolution Operations on Packed Data ---
  * 
  * def fast_crossover_packed(cnp.ndarray[uint8_t, ndim=1] p1,             # <<<<<<<<<<<<<<
  *                           cnp.ndarray[uint8_t, ndim=1] p2,
  *                           int crossover_bit,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_9fast_crossover_packed, 0, __pyx_mstate_global->__pyx_n_u_fast_crossover_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[4])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_9fast_crossover_packed, 0, __pyx_mstate_global->__pyx_n_u_fast_crossover_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[4])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 145, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_crossover_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 123, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_crossover_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 145, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":152
+  /* "evo/core.pyx":174
  *     return child
  * 
  * def fast_mutation_packed(cnp.ndarray[uint8_t, ndim=1] packed,             # <<<<<<<<<<<<<<
  *                          double mutation_rate,
  *                          cnp.ndarray[cnp.float64_t, ndim=1] random_values,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_11fast_mutation_packed, 0, __pyx_mstate_global->__pyx_n_u_fast_mutation_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[5])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_11fast_mutation_packed, 0, __pyx_mstate_global->__pyx_n_u_fast_mutation_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[5])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_mutation_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 152, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_mutation_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 174, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":171
+  /* "evo/core.pyx":193
  * # --- Parallel Batch Operations (OpenMP) ---
  * 
  * def batch_crossover_packed(cnp.ndarray[uint8_t, ndim=2] parents_pool,             # <<<<<<<<<<<<<<
  *                            cnp.ndarray[cnp.int32_t, ndim=1] p1_indices,
  *                            cnp.ndarray[cnp.int32_t, ndim=1] p2_indices,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_13batch_crossover_packed, 0, __pyx_mstate_global->__pyx_n_u_batch_crossover_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[6])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 171, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_13batch_crossover_packed, 0, __pyx_mstate_global->__pyx_n_u_batch_crossover_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[6])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 193, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_batch_crossover_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 171, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_batch_crossover_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 193, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":208
+  /* "evo/core.pyx":230
  *     return offspring
  * 
  * def batch_mutation_packed(cnp.ndarray[uint8_t, ndim=2] offspring_pool,             # <<<<<<<<<<<<<<
  *                           double mutation_rate,
  *                           cnp.ndarray[cnp.float64_t, ndim=2] random_matrix,
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_15batch_mutation_packed, 0, __pyx_mstate_global->__pyx_n_u_batch_mutation_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[7])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 208, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_15batch_mutation_packed, 0, __pyx_mstate_global->__pyx_n_u_batch_mutation_packed, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[7])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 230, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_batch_mutation_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 208, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_batch_mutation_packed, __pyx_t_2) < (0)) __PYX_ERR(0, 230, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":232
+  /* "evo/core.pyx":254
  * # --- Original int8 Helpers (for backward compatibility) ---
  * 
  * def fast_binary_to_decimal(cnp.ndarray[int8_t, ndim=1] binary):             # <<<<<<<<<<<<<<
  *     cdef long long res = 0
  *     cdef int i, n = binary.shape[0]
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_17fast_binary_to_decimal, 0, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[8])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_17fast_binary_to_decimal, 0, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[8])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 254, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal, __pyx_t_2) < (0)) __PYX_ERR(0, 232, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_binary_to_decimal, __pyx_t_2) < (0)) __PYX_ERR(0, 254, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":239
+  /* "evo/core.pyx":261
  *     return res
  * 
  * def fast_crossover(cnp.ndarray[int8_t, ndim=1] parent1,             # <<<<<<<<<<<<<<
  *                    cnp.ndarray[int8_t, ndim=1] parent2,
  *                    int crossover_point):
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_19fast_crossover, 0, __pyx_mstate_global->__pyx_n_u_fast_crossover, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[9])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 239, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_19fast_crossover, 0, __pyx_mstate_global->__pyx_n_u_fast_crossover, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[9])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 261, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_crossover, __pyx_t_2) < (0)) __PYX_ERR(0, 239, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_crossover, __pyx_t_2) < (0)) __PYX_ERR(0, 261, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":251
+  /* "evo/core.pyx":273
  *     return child
  * 
  * def fast_mutation(cnp.ndarray[int8_t, ndim=1] genes,             # <<<<<<<<<<<<<<
  *                   double mutation_rate,
  *                   cnp.ndarray[cnp.float64_t, ndim=1] random_values):
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_21fast_mutation, 0, __pyx_mstate_global->__pyx_n_u_fast_mutation, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[10])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 251, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_21fast_mutation, 0, __pyx_mstate_global->__pyx_n_u_fast_mutation, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[10])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 273, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_mutation, __pyx_t_2) < (0)) __PYX_ERR(0, 251, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_mutation, __pyx_t_2) < (0)) __PYX_ERR(0, 273, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "evo/core.pyx":263
+  /* "evo/core.pyx":285
  * from libc.math cimport sqrt
  * 
  * def fast_binary_metrics(cnp.ndarray[cnp.int64_t, ndim=1] y_true, cnp.ndarray[cnp.int64_t, ndim=1] y_pred):             # <<<<<<<<<<<<<<
  *     """
  *     Ultra-fast C-level calculation of binary classification metrics.
 */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_23fast_binary_metrics, 0, __pyx_mstate_global->__pyx_n_u_fast_binary_metrics, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[11])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 263, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_3evo_4core_23fast_binary_metrics, 0, __pyx_mstate_global->__pyx_n_u_fast_binary_metrics, NULL, __pyx_mstate_global->__pyx_n_u_evo_core, __pyx_mstate_global->__pyx_d, ((PyObject *)__pyx_mstate_global->__pyx_codeobj_tab[11])); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 285, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030E0000
   PyUnstable_Object_EnableDeferredRefcount(__pyx_t_2);
   #endif
-  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_binary_metrics, __pyx_t_2) < (0)) __PYX_ERR(0, 263, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_mstate_global->__pyx_d, __pyx_mstate_global->__pyx_n_u_fast_binary_metrics, __pyx_t_2) < (0)) __PYX_ERR(0, 285, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "evo/core.pyx":1
@@ -10973,31 +10982,31 @@ static int __Pyx_InitCachedConstants(__pyx_mstatetype *__pyx_mstate) {
 static int __Pyx_InitConstants(__pyx_mstatetype *__pyx_mstate) {
   CYTHON_UNUSED_VAR(__pyx_mstate);
   {
-    const struct { const unsigned int length: 10; } index[] = {{1},{179},{8},{12},{38},{33},{1},{20},{3},{18},{22},{21},{6},{7},{4},{8},{8},{5},{18},{9},{18},{9},{10},{13},{14},{15},{17},{6},{11},{5},{5},{7},{9},{8},{11},{2},{19},{22},{29},{14},{21},{13},{20},{9},{8},{2},{2},{12},{8},{5},{4},{1},{4},{13},{5},{1},{6},{15},{7},{6},{8},{4},{8},{8},{4},{3},{10},{7},{11},{14},{15},{10},{13},{1},{6},{7},{12},{11},{5},{8},{2},{5},{9},{14},{10},{2},{10},{2},{10},{9},{6},{8},{11},{7},{7},{12},{4},{3},{4},{12},{13},{13},{3},{6},{3},{5},{12},{10},{7},{13},{9},{8},{2},{10},{2},{5},{11},{8},{6},{6},{6},{5},{108},{106},{51},{549},{68},{82},{241},{88},{61},{205},{168},{370}};
-    #if (CYTHON_COMPRESS_STRINGS) == 2 /* compression: bz2 (2090 bytes) */
-const char* const cstring = "BZh91AY&SY\316\374Q\200\000\001\245\177\377\377\377\377\367\377\327\377\377\377\177\377\357\377\377\377}@@@@@@@@@@@@@\000@\000`\007}\367\017*\212\367\235\351\241\346\300\016\033\300}o}\341\251\242\0254\003\324\311\345\032\036\304\241\372B~\203M3I=I\2755OS\324\365=!\241\352\006@\000\000=\014Q\352z\231\352h\324\tD4@\t\243F\201O\"h4\206\206@\000\000\000\000\000\000h\000\000\032\r\006\223\004\024\324\365O\320\204h\3024h\000\000\r\001\240\000\000\000\000\003@4h\311\240\003L\220\246\023T\364\322z\2324\310\007\352\232\0004\000\006\201\240\000\000\000\006\200\r\000\311\352y@* \000\t\211\246\23122i\211\344\230\230\230\206\t\243\006\200\021\246L!\221\200&\000&\214\000\224\324$\243\321\251\265\036\243\320\310d\312242z\232i\2040\020\320h\365\006\203\320\2324h\032\032\032d`\023\321\250\223M\202P\245!h\272\016\036\331\201{I\263\0335\2777\177M~\027H\225\342\023B\002Os\004\031\314\372\261U\"\211\243\204DU\206\254$\204!\223$\300\220\321\206\312\210\204\310\024\207PDj)\247\251\246\022\220\224\210\225(\210\212\246\244\212%\022\256\346\222(\223\304\235,J\345U\"\031E\314\222\261\021)`\270\266\354\225\243\t2(Y\231\325(9!\222\2409\020ep\256\215\363 U\224\313\224, 23\255|!e\306@\252\272\222d(I\212\2502\223 \223.qVy\321'K\032\362\364'\014\220\221Y\244\310Vb\244p+\2650\030<0LFe:\325\332\224bb\302':Hb\200\225Z\266\303\021\231b(\022\"OPt\311<\334\274|\274\217\206n?\317\365!\034\347L\245e\031\325\336!\305#N\215h\027\241\274\331\240\203\371\003jE\037\311p=\220pb\321\230\231&\306BOb\356(\032q#\r*\027\327\035\332\324\250\246\014yt\3120\357\257\264\003\000\031X\311\013\237\213\370i\346\010gD\232\355\006:1\212Dh\274\025I)\202\252\260\254\345UV\240\242I\022`\300=\344\312n\035\303\257C\220\273\2400/\352\245\027!\t\"8\244\203}\215la\013b\267\023\034\001@\211_\n#\215`}%\350<\352\205\000\272\005t\277\255\244pI\251@\031\222\271\243\031\030\210Rqe\247\022\214q&L)\213Y)If\222\201\362L3\235:\247^We\023\334\243;\n\023\240\311i\\\357z[|\222\371\206\022\324-\217\241\322\230\225\023'\315\004 ,\257b\036\016\034""\000\345\021\037`d\264&\271,\252H\2005\200Y\356\223{}\346\004\327eEU\340l\355\004 \307\274\211Y\227\371X\371\237g\261'D!\322P\240.\0102\332A\010\223*C\222\310*\361\023\t\370\022\250F\201\343\362-\336D\205\354u=T9&\234\002\365J\331\212IQ\201\n,\005 J\n\224 \034\232\241^\036fE\234!t\2002`&\301\245_\311\274\367\037\351\021f\344\314\263\363v/<W\332P\251\232\273\n\002-\240\271\022\352\347\274\254\232\204\024\204\241\3208\203G^t\016\234 A\020\347\220H\214\350\3663\345\222\344Nh)\310\271@M\342\275\344\202\301\2112JI\252\334E\\\016\232\256CA\252$\231\020\322e\235\267t\224\310\263stU%\211\202\330\220C2k\277\263)`\265R\373\370\351+\031\240\232Z\t\312\234\202\275E\262\325\223\334.\234n\333\323\323Z\256\234&6\361Z\314\255\\KN1g\021h\314\344_\"g\304d[:C\212\rs\005\261\242\305#\007\275\036\344s\206\235n\207\033\344D\342s\357C\205\\V\237\346\332\313h\235e\224\247\226\320\231\363&|\211\375\303\232\034[\277\2152\340:\327\323f7\254\226\023\242\303Fm\251}\234\034\022\235[\221G$t+U9]\033t\353\024\025tq8\301\214?u\273~A\346Kn\341\346\033sd-\330+S\311\330\016K\3066Z\221\256\254\225H\"\252\271k\245\365\0061\034\200\370\276\226\276\3550\244\210Y\215(\304n\004\356\224\000\220;\220\270\244\201\001\254M\004\256-\272%O\032R\010\021\265Lk\t \260\326*\225p\365\016J\347\214+[\223\027\221%=a\201zS\255\242\017CA\022\342\202%$f\266P\024\352\243<\030\2020\316y\240\024\352\267`\362\246\252E \206\"\212GK\210s\337\263I\317\3534\014\033\351Z\336j\322\031\262Y\206v\267\001u\233\354Dx\252\030\327XN\347\n\370\031Y\342\252$-\347-p5\t\305.8\364Z\345}\327\240\367\216\252R\315Q\265e*g\324\364l\n\357\204R\025\250\313\273sf\223\271\301\2606\244E\342\203\240\242\252\270q\306\375\342W\300Q\222\016\325U\301\223\r\263\277p\330\3018q\252\302\211N\2207\r\t\240\217\255\200{\014\347#\225YC?\262n\316&c:uZy\332J\271z-\267\027\n\217{\236\344\303l5\002\232\\a\031\013\034&\232\003gx\216\036\270\244\374/\232\304\255\357\036\210\347\"O\027\315Z+\2329\3039\237>x\313xU\2675\267\204$\341\352J\267\033\021\312\303\023\305\267\243""\334\314\263\270k\341x>XR\264\223\311\006t\325N\016\03634\315S\231\241\027R\024*\r\267\nf\314e.lJ\312Kx\351\216\232\370.\r]\205:\344\026\033\314\233'2\225\341!\027A)k\322j\230X\311d\230\345\321\201\336c\231JW3AM{q&\005\374x\3262(W\311\344\222\250\222\232Yr4\244\033y\205D\305A\010H\220zF4M#9\342\r\001\252Rd\007\265\273\300\227\2741\020\313C\230w<\017\370\010Yg!\324\331J\nc$\227\t5\240\275c\032\202\021\031$\250\217\350\010\034(\t}\307Rq1-\032\t\r4\311\323u\250}\036\n\325%\332\326z\335\213H\310\024\361\313-\375\311=\352\\f\211j8\303y\320c\215bQ\007\355X#-\221\030\331Gf\353\224\231/\210\211\362\224mS\2540\212\006m\273\3340\n\212\212\0202<\347V\205\001H\206@p\222\030\002\205O\271v\243\246\004\251\302\020\341n\324wL\332\257lm\335\007\010 \262\207\375\244>\022Xw1\234\236\020W\255\3358+\3072\243\002a\255\000\204\021\304!\007\013o[[I!0\214gD:\323\352\276\222\025\205\327\205[A\360\204\037\361\006A'\025&~\223\200\027\373\352\347m\312en\223\227(\231\302\016)\211L\357u\003\215f\333\032\006\354t\263\306|\360\320\350\202\013\340\234x\356c\366\342j\276!;6(\212\3733\230\033\323r\331\005qy\257'1t\262\3733\300\3713\331-M@*Z\346\300M\233\205r\322\363mX\352\272/\215\365\327\360\220\263\\o\316\3600\004\214\211\027\014Y>\2536@]\202\"fm\354\202:y\272\022\346k\3354c`EV_']\323L\351\323/\027\252\260\004\017\315\366n\221?\2677\377\t \240\357\343\030r0\014\024\026\210\275\204~\037\227X\026Vd\307\240(1i\004/80\035\226\321\243\267\020\261\227\266\322AL\277\034\257Np`\207\361\346\272\017\016\240\335\224\005*>\211\"\342\01467\004\276p\370h\3612\207\027o\255\032\365\272#\217\316\341\305F\203a9w\201\030\344\"\322\023H'b\010\254\371O\335\350\216\231%@\264\302mn\"\243\020X\327(\304\254x\317\220,\207\216\256Z\331\240\263\204\204\241#\227L\316Qv\301\272\344\261\204\304$$\246\220\303\243\272\204\211\212\340Cx\273\222)\302\204\206w\342\214\000";
-    PyObject *data = __Pyx_DecompressString(cstring, 2090, 2);
+    const struct { const unsigned int length: 9; } index[] = {{1},{179},{8},{12},{38},{33},{20},{3},{18},{22},{21},{6},{7},{8},{8},{8},{5},{18},{9},{10},{13},{14},{15},{11},{17},{5},{2},{2},{2},{5},{5},{8},{2},{19},{22},{29},{14},{21},{13},{20},{9},{2},{2},{8},{5},{1},{4},{13},{5},{1},{5},{8},{4},{3},{10},{7},{13},{11},{14},{15},{10},{13},{1},{6},{7},{11},{5},{8},{8},{2},{10},{5},{9},{14},{10},{2},{10},{2},{10},{6},{6},{9},{6},{8},{16},{11},{11},{7},{7},{12},{3},{4},{12},{13},{13},{6},{3},{5},{5},{12},{10},{9},{8},{2},{10},{2},{5},{11},{8},{3},{6},{6},{6},{5},{108},{106},{51},{68},{82},{241},{88},{61},{205},{488},{168},{370}};
+    #if (CYTHON_COMPRESS_STRINGS) == 2 /* compression: bz2 (1919 bytes) */
+const char* const cstring = "BZh91AY&SYU[\034C\000\001\257\377\377\377\377\377\377\377\327\377\373\277?\177\377\277\377\377}\300@@@@@@@@@@@@\000@\000`\007\035\334\016\253+]\3004\000|z\200q\360\324\310\204\214P\314\215F\321\231$\331M<\230\324l\232#\322\2321\r4\321\211\240\310\032=@4\323\001\250y\242\207\244\022\210\004e4\301#i2h\023\3254h\000\000\000\000\000\000\000\000\0004\032\0004\322a$\320H\000h\032\000\000\0004\000\000\000\000\000\000\000\006\215\032\006\246H\325\007\251\241\351\030\206@\000\006 a\003@\000\014\201\241\246\215\003 \320\000z\232\000\203\000\004\300\000L\023\000\000\000\000\004\300&\002\030\000\0020\000\000\022\247\251\022\000\000\003@\000\r\000\000\000\001\240\001\220\000\0004\000\003@\240\033\320\030`\314R\022L$\231r\262\341zS@\366\003\335\rNG\322CD\022\027\234J \311\020?tT\001\221E\002N<c\210\204\250\031\031\005\001$\222\tBP\241T\005\024G\r\304D !@\252\257\370\0025\322\220\377\265\020\244\2032\001b\210\034\t\000!8\314\2343\250\226D\2329!\nV!\201\022\306\342\225X\202%6H/-\277:9\002\3439X8pY\240e\212\305EG\341`\n\241\265\302\212\370)\214\2203P\304\314\0268x\325\036\334\032\367Y\211q\200YD\222\025\244\212<\226db\351\025VR\t%\227\227\241QU\325J\224y\221\n!nv\217t\2029\246\360\202\360\260\213]+G\271\3658\034\216XC\226\305G\025\267\010$\211\004!\006N\023\013\210c\006\030\301\nN\375\273O\332\323\341\266\377%\350A\210\027O*\226P\202,T\232\350^\034\214,\0200C\217[Z\215\3323J\267\225\210e\001\030\032_\031\001$\224b$\272\350@xZ\021\0051\316\373\221V\030\025\221\200\016\314\350a\245\t\0221\204\220h]t\266\016\300\270\2761\344P\010*L\351\250\327\254\311\343\237\250\025H\252\016\005\326\366\212\252\254R\272,\342\221\007\212\201]\366\013\227$L\211\350r)\233\266g\025\250\224p\364\033\335>\001g\031\352\t\220\251\215@2\227\326\323tE\010f\ni\206\356\356\212\202\210\030b8q\017\206\310\325\317\332\214\222\3516Lc\237\022\266\327\370\372\355\367*q\315R\025\245u\314\230\347-\006\032p\220\3213!U\221r,\022\223c\270z\264\273\240\016\222!\226D\372\030z|\353h\365\250>\257g\265\211\341\343\352#\223\n5""\354S\233\372\201\3019D\242Q,\021N\251\231\232\230b\004\222\352\272y\354\n\202\034@\233\251\336\357\256\272\363\300\267P\266\262\222Kn\340\333\177$YU^\233\254'\266\300\262\024,\250`\222nk*\214\035\226\013\023\301\242\000DX+\3442\302S\020\215\224\367,\206\020\244\002\024\367\20623\001\322\241\020\243\264\026\"Y;\331p\264%Z\013\026\313\210\332\030\365GVu\r\034\256s\005\353Q\312\244\031f[24kF\256\265\004\313\224a4\314\205\226!\234,\353\rV\357\212\270Ox\351*\336iH\222r!\221\215o\333\361)5\335[\325\306KDr;B_c\222\212\226\347\335YP\300\322\330$\206\25223\203X\213\242z8g\307o\nKv\354\331$\227>\r\37195Lz>M\376XS \035\3158\267\367\251\256u\256\005WT\267\267\236\330\005L\301\r\253\375V>d-2\307t\336\311#\267a\374?\236\034\233z08\316\0354\263~\365\212\324\217v\264\344\247#\206\342\302\254t\n\n\267r3=\206~\212\352\2420\267g1\277\230\336(\351p\360\203\022\307\233(\230\317M %\331\253\256hb\250\020\204\335n\025\242\014\264r\252\212\215+m\213}\350(\025\336\202\370\274\263%RK\232\035\r&\001s\\\\J\240g]\005\322Z\242pE\206\347\206\346\321\361\031\301P\303}^\366,\255T`O\222\266\242\213\276\244\245\265\240\327\322\242\241z\017 *\351f\247\275\331\372\206\006\311+\r\375\010[\205w\322\363\200\331A\034\025\204\2640i\255\0036<\313G\013x\234\\\257\347\273U\3144\276\374\020sE\030f\252\254h\021\200]\240\245\316\232:j\232\370\234\376a:\001\300'8\200\306\271X*\253\001z\003\234?\267{t\tN4+\342s5\\\227g\341cw\252 \270\3252\004Q\233\000s\210q\261\212\257P\365\216\035\341//Ltr\337\232x0TkF\255\330\2171a{\341\225\315F\266\"0h\246\324\213!\203\025\202\210\306\"=\323eh\257|/B\362\373\337\016\000\323n\234\326\203\037\026\216c\010\321\206\3721\\5\344\026\020\326\213\001\313S\256m\300\334I\220z\013\nD\030M\264m\031\026\306\023J\224+S-\261\242\340\227\226\277\235aYoM8i\272\335\252\031u\263\306!b[\225\350[\233\030\010\273\304c\216[2\251\026R\222G\t\342w{\367\2515\326\327\352\223\203 \350\325\t\355\262\343\210\2651\031\314\206u?EO@\364UT \211\210H\2264\306\031\306\351\2528 \2023A\363\023\001\254\200\314`Ky""\205\332c\024\n\003\036\023\234\002Y\204\233_\261J\002\037\200\325\014\234\016\367\215\3266\204D\244\205FU:\204\r\023\250]\004\024\347!x\340\365'\203\323\022#\245\302|8\335\005<E\320}\355u\025\265\354\215@Hh8\022|J\3364\246\010\2062\255\206\016\276\250-\224\026[\013\205\200\274\352\004v1\250\252\353\342m\243\255\312I\340\242\234|\353^\025\243\346Cc\350Q\314\025\203\226\010b}F\262\212\226\370\2463L\030\343\276\022\0243\310\032\226,\355\255\364\270\350\"\t=\022 \347m\033\016\325\271\314\014$\205r\346Pz\250x\271\340\274\340{\271\263_A<\204fh\3600?u\237\031\365\303\340\214>\223\013\353,\373\301\355\001x\323\2416\243\256\025a\367\327\016\rP\3507\016\373\327\"\270\212\210\246\003u\013\241\277\035:%\337\340\244\336\250\265D6Hmo\312\226\354\017\215\003\033\324s\0223\004\364xhO\023\362\304\3414\020k$\257#G\311g+\026n\213\002\306M\204I+\005\304\037,\226FC(\376\010\347,\021\215\213\354\325y\003\022\311p&`y\246B>\305\254R\364\245\372\303\270\350\256\321\221R\333\356\313\316f%\375I`2&\016Q}\222\315\334!+\3753\316\320\027D\241\246W\004\2318\346Y\t\366\343\332\221bF,l8\336\233\364\260\372\342\316\346\355h\365\306\020\231\245\267\244\323\265q&q\355i\326\335\216\334\245\336\025\235\036\377+*C\2026te\265%a\335\024\256\210 \301\353N\007\005\365\033\034-+\253\311\227\226f\2022\344)H\020\352 \026B\r\035\224\031`iGUb\265xV\210P\265\014\320\246a\026\035\t\006\254\216)J\370\335\313T\315A5\255?\305Ee`\202\304\310W\022T\336p\362\321*.\224\270S\310\273\222)\302\204\202\252\330\342\030";
+    PyObject *data = __Pyx_DecompressString(cstring, 1919, 2);
     if (unlikely(!data)) __PYX_ERR(0, 1, __pyx_L1_error)
     const char* const bytes = __Pyx_PyBytes_AsString(data);
     #if !CYTHON_ASSUME_SAFE_MACROS
     if (likely(bytes)); else { Py_DECREF(data); __PYX_ERR(0, 1, __pyx_L1_error) }
     #endif
-    #elif (CYTHON_COMPRESS_STRINGS) != 0 /* compression: zlib (1987 bytes) */
-const char* const cstring = "x\332\225U\315s\333\306\0257-J\246%\306\021?\"\311\032\333\001e[\361dl\245\244$\307U\354\266\222,O\223\272\251I}X\036\177 K`IA\002\001r\027\324\210N\246\223#\2178\356\021G\034q\304\021G\034\367\210\243\376\004\377\ty\013\2204\345\246\323t\206\004v\027\357\363\367~\357\355_\1774-,YG\310\222\266{\326\221iH\032\225T\254kuL\220\205\365\236D-\242)\026&B\310\220^\354\274x\260\366hMB\206*\021|\214\025\213J\264[WtD)\246\222\331\220\352]M\2674C\262zmLW\244\357\033R\317\354J\006\306\252d\231R\033\344\306\025\254#lH\024[b!}\205\014\303\264\220\245\231\206\014\352\232\321\374JR5\002N\264S,\264\237!\235\342\025\244\2522\310a|j~\243\230\004\257\264{gF\267\325\356\255\304\273V\027\374#BPOj MO\374j\255\266I\2541\251n\013YG\377!\260-\313/zg\360\177\n9\313?\3423\253\206\033HQ\020\355\031\212f\nU\263\013\331aZG\226r$+\304\244\324<\305Dn#\345\004\253\311i\253;Hbp\250\031\210\364\352\232%k\352\031\274h\275g\341x-\336\247HW\2164]Ut0+k\2209A\n\256\203\246B4\300\035\354\214\0262\305:\240a\222\330\257\014\266\006\0130\3641\224\341\361pC\307\24245\303R\261b\252\302\225\252\235jj\027\351*n\022\250O\374\214\025TQ<\334j[=lX\304l\3670m\233\006\254\005\3461~\370,9\320\220\336(7\020\265\344$K\271\205\005_\350\370\221e\312\340Rk\201\350\357\236\016`\212?\216B\275\270\033\027\031\242{a3\024\300\310\2123\020\213.\301\264a4\332\r\242a\265\205\014\271E\261,7\272\206\"\313M\0145lj\206\246\001 \217d\215\312\243\322\002\326-z|\202\211\201\365\3449\202=\331RQ)Dt\263)\353\020\237\370\313r\013A\351\340\t\220P\212Z\210\236\264\024\005~\220$\224\255#V\300\276\026\000/\362%h\260\004\313q\274\243\235 \273),\231jW\207pG\t\212v4\214X\330\210\013\016/L-\000\020\002\203\265\331h\3206\201\236\001,\314\266,\033\250\005\352F;\346\374\350\343h\001B\246n\022\r0\200\n\030\355r\273\0343B\201RW\332\225\321\032`\215}&\370&O\020\027\031\310\324B\304\202%\360\240\234\274*\311\213\306\326\333\246\336\203P\332\320\300\262\334\001\236%!\021\230\035f\013\240\002\242\234\r6\320\004]LI\275\001\262H\327\241p\0247\rS\006D\254A&\260R""\241\027\241\271\251\326l\231\232J\301$\201`0!\000\200\010E\004*\313\200\214x\032\026\214\222\004\\\253\335\025U\356\032\243l\222%V\023\277=\031bT\201\222\244\213\337c\340\334\257\251\017\323\227&\313\336eo\331O\3717\202\203\260\022V?d.M^\355g\355\035\226c\313\316\224\203\234N\224)\330\017a[\2122\331\376?\354.\333d\325(;k_eyVa5\326\211\262\237\367\211\235\267\313\321\354\002K\2619\326s\323\356\226[\367\246\375%\177\363<=\323/\203\257k\227&\347\354w\316C7\347\226\242\364\274\375o\347\300-\273\233\340pz&\312\316\333\035\226\022V'\355}Vb`\252`?qRN\301\331v\210\233\213\212_2\002\233\315\250x\213\325\235\313N)*.9%g\3251\274-O\005?[>\032x\212\322\327Y.J\027\355g\220A\312\201e\246?\331\337\267K\020`\346\363\276e\257\332\n\204\376\320\311\201\225Ap\220\365\"+\262*CQ\372\026S\301r\371\303\324\245I\211\177\371\330\337\364\017\203\327\374EU\034\334`\033N\r I\337`\"\362\311\014\2772oS\001\315<\237_\3636\275C\377mX\022\210\225yq\231/?\364ZA%x\031nF\231\233\374\346\206_\362\037\005\217C\302\253{|o?\026\263\377\345l\360\007\177\013&\202G\341\023~x\302O\014nty\367\364\374\352uV`\240X\340\205?y)o\301\277\031(a>\204$f\355+Coo\340d5Tb\203\257\371\3537Q\246\310\213e/\347\335\363\357\007\365pB\210\013/\177gO\001\265\257\335m\227zw\274F\014Wf\221/~\353u\374L\220\r\267\204\215Z\224\311\003L\033\354\320y\351n&\212\317\235+N\207\337{\314\037?\007\241&\337?\030\234s\351\211_\365\217\002\235\327\300\367!?\004\367o\371\333w\243\270\377'\"q\366\374\366:_\257\361\332.\337\005\003M\336\324\270\246s\335\344&\341\244\307{\357\023\271\037\230\301\357\177\037\346\302{\274\366\216\277\373\211\377\244r\025\244\217\371q\207w\310\037w\372\177\227!=\303g\240\332@\222\274h\215\021\223f\372O\200\354\005\266\005\234\001\372\222\330\177v\316\256\263\313\300\207\254\000\362/N\336Y\003\372\346\335\362\3718\321r\202Jc\246\212\220^\335\231\0006#\021\314\0064\025u\226\200\354#\272\026\331\201Sv~pUo\t\370~\034\\\016JC\213\263\t+\343f\022}\365\313\260\305* \373\014:\343\237\341\"\337}\305_\tz|\310\216w\333uv\313""\351\270\023\356\252\013),\260k\320\355\324]\0023\331\202\275\316\322\220Z\335IA\254\237\345>\266%\364\026\273\315\366\235\373.r\337\3739\377\216\217\204\304l\377g\266\004\000\014\276\313\356s\230)\213A9x\032f\371\336\001?x\303\337\274\215\036\374\0314\276\0166\203\275\360\006\337\177\311_\002m^\215;\370\316\251C<\277\357f\2300`\227\267\347\331\024C0z\322\017\334\232{\352U=\305\237\363I\220;\037o\366\317\372\325>\266\277\215\003\037\236\363\302\035\001\354\205Ocv\277\260\033b\276]0s\241\3229;g\337\205j\347\331z2\\\022\345i\241\274\000\263\257\343\304\003H\214\306]()X\377\306%\336\034\264\331t\260\034^\016KBt8a\227\3306\213\347kY\314\326\035\360\216\354x\234\236A\201\256\002{*\361\264\231\275\t\214\260\006\233\314\265>\352\377\302\342\371\224\371\225\364\363\375J\177\327N\t+\025{\227\245>1'\"-\377A\223c\243z\001\024\007\311\254\300$\237\362\220\327\013\246`\242\244\316\323\213l%.RZ\360\007\206srg|\202z\305\256\332(\211\361g{\311\216\271\334\265\237Bs\010\232\304B\246\270<\234,\\\025\ro\333#Pe1\262R\341\205\366\370.\356\214\213f\307\342\314\333s\366i2\267\027X\306\311\270\031OT\022H~\021\320S\320S\342\026\235Mn\263\333P\236TT\\d\245\363\370\361_\216\323s6\022]\325\031\334*_\330\325H\234}D?\276T(\244(r\273+ \023\344\231\200\252\354\305w\342\340\353Nl\034\022\376\344k\316.\330[6fe\240\002q\006\374\255A\265\010\270\203\244k\240-\370\266\000\267\337N2I\206\356&\330\252h\320(\235\213\363\244\200\254\030\362w\343\236\256\270{^\336[\207.,\300\260W\203\245`\007\246\347\355\260\026B\004W\2065\271\326?\202\201\225\216)/X \322\312\366\327\241\033\367\240\374g`)\345\026\335}\257\344\255y\235\337\000,gHn";
-    PyObject *data = __Pyx_DecompressString(cstring, 1987, 1);
+    #elif (CYTHON_COMPRESS_STRINGS) != 0 /* compression: zlib (1861 bytes) */
+const char* const cstring = "x\332\215UMs\333\306\031\026eR\242%J\021)ZRd%\006\351\257L\307\222K\312\262\323d\322\216$\3133M\032\217\251\257\330\215S\314\022XZp@\200\004@\216\230dZ\037q\334\343\036q\304\021G\036y\344\021G\036\363\023\374\023\372,@\322\244\352\316d\206\004v\027\357\347\363>\357\273\177{n:Tr.\210#\035v\234\013\323\2204[R\251\256U\251E\034\252w$\333\2614\305\241\226\0202\244\027G/\266\037}\371H\"\206*Y\364-U\034[\262[UE'\266Mm\311\254I\325\226\246;\232!9\235\006\265w\244\277\327\244\216\331\222\014JU\3111\245\006\344&\025\234\013jH6u\304B\272O\014\303t\210\243\231\206\014u\315xs_R5\013N\2646\025\332\317\210n\323\035\242\2522\344(m\233\017\025\323\242;\215\316\245\321\2527:;\321\256\336\202\177bY\244#\325\210\246\307~\265z\303\264\234\t\251V\2358\027\377# \313/:\227\370?E\312\362sz\351\034\323\032Q\024bw\014E3\205\246\331Br\324\256\022G\271\220\025\313\264m\263M-\271A\224\237\251\032\237\326[\303\034\206\207\232A\254NUsdM\275\254v\034:~\267\211\256\020G\3265\033j\232\256*:L\313\032\222\267\210B\253\320\216\034\310\320\035.\240\365\301\347\350x\264\261'\30215\303QZ\226E\rG|R\251b\252\302\264\252\2655\265EtU\224\207\226h\231\356Fq\320z\303\351\000\320\010\234Z\251Fl\241'\002\227\353T0\300\236<rL\031\026\265:\321?~:\314<\3728\016jz7)2\002lj3\022\240$\312\300\256\031\265\206,\327Z\206\"\313o(J\240!\305/e\315\226\307U\321\034Z\267\337\326E>\262\\'\000\022O\373\347\272\242\340\207\330\014\331n\212\025hP\007\034\272\254\023p\323\261\343M\203Xdxn\343/|\216w\202\202\2460g\252-\235\312\037\202\024Mb\030\221\260\021\225\007/\263V\263\033\026\330\213\034L\304l\220:\035>Qy\243\001\367\2613;\342\343X|\274\200\232\251\233\226\366\006\270\352\262\321(5JQ\351\024j7\312\215\362x\035\271m\210V\241\002\254x\033\241\026?\241*\334\310 \031}\003{P\211\366\"\224\341\322v\210\345`\t\236\224\342W9~\331Q\020\210\277\201\376\223\345&8\023\347a\241\365\315:\200\005+.\207\033\000\336\2426\004\211\256[4f\254\035\227\001\275=\004\000+\025\335\204\356\214\234\n\031Y\006`\342i8\350\373\030s\247\321\022\205m\031""\343\224\342%Ua/v\324\221\021\224\n\302Y-\372\013\005\243\336%\336/\314\244J\301lp\257\233\350n\365\316\373\345~\345}z&u\335\315\260#\236\345\367\2749\217x\315Az\225=\306\2660Hg\334\357X\213\357\363\312 \263\302\256\363\034/\363c\336\034d>q-\226c\245\301\312\006O\3605\336\361\223\376\201_\r\026\272\305\356\376\357\311E\267\004_\3133\2515\366/\357\261\237\365\013\203\344:\373\267w\356\227\374}8\\X\034d\326Y\223'\204\325\024;\343\005\016S\253\354\033/\341\255z\207\236\345g\007\371[\334\302f\177\220\377\234W\275Y\2570\310\027\275\202\267\353\031\301A\240\302\317A\227\014=\r\222\237\362\354 \231g\317\220A\302\3032\355\246\3343V@\200\351O\\\207\3552\005\241?\366\262\2602\014.'\262\036\013-\272\337 \217U~\300\211\210\314\302r\177\220YcU>\013\02429H\375\325\313y\217\020Y\316/\215\022\004r\233<\373~n\312T\236}\213x\257!P\"p\374\nx\331^\021y\214#\311\363s\257\344}\353\253A\021\251\274\355\315\366\n#\213+3\251-\376U\214\223\200\354\267\021ze\310>C\322\337\3677\303\223W\341\253\037\303\037_\277\317L\002\371)\377\334k\372\327\374]\037)l\360e\024\322\366\2130\223Ye{<\211\324\252^\002\261.e? \016\330\370m~\346=\360\211\377K7\333\275\323%Bb\305\375\225\027\001\300\360\273\354\377\003t\331\354\225zO\373\231\360\364<<\177\035\276\376i\260\375\027h\374\251\267\337;\355o\205g?\204?\274\014_\276\232t\360\265WE<\037w3J\030\330\345\330:\237\343\004\254Jn\373\307~;\250\004Jw\255k\365\262\277O\326q\311\255\270\224=\211\002\037\235\207\253w\004\260S\237&\354\336`5A\335)3S\225\316\262,\273\213j\347\370^\314\233XyA(o\200\326M/\342\226`\375\tJ\n\353\017}+X\013\232\335\205\336\275\376l\277 DG\315S\344\207<j\235\222h\233#x',\352\224K\024\350:\330S\366\216\321[+\237\201\021\316p\223^v\211\373\033/\211x\323\357,7\347\226\335\023\226\020V\312\354\204'\256\230\023\221\226\376\240\311\021\302k3)I`;\377\356?\2403,n\206\233O\220A\272\267\330\217\375\206\363\353\314\346\333^\333\257\200;\351M\016:nb\337\014\277@\211\007\311-P!y\023\264\204y\321\324[\302\370\004\244Q\337\206\205rD\347jw\266\213\271\221e""\237q\022\336\3723fM|\232\370\370\331\222\373\023/\2047\037D\323C\234\357\377\3213\204~=\343>a\267\031fS.\314=\364\233A\272\273\324\253\304\035\261\210\026\373>\310\007\307\001jp3Bx\371\006;\024\025\271\"\034\256\337G\343$\004\254N\214:\206\311\nT\370w8_\n^v+\340\353\325\203\253F\363a\276\024d\203/\272\333\275\330!\216\330\2760j\263\"\026+\033\341\306\036\250}\321\255\367\243\2619\317\333\336\211?\357\243|\267\370\307\r\214\362x\036\334\001Zs\335j/\325;\351\247\372\247a\005\355\206)\360O\0249\\D}\342i\273\001\202\014I\273\003\230\346\002\022tzs\275j?!\n\272\0235cR\314\t\314\327x\354_\351\2562\2530\022s\361\327(j\314\254\026{\212!(\306A$d\212\371\357eP\207Zp\030X\350\346\007\302A\177j\014~\035M\300i\263\023\267B\216\255\2616\257\240\003\223\033<\355\245\375t :\026\303l\272q\332\320S\242Q\274\022_H\267\321\206\211A^04z\374\237\343\344\032#bz6\207\027\303\rPD\234}\350\262\350^\020\205\021\271\335\025\220\tF_C\367\235F\327\332\360\353Qd\034\t_\371\232e\253\354\200Q0\342\020\227\324pN\035\243+-\270C\322\307\320\026se\003\027\330Q|c\214\334]\343\273b\020\017\222\331(O\033\310>\305\355v7\232\335e\3774\310\005{\230\266\253\270\336\324^\261w\324\317\366o\367\217\373\210`~T\223e\367\002\235\234\214F\233\350v\221V\306\335\303\324=E\371/\005\231\375\274\177\026\024\202GA\363\277\200\270\370\210";
+    PyObject *data = __Pyx_DecompressString(cstring, 1861, 1);
     if (unlikely(!data)) __PYX_ERR(0, 1, __pyx_L1_error)
     const char* const bytes = __Pyx_PyBytes_AsString(data);
     #if !CYTHON_ASSUME_SAFE_MACROS
     if (likely(bytes)); else { Py_DECREF(data); __PYX_ERR(0, 1, __pyx_L1_error) }
     #endif
-    #else /* compression: none (3399 bytes) */
-const char* const bytes = "?Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.add_noteevo/core.pyxnumpy.core.multiarray failed to importnumpy.core.umath failed to importC__Pyx_PyDict_NextRefaccasyncio.coroutinesbatch_crossover_packedbatch_mutation_packedbinarybit_idxbitsbyte_idxbyte_valchildcline_in_tracebackcriterioncriterion_selectorcross_bitcross_bytecrossover_bitcrossover_bitscrossover_pointdecode_individualdegreedegree_bitsdtypeemptyentropyesponenteevo.coreexponentialf1fast_binary_metricsfast_binary_to_decimalfast_binary_to_decimal_packedfast_crossoverfast_crossover_packedfast_mutationfast_mutation_packedfeat_bitsfeaturesfnfpfriedman_mse__func__genesginiiint8_is_coroutineitemsjkernelkernel_selectorkernelslinearlog_lossloss__main__mantissamaskmccmcc_den_sqmcc_nummodel_parammodel_sel_bitsmodel_selection__module__mutation_ratenn_bitsn_bytesn_estimatorsn_offspringn_pop__name__npnumpyoffspringoffspring_pooloriginal_np1p1_indicesp2p2_indicespack_bitspackedpacked_nparam_startparent1parent2parents_poolpolypopprec__qualname__random_matrixrandom_valuesrbfrecallressegno__set_name__setdefaultsigmoidsquared_errorstart_bit__test__tntotal_bitstpuint8unpack_bitsunpackedvaluesy_predy_truezeros\200\001\360\n\000\0051\260\002\260&\270\001\270\034\300V\3102\310Q\360\010\000\005\t\210\014\220E\230\021\230&\240\006\240a\240q\330\010\023\2206\230\021\230!\330\010\014\210K\220u\230A\230Q\330\014\020\220\t\230\022\2302\230R\230q\330\014\017\210r\220\022\2201\330\020\030\230\001\230\026\230y\250\004\250B\250b\260\n\270\"\270A\340\004\013\2101\200\001\360\016\000\005\026\220^\2406\250\021\250!\330\004\027\220~\240V\2501\250A\360\010\000\n\013\330\014\027\220q\230\001\330\014\020\220\005\220U\230!\2301\330\020\023\220=\240\001\240\023\240C\240r\250\021\330\024\037\230r\240\023\240A\330\024\036\230b\240\002\240!\330\024\"\240!\2403\240n\260B\260d\270\"\270B\270a\340\004\013\2101\200\001""\330\004\031\230\021\330\004\024\220F\230&\240\001\240\021\330\004\010\210\005\210U\220!\2201\330\010\017\210t\2203\220c\230\022\2306\240\021\240!\330\004\013\2101\200\001\360\010\000\005\032\230\024\230Q\230a\330\004\036\230d\240!\2401\360\006\000\005 \320\037<\270A\270X\300[\320PQ\360\006\000\005\034\230:\240R\240q\330\004\034\230A\360\010\000\005\010\320\007\027\220s\230!\330\010\027\320\0274\260A\260X\270]\310!\330\010\023\2201\320\024&\320&6\260m\3002\300W\310A\330\010\035\320\035:\270!\2708\300<\310r\320QT\320TU\330\010\023\2201\220O\240:\320-@\300\003\3008\310=\320Xk\320kn\320nu\320uv\340\t\031\230\023\230A\330\010\023\320\0230\260\001\260\030\270\035\300c\310\022\3101\330\010\020\220\007\320\0274\260A\260X\270\\\310\022\3103\310c\320QT\320T[\320[\\\330\010\024\320\0241\260\021\260(\270,\300b\310\003\3101\330\010\023\2201\220H\230D\240\002\240*\250C\250s\260$\260f\270B\270a\340\010\032\320\0327\260q\270\010\300\014\310B\310c\320QR\330\010\022\220!\220:\230X\240W\250A\330\010\023\2201\220L\240\007\240q\320(<\320<L\310B\310g\320UV\330\010\023\2201\220L\320 =\270Q\270h\300l\320RT\320TX\320X[\320[]\320]^\340\t\031\230\023\230A\330\010\027\320\0274\260A\260X\270]\310!\330\010\023\2201\320\024&\320&6\260m\3002\300W\310A\330\010\023\2201\220O\320#5\3205R\320RS\320S[\320[g\320gi\320il\320lo\320or\320ry\320yz\330\010\023\2201\220J\230n\320,I\310\021\310(\320R^\320^`\320`d\320dg\320gj\320jq\320qr\340\t\031\230\023\230A\330\010\027\320\0274\260A\260X\270]\310!\330\010\023\2201\320\024&\320&6\260m\3002\300W\310A\330\010\035\320\035:\270!\2708\300<\310r\320QT\320TU\330\010\023\2201\220O\240:\320-@\300\003\3008\310=\320Xk\320kn\320nu\320uv\340\004\013\320\013\034\230A\200\001\360\022\000\005\t\210\005\210U\220!\2201\330\010\013\210=\230\001\230\023\230B\230a\330\014\027\220r\230\023\230A\330\014\026\220b\230\002\230!\330\014\022\220!\220>\240\022\2404\240r\250\022\2501\340\004\013\2101\200\001\360\010\000\005\032\230\021\360\006\000\005\t\210\005\210U\220!\2201\330\010""\024\220J\230b\240\003\2403\240a\330\010\023\220:\230R\230s\240\"\240A\330\010\017\210t\2203\220c\230\024\230V\2401\240J\250d\260\"\260B\260j\300\002\300!\340\004\013\2101\200\001\360\020\000\005\034\230:\240V\2501\250A\330\004\027\220|\2406\250\021\250!\330\0042\260\"\260F\270\"\270M\310\032\320SY\320Y[\320[\\\360\014\000\n\013\330\014\027\220q\230\001\330\014\031\230\036\240q\250\003\2503\250a\330\014\030\230\016\240a\240s\250\"\250A\330\014\023\2205\230\004\230B\230b\240\001\360\006\000\r\021\220\005\220U\230!\2301\330\020\031\230\021\230#\230U\240,\250a\250z\270\021\270$\270a\360\006\000\r\020\210{\230\"\230A\330\020\031\230\021\230#\230_\250L\270\001\270\032\3001\300D\310\014\320TV\320V\\\320\\]\330-9\270\021\270*\300A\300T\310\034\320UW\320WX\320XY\360\006\000\r\021\220\005\220U\230!\230;\240b\250\003\2501\330\020\031\230\021\230#\230U\240,\250a\250z\270\021\270$\270a\340\004\013\2101\200\001\360\006\000\005\022\220\027\230\006\230a\230q\330\004-\250R\250v\260Q\260c\270\026\270r\300\021\340\004\010\210\005\210U\220!\2201\330\010\r\210Q\210e\2207\230!\2301\330\004\010\210\005\210U\220!\320\023$\240A\330\010\r\210Q\210e\2207\230!\2301\330\004\013\2101\200\001\360\006\000\005\022\220\025\220f\230A\230Q\340\004\010\210\005\210U\220!\2201\330\010\013\210=\230\001\230\023\230B\230a\330\014\021\220\021\220%\220r\230\022\2305\240\001\240\021\330\004\013\2101\200\001\360\n\000\005\022\220\030\230\026\230q\240\001\330\004\031\230\022\2302\230S\240\003\2401\330\004/\250r\260\026\260q\270\n\300&\310\002\310!\360\n\000\005\t\210\014\220E\230\021\230\"\230C\230q\330\010\023\2201\330\010\014\210E\220\025\220a\220q\330\014\017\210x\220q\230\t\240\022\2402\240R\240q\330\020\035\230R\230t\2402\240R\240q\330\010\016\210a\210|\2301\360\006\000\005\010\200r\210\022\2102\210S\220\001\330\010\023\2202\220S\230\001\330\010\023\2201\330\010\014\210E\220\025\220a\220r\230\022\2301\330\014\017\210x\220q\230\t\240\022\2402\240R\240q\330\020\035\230R\230t\2402\240R\240q\330\010\016\210a""\210|\2301\340\004\013\2101\200\001\360\016\000\005\030\220r\230\026\230q\240\001\330\004.\250b\260\006\260a\260y\300\006\300b\310\001\340\004\032\230.\250\003\2501\330\004\031\230\036\240r\250\021\360\010\000\005\t\210\005\210U\220!\2201\330\010\r\210Q\210e\2202\220Q\220a\360\006\000\005\010\200{\220\"\220A\330\010\017\210u\220D\230\002\230\"\230A\330\010\r\210Q\210o\230R\230q\240\014\250B\250f\260C\260r\270\021\270,\300b\310\001\310\021\360\006\000\005\t\210\005\210U\220!\220;\230b\240\003\2401\330\010\r\210Q\210e\2202\220Q\220a\340\004\013\2101\200\001\360\016\000\005\022\220\026\220v\230Q\230a\330\004\030\230\010\240\010\250\010\260\001\360\006\000\n\013\330\010\014\210E\220\025\220a\220q\330\014\017\210v\220Q\220c\230\023\230A\330\020\023\2206\230\021\230#\230S\240\001\330\024\032\230!\340\024\032\230!\340\020\023\2206\230\021\230#\230S\240\001\330\024\032\230!\340\024\032\230!\340\004\026\220a\330\004\027\220q\330\004\031\230\021\330\004\025\220Q\330\004\026\220a\360\006\000\005\010\200r\210\022\2101\330\010\017\210s\220\"\220D\230\002\230%\230q\240\001\340\004\010\210\003\2102\210T\220\022\2201\330\010\017\210s\220\"\220E\230\021\230#\230R\230q\340\004\010\210\003\2102\210T\220\022\2201\330\010\021\220\023\220B\220e\2301\230C\230r\240\021\340\004\010\210\005\210R\210x\220r\230\021\330\010\r\210R\210s\220%\220r\230\030\240\023\240E\250\022\2501\340\004\017\210s\220\"\220D\230\003\2303\230b\240\001\330\004\021\220\025\220a\220s\230\"\230D\240\002\240%\240q\250\003\2502\250T\260\022\2605\270\001\270\023\270B\270d\300\"\300E\310\021\310#\310R\310q\340\004\007\200{\220\"\220A\330\010\016\210h\220b\230\004\230A\230Q\340\010\016\210a\360\006\000\005\014\2105\220\005\220T\230\026\230x\240q\250\001\250\024\250U\260!\2604\260q";
+    #else /* compression: none (3258 bytes) */
+const char* const bytes = "?Note that Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types. If you need to pass subclasses then set the 'annotation_typing' directive to False.add_noteevo/core.pyxnumpy.core.multiarray failed to importnumpy.core.umath failed to import__Pyx_PyDict_NextRefaccasyncio.coroutinesbatch_crossover_packedbatch_mutation_packedbinarybit_idxbyte_idxbyte_valcat_listchildcline_in_tracebackcross_bitcross_bytecrossover_bitcrossover_bitscrossover_pointcurrent_bitdecode_individualdtypee1e2e3e_valemptyevo.coref1fast_binary_metricsfast_binary_to_decimalfast_binary_to_decimal_packedfast_crossoverfast_crossover_packedfast_mutationfast_mutation_packedfeat_bitsfnfp__func__genesiint8_is_coroutineitemsjm_val__main__maskmccmcc_den_sqmcc_nummodel_layoutsmodel_parammodel_sel_bitsmodel_selection__module__mutation_ratenn_bitsn_bytesn_offspringn_pop__name__name_idxnpnum_paramsnumpyoffspringoffspring_pooloriginal_np1p1_indicesp2p2_indicesp_bitsp_typepack_bitspackedpacked_nparam_categoriesparam_namesparam_startparent1parent2parents_poolpopprec__qualname__random_matrixrandom_valuesrecallress_bits_val__set_name__setdefaultstart_bit__test__tntotal_bitstpuint8unpack_bitsunpackedvalvaluesy_predy_truezeros\200\001\360\n\000\0051\260\002\260&\270\001\270\034\300V\3102\310Q\360\010\000\005\t\210\014\220E\230\021\230&\240\006\240a\240q\330\010\023\2206\230\021\230!\330\010\014\210K\220u\230A\230Q\330\014\020\220\t\230\022\2302\230R\230q\330\014\017\210r\220\022\2201\330\020\030\230\001\230\026\230y\250\004\250B\250b\260\n\270\"\270A\340\004\013\2101\200\001\360\016\000\005\026\220^\2406\250\021\250!\330\004\027\220~\240V\2501\250A\360\010\000\n\013\330\014\027\220q\230\001\330\014\020\220\005\220U\230!\2301\330\020\023\220=\240\001\240\023\240C\240r\250\021\330\024\037\230r\240\023\240A\330\024\036\230b\240\002\240!\330\024\"\240!\2403\240n\260B\260d\270\"\270B\270a\340\004\013\2101\200\001\330\004\031\230\021\330\004\024\220F\230&\240\001\240\021\330\004\010\210\005\210U""\220!\2201\330\010\017\210t\2203\220c\230\022\2306\240\021\240!\330\004\013\2101\200\001\360\022\000\005\t\210\005\210U\220!\2201\330\010\013\210=\230\001\230\023\230B\230a\330\014\027\220r\230\023\230A\330\014\026\220b\230\002\230!\330\014\022\220!\220>\240\022\2404\240r\250\022\2501\340\004\013\2101\200\001\360\010\000\005\032\230\021\360\006\000\005\t\210\005\210U\220!\2201\330\010\024\220J\230b\240\003\2403\240a\330\010\023\220:\230R\230s\240\"\240A\330\010\017\210t\2203\220c\230\024\230V\2401\240J\250d\260\"\260B\260j\300\002\300!\340\004\013\2101\200\001\360\020\000\005\034\230:\240V\2501\250A\330\004\027\220|\2406\250\021\250!\330\0042\260\"\260F\270\"\270M\310\032\320SY\320Y[\320[\\\360\014\000\n\013\330\014\027\220q\230\001\330\014\031\230\036\240q\250\003\2503\250a\330\014\030\230\016\240a\240s\250\"\250A\330\014\023\2205\230\004\230B\230b\240\001\360\006\000\r\021\220\005\220U\230!\2301\330\020\031\230\021\230#\230U\240,\250a\250z\270\021\270$\270a\360\006\000\r\020\210{\230\"\230A\330\020\031\230\021\230#\230_\250L\270\001\270\032\3001\300D\310\014\320TV\320V\\\320\\]\330-9\270\021\270*\300A\300T\310\034\320UW\320WX\320XY\360\006\000\r\021\220\005\220U\230!\230;\240b\250\003\2501\330\020\031\230\021\230#\230U\240,\250a\250z\270\021\270$\270a\340\004\013\2101\200\001\360\006\000\005\022\220\027\230\006\230a\230q\330\004-\250R\250v\260Q\260c\270\026\270r\300\021\340\004\010\210\005\210U\220!\2201\330\010\r\210Q\210e\2207\230!\2301\330\004\010\210\005\210U\220!\320\023$\240A\330\010\r\210Q\210e\2207\230!\2301\330\004\013\2101\200\001\360\006\000\005\022\220\025\220f\230A\230Q\340\004\010\210\005\210U\220!\2201\330\010\013\210=\230\001\230\023\230B\230a\330\014\021\220\021\220%\220r\230\022\2305\240\001\240\021\330\004\013\2101\200\001\360\n\000\005\022\220\030\230\026\230q\240\001\330\004\031\230\022\2302\230S\240\003\2401\330\004/\250r\260\026\260q\270\n\300&\310\002\310!\360\n\000\005\t\210\014\220E\230\021\230\"\230C\230q\330\010\023\2201\330\010\014""\210E\220\025\220a\220q\330\014\017\210x\220q\230\t\240\022\2402\240R\240q\330\020\035\230R\230t\2402\240R\240q\330\010\016\210a\210|\2301\360\006\000\005\010\200r\210\022\2102\210S\220\001\330\010\023\2202\220S\230\001\330\010\023\2201\330\010\014\210E\220\025\220a\220r\230\022\2301\330\014\017\210x\220q\230\t\240\022\2402\240R\240q\330\020\035\230R\230t\2402\240R\240q\330\010\016\210a\210|\2301\340\004\013\2101\200\001\360\026\000\005 \230q\330\004\007\200\177\220b\230\001\330\010\032\320\0327\260q\270\010\300\013\3101\360\006\000\005\010\320\007\027\220s\230-\240v\250Q\250a\330\010\032\230!\340\004\032\230-\240q\320(9\270\021\330\004\034\230A\330\004\033\230:\240R\240q\360\016\000\005\034\2301\340\004\010\210\005\210U\220!\2201\330\010\023\220=\240\001\320!2\260\"\260B\260b\270\002\270!\330\010\021\220\035\230a\320\0370\260\002\260\"\260B\260b\270\001\330\010\021\220\035\230a\320\0370\260\002\260\"\260B\260b\270\001\330\010\r\210]\230!\320\033,\250B\250b\260\002\260\"\260A\330\010\r\210]\230!\320\033,\250B\250b\260\002\260\"\260A\330\010\r\210]\230!\320\033,\250B\250b\260\002\260\"\260A\360\006\000\t\014\2107\220#\220Q\330\014\022\320\022/\250q\260\010\270\r\300Q\330\014\027\220q\230\013\2401\240M\260\024\260R\260q\330\014\033\2301\360\006\000\016\025\220C\220q\330\014\022\320\022/\250q\260\010\270\r\300Q\330\014\027\320\027'\240q\250\001\330\014\017\210t\2202\220S\230\001\230\021\330\020\033\2301\230K\240q\250\r\260X\270Q\270a\340\020\033\2301\230K\240q\250\r\260X\270Q\270a\330\014\033\2301\360\006\000\016\025\220C\220q\330\014\024\320\0241\260\021\260(\270-\300q\330\014\033\2301\330\014\024\220A\330\014\017\210s\220\"\220A\330\020\030\320\0305\260Q\260h\270m\3101\330\020\030\230\007\230v\240S\250\007\250q\330\020\037\230q\330\014\024\320\0241\260\021\260(\270-\300q\330\014\033\2301\330\014\027\220q\230\013\2401\240N\260$\260b\270\006\270b\300\005\300S\310\005\310T\320QW\320WY\320YZ\340\004\013\320\013\034\230A\200\001\360\016\000\005\030\220r\230\026\230q\240""\001\330\004.\250b\260\006\260a\260y\300\006\300b\310\001\340\004\032\230.\250\003\2501\330\004\031\230\036\240r\250\021\360\010\000\005\t\210\005\210U\220!\2201\330\010\r\210Q\210e\2202\220Q\220a\360\006\000\005\010\200{\220\"\220A\330\010\017\210u\220D\230\002\230\"\230A\330\010\r\210Q\210o\230R\230q\240\014\250B\250f\260C\260r\270\021\270,\300b\310\001\310\021\360\006\000\005\t\210\005\210U\220!\220;\230b\240\003\2401\330\010\r\210Q\210e\2202\220Q\220a\340\004\013\2101\200\001\360\016\000\005\022\220\026\220v\230Q\230a\330\004\030\230\010\240\010\250\010\260\001\360\006\000\n\013\330\010\014\210E\220\025\220a\220q\330\014\017\210v\220Q\220c\230\023\230A\330\020\023\2206\230\021\230#\230S\240\001\330\024\032\230!\340\024\032\230!\340\020\023\2206\230\021\230#\230S\240\001\330\024\032\230!\340\024\032\230!\340\004\026\220a\330\004\027\220q\330\004\031\230\021\330\004\025\220Q\330\004\026\220a\360\006\000\005\010\200r\210\022\2101\330\010\017\210s\220\"\220D\230\002\230%\230q\240\001\340\004\010\210\003\2102\210T\220\022\2201\330\010\017\210s\220\"\220E\230\021\230#\230R\230q\340\004\010\210\003\2102\210T\220\022\2201\330\010\021\220\023\220B\220e\2301\230C\230r\240\021\340\004\010\210\005\210R\210x\220r\230\021\330\010\r\210R\210s\220%\220r\230\030\240\023\240E\250\022\2501\340\004\017\210s\220\"\220D\230\003\2303\230b\240\001\330\004\021\220\025\220a\220s\230\"\230D\240\002\240%\240q\250\003\2502\250T\260\022\2605\270\001\270\023\270B\270d\300\"\300E\310\021\310#\310R\310q\340\004\007\200{\220\"\220A\330\010\016\210h\220b\230\004\230A\230Q\340\010\016\210a\360\006\000\005\014\2105\220\005\220T\230\026\230x\240q\250\001\250\024\250U\260!\2604\260q";
     PyObject *data = NULL;
     CYTHON_UNUSED_VAR(__Pyx_DecompressString);
     #endif
     PyObject **stringtab = __pyx_mstate->__pyx_string_tab;
     Py_ssize_t pos = 0;
-    for (int i = 0; i < 122; i++) {
+    for (int i = 0; i < 114; i++) {
       Py_ssize_t bytes_length = index[i].length;
       PyObject *string = PyUnicode_DecodeUTF8(bytes + pos, bytes_length, NULL);
       if (likely(string) && i >= 6) PyUnicode_InternInPlace(&string);
@@ -11008,7 +11017,7 @@ const char* const bytes = "?Note that Cython is deliberately stricter than PEP-4
       stringtab[i] = string;
       pos += bytes_length;
     }
-    for (int i = 122; i < 134; i++) {
+    for (int i = 114; i < 126; i++) {
       Py_ssize_t bytes_length = index[i].length;
       PyObject *string = PyBytes_FromStringAndSize(bytes + pos, bytes_length);
       stringtab[i] = string;
@@ -11019,14 +11028,14 @@ const char* const bytes = "?Note that Cython is deliberately stricter than PEP-4
       }
     }
     Py_XDECREF(data);
-    for (Py_ssize_t i = 0; i < 134; i++) {
+    for (Py_ssize_t i = 0; i < 126; i++) {
       if (unlikely(PyObject_Hash(stringtab[i]) == -1)) {
         __PYX_ERR(0, 1, __pyx_L1_error)
       }
     }
     #if CYTHON_IMMORTAL_CONSTANTS
     {
-      PyObject **table = stringtab + 122;
+      PyObject **table = stringtab + 114;
       for (Py_ssize_t i=0; i<12; ++i) {
         #if CYTHON_COMPILING_IN_CPYTHON_FREETHREADING
         #if PY_VERSION_HEX < 0x030E0000
@@ -11044,41 +11053,6 @@ const char* const bytes = "?Note that Cython is deliberately stricter than PEP-4
     }
     #endif
   }
-  {
-    PyObject **numbertab = __pyx_mstate->__pyx_number_tab;
-    double const c_constants[] = {0.1};
-    for (int i = 0; i < 1; i++) {
-      numbertab[i] = PyFloat_FromDouble(c_constants[i]);
-      if (unlikely(!numbertab[i])) __PYX_ERR(0, 1, __pyx_L1_error)
-    }
-  }
-  {
-    PyObject **numbertab = __pyx_mstate->__pyx_number_tab + 1;
-    int8_t const cint_constants_1[] = {0,1,2,3,9};
-    for (int i = 0; i < 5; i++) {
-      numbertab[i] = PyLong_FromLong(cint_constants_1[i - 0]);
-      if (unlikely(!numbertab[i])) __PYX_ERR(0, 1, __pyx_L1_error)
-    }
-  }
-  #if CYTHON_IMMORTAL_CONSTANTS
-  {
-    PyObject **table = __pyx_mstate->__pyx_number_tab;
-    for (Py_ssize_t i=0; i<6; ++i) {
-      #if CYTHON_COMPILING_IN_CPYTHON_FREETHREADING
-      #if PY_VERSION_HEX < 0x030E0000
-      if (_Py_IsOwnedByCurrentThread(table[i]) && Py_REFCNT(table[i]) == 1)
-      #else
-      if (PyUnstable_Object_IsUniquelyReferenced(table[i]))
-      #endif
-      {
-        Py_SET_REFCNT(table[i], _Py_IMMORTAL_REFCNT_LOCAL);
-      }
-      #else
-      Py_SET_REFCNT(table[i], _Py_IMMORTAL_INITIAL_REFCNT);
-      #endif
-    }
-  }
-  #endif
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -11088,7 +11062,7 @@ typedef struct {
     unsigned int argcount : 3;
     unsigned int num_posonly_args : 1;
     unsigned int num_kwonly_args : 1;
-    unsigned int nlocals : 4;
+    unsigned int nlocals : 5;
     unsigned int flags : 10;
     unsigned int first_line : 9;
 } __Pyx_PyCode_New_function_description;
@@ -11122,47 +11096,47 @@ static int __Pyx_CreateCodeObjects(__pyx_mstatetype *__pyx_mstate) {
     __pyx_mstate_global->__pyx_codeobj_tab[2] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_binary_to_decimal_packed, __pyx_mstate->__pyx_kp_b_iso88591_U_1_Jb_3a_Rs_A_t3c_V1Jd_Bj_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[2])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 15, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 74};
-    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_packed, __pyx_mstate->__pyx_n_u_bits, __pyx_mstate->__pyx_n_u_feat_bits, __pyx_mstate->__pyx_n_u_model_sel_bits, __pyx_mstate->__pyx_n_u_model_selection, __pyx_mstate->__pyx_n_u_param_start, __pyx_mstate->__pyx_n_u_model_param, __pyx_mstate->__pyx_n_u_n_estimators, __pyx_mstate->__pyx_n_u_criterion_selector, __pyx_mstate->__pyx_n_u_kernel_selector, __pyx_mstate->__pyx_n_u_degree_bits, __pyx_mstate->__pyx_n_u_mantissa, __pyx_mstate->__pyx_n_u_segno, __pyx_mstate->__pyx_n_u_esponente, __pyx_mstate->__pyx_n_u_kernels};
-    __pyx_mstate_global->__pyx_codeobj_tab[3] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_decode_individual, __pyx_mstate->__pyx_kp_b_iso88591_Qa_d_1_AX_PQ_Rq_A_s_4AX_1_6m2WA, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[3])) goto bad;
+    const __Pyx_PyCode_New_function_description descr = {6, 0, 0, 24, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 74};
+    PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_packed, __pyx_mstate->__pyx_n_u_feat_bits, __pyx_mstate->__pyx_n_u_model_sel_bits, __pyx_mstate->__pyx_n_u_param_names, __pyx_mstate->__pyx_n_u_param_categories, __pyx_mstate->__pyx_n_u_model_layouts, __pyx_mstate->__pyx_n_u_model_selection, __pyx_mstate->__pyx_n_u_num_params, __pyx_mstate->__pyx_n_u_model_param, __pyx_mstate->__pyx_n_u_param_start, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_name_idx, __pyx_mstate->__pyx_n_u_p_bits, __pyx_mstate->__pyx_n_u_p_type, __pyx_mstate->__pyx_n_u_e1, __pyx_mstate->__pyx_n_u_e2, __pyx_mstate->__pyx_n_u_e3, __pyx_mstate->__pyx_n_u_val, __pyx_mstate->__pyx_n_u_m_val, __pyx_mstate->__pyx_n_u_e_val, __pyx_mstate->__pyx_n_u_s_bit, __pyx_mstate->__pyx_n_u_s_val, __pyx_mstate->__pyx_n_u_cat_list, __pyx_mstate->__pyx_n_u_current_bit};
+    __pyx_mstate_global->__pyx_codeobj_tab[3] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_decode_individual, __pyx_mstate->__pyx_kp_b_iso88591_q_b_7q_1_s_vQa_q_9_A_Rq_1_U_1_2, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[3])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 12, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 123};
+    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 12, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 145};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_p1, __pyx_mstate->__pyx_n_u_p2, __pyx_mstate->__pyx_n_u_crossover_bit, __pyx_mstate->__pyx_n_u_total_bits, __pyx_mstate->__pyx_n_u_n_bytes, __pyx_mstate->__pyx_n_u_child, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_byte_idx, __pyx_mstate->__pyx_n_u_bit_idx, __pyx_mstate->__pyx_n_u_cross_byte, __pyx_mstate->__pyx_n_u_cross_bit, __pyx_mstate->__pyx_n_u_mask};
     __pyx_mstate_global->__pyx_codeobj_tab[4] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_crossover_packed, __pyx_mstate->__pyx_kp_b_iso88591_r_q_b_ay_b_1_r_U_1_Qe2Qa_A_uD_A, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[4])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 7, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 152};
+    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 7, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 174};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_packed, __pyx_mstate->__pyx_n_u_mutation_rate, __pyx_mstate->__pyx_n_u_random_values, __pyx_mstate->__pyx_n_u_total_bits, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_byte_idx, __pyx_mstate->__pyx_n_u_bit_idx};
     __pyx_mstate_global->__pyx_codeobj_tab[5] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_mutation_packed, __pyx_mstate->__pyx_kp_b_iso88591_U_1_Ba_r_A_b_4r_1_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[5])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 13, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 171};
+    const __Pyx_PyCode_New_function_description descr = {5, 0, 0, 13, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 193};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_parents_pool, __pyx_mstate->__pyx_n_u_p1_indices, __pyx_mstate->__pyx_n_u_p2_indices, __pyx_mstate->__pyx_n_u_crossover_bits, __pyx_mstate->__pyx_n_u_total_bits, __pyx_mstate->__pyx_n_u_n_offspring, __pyx_mstate->__pyx_n_u_n_bytes, __pyx_mstate->__pyx_n_u_offspring, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_j, __pyx_mstate->__pyx_n_u_cross_byte, __pyx_mstate->__pyx_n_u_cross_bit, __pyx_mstate->__pyx_n_u_mask};
     __pyx_mstate_global->__pyx_codeobj_tab[6] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_batch_crossover_packed, __pyx_mstate->__pyx_kp_b_iso88591_V1A_6_2_F_M_SYY_q_q_3a_as_A_5_B, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[6])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 10, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 208};
+    const __Pyx_PyCode_New_function_description descr = {4, 0, 0, 10, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 230};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_offspring_pool, __pyx_mstate->__pyx_n_u_mutation_rate, __pyx_mstate->__pyx_n_u_random_matrix, __pyx_mstate->__pyx_n_u_total_bits, __pyx_mstate->__pyx_n_u_n_pop, __pyx_mstate->__pyx_n_u_n_bytes, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_j, __pyx_mstate->__pyx_n_u_byte_idx, __pyx_mstate->__pyx_n_u_bit_idx};
     __pyx_mstate_global->__pyx_codeobj_tab[7] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_batch_mutation_packed, __pyx_mstate->__pyx_kp_b_iso88591_6_V1A_q_U_1_Cr_r_A_b_3nBd_Ba_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[7])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 232};
+    const __Pyx_PyCode_New_function_description descr = {1, 0, 0, 4, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 254};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_binary, __pyx_mstate->__pyx_n_u_res, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_n};
     __pyx_mstate_global->__pyx_codeobj_tab[8] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_binary_to_decimal, __pyx_mstate->__pyx_kp_b_iso88591_F_U_1_t3c_6_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[8])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 6, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 239};
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 6, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 261};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_parent1, __pyx_mstate->__pyx_n_u_parent2, __pyx_mstate->__pyx_n_u_crossover_point, __pyx_mstate->__pyx_n_u_n, __pyx_mstate->__pyx_n_u_child, __pyx_mstate->__pyx_n_u_i};
     __pyx_mstate_global->__pyx_codeobj_tab[9] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_crossover, __pyx_mstate->__pyx_kp_b_iso88591_aq_RvQc_r_U_1_Qe7_1_U_A_Qe7_1_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[9])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 251};
+    const __Pyx_PyCode_New_function_description descr = {3, 0, 0, 5, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 273};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_genes, __pyx_mstate->__pyx_n_u_mutation_rate, __pyx_mstate->__pyx_n_u_random_values, __pyx_mstate->__pyx_n_u_n, __pyx_mstate->__pyx_n_u_i};
     __pyx_mstate_global->__pyx_codeobj_tab[10] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_mutation, __pyx_mstate->__pyx_kp_b_iso88591_fAQ_U_1_Ba_r_5_1, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[10])) goto bad;
   }
   {
-    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 15, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 263};
+    const __Pyx_PyCode_New_function_description descr = {2, 0, 0, 15, (unsigned int)(CO_OPTIMIZED|CO_NEWLOCALS), 285};
     PyObject* const varnames[] = {__pyx_mstate->__pyx_n_u_y_true, __pyx_mstate->__pyx_n_u_y_pred, __pyx_mstate->__pyx_n_u_n, __pyx_mstate->__pyx_n_u_tp, __pyx_mstate->__pyx_n_u_tn, __pyx_mstate->__pyx_n_u_fp, __pyx_mstate->__pyx_n_u_fn, __pyx_mstate->__pyx_n_u_i, __pyx_mstate->__pyx_n_u_acc, __pyx_mstate->__pyx_n_u_prec, __pyx_mstate->__pyx_n_u_recall, __pyx_mstate->__pyx_n_u_f1, __pyx_mstate->__pyx_n_u_mcc, __pyx_mstate->__pyx_n_u_mcc_num, __pyx_mstate->__pyx_n_u_mcc_den_sq};
     __pyx_mstate_global->__pyx_codeobj_tab[11] = __Pyx_PyCode_New(descr, varnames, __pyx_mstate->__pyx_kp_u_evo_core_pyx, __pyx_mstate->__pyx_n_u_fast_binary_metrics, __pyx_mstate->__pyx_kp_b_iso88591_vQa_E_aq_vQc_A_6_S_6_S_a_q_Q_a, tuple_dedup_map); if (unlikely(!__pyx_mstate_global->__pyx_codeobj_tab[11])) goto bad;
   }
@@ -13480,86 +13454,6 @@ static const char* __Pyx_BufFmt_CheckString(__Pyx_BufFmt_Context* ctx, const cha
       return r + adapt_python * b;
   }
   
-/* DictGetItem */
-  #if !CYTHON_COMPILING_IN_PYPY
-  static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
-      PyObject *value;
-      if (unlikely(__Pyx_PyDict_GetItemRef(d, key, &value) == 0)) { // no value, no error
-          if (unlikely(PyTuple_Check(key))) {
-              PyObject* args = PyTuple_Pack(1, key);
-              if (likely(args)) {
-                  PyErr_SetObject(PyExc_KeyError, args);
-                  Py_DECREF(args);
-              }
-          } else {
-              PyErr_SetObject(PyExc_KeyError, key);
-          }
-      }
-      return value;
-  }
-  #endif
-  
-/* PyLongCompare */
-  static CYTHON_INLINE int __Pyx_PyLong_BoolEqObjC(PyObject *op1, PyObject *op2, long intval, long inplace) {
-      CYTHON_MAYBE_UNUSED_VAR(intval);
-      CYTHON_UNUSED_VAR(inplace);
-      if (op1 == op2) {
-          return 1;
-      }
-      #if CYTHON_USE_PYLONG_INTERNALS
-      if (likely(PyLong_CheckExact(op1))) {
-          int unequal;
-          unsigned long uintval;
-          Py_ssize_t size = __Pyx_PyLong_DigitCount(op1);
-          const digit* digits = __Pyx_PyLong_Digits(op1);
-          if (intval == 0) {
-              return (__Pyx_PyLong_IsZero(op1) == 1);
-          } else if (intval < 0) {
-              if (__Pyx_PyLong_IsNonNeg(op1))
-                  return 0;
-              intval = -intval;
-          } else {
-              if (__Pyx_PyLong_IsNeg(op1))
-                  return 0;
-          }
-          uintval = (unsigned long) intval;
-  #if PyLong_SHIFT * 4 < SIZEOF_LONG*8
-          if (uintval >> (PyLong_SHIFT * 4)) {
-              unequal = (size != 5) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                   | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[3] != ((uintval >> (3 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[4] != ((uintval >> (4 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-          } else
-  #endif
-  #if PyLong_SHIFT * 3 < SIZEOF_LONG*8
-          if (uintval >> (PyLong_SHIFT * 3)) {
-              unequal = (size != 4) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                   | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[3] != ((uintval >> (3 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-          } else
-  #endif
-  #if PyLong_SHIFT * 2 < SIZEOF_LONG*8
-          if (uintval >> (PyLong_SHIFT * 2)) {
-              unequal = (size != 3) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                   | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK)) | (digits[2] != ((uintval >> (2 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-          } else
-  #endif
-  #if PyLong_SHIFT * 1 < SIZEOF_LONG*8
-          if (uintval >> (PyLong_SHIFT * 1)) {
-              unequal = (size != 2) || (digits[0] != (uintval & (unsigned long) PyLong_MASK))
-                   | (digits[1] != ((uintval >> (1 * PyLong_SHIFT)) & (unsigned long) PyLong_MASK));
-          } else
-  #endif
-              unequal = (size != 1) || (((unsigned long) digits[0]) != (uintval & (unsigned long) PyLong_MASK));
-          return (unequal == 0);
-      }
-      #endif
-      if (PyFloat_CheckExact(op1)) {
-          const long b = intval;
-          double a = __Pyx_PyFloat_AS_DOUBLE(op1);
-          return ((double)a == (double)b);
-      }
-      return __Pyx_PyObject_IsTrueAndDecref(
-          PyObject_RichCompare(op1, op2, Py_EQ));
-  }
-  
 /* GetItemInt */
   static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
       PyObject *r;
@@ -13663,104 +13557,16 @@ static const char* __Pyx_BufFmt_CheckString(__Pyx_BufFmt_Context* ctx, const cha
       return __Pyx_GetItemInt_Generic(o, PyLong_FromSsize_t(i));
   }
   
-/* PyLongBinop */
-  #if !CYTHON_COMPILING_IN_PYPY
-  static PyObject* __Pyx_Fallback___Pyx_PyLong_AddObjC(PyObject *op1, PyObject *op2, int inplace) {
-      return (inplace ? PyNumber_InPlaceAdd : PyNumber_Add)(op1, op2);
+/* RaiseUnexpectedTypeError */
+  static int
+  __Pyx_RaiseUnexpectedTypeError(const char *expected, PyObject *obj)
+  {
+      __Pyx_TypeName obj_type_name = __Pyx_PyType_GetFullyQualifiedName(Py_TYPE(obj));
+      PyErr_Format(PyExc_TypeError, "Expected %s, got " __Pyx_FMT_TYPENAME,
+                   expected, obj_type_name);
+      __Pyx_DECREF_TypeName(obj_type_name);
+      return 0;
   }
-  #if CYTHON_USE_PYLONG_INTERNALS
-  static PyObject* __Pyx_Unpacked___Pyx_PyLong_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check) {
-      CYTHON_MAYBE_UNUSED_VAR(inplace);
-      CYTHON_UNUSED_VAR(zerodivision_check);
-      const long b = intval;
-      long a;
-      const PY_LONG_LONG llb = intval;
-      PY_LONG_LONG lla;
-      if (unlikely(__Pyx_PyLong_IsZero(op1))) {
-          return __Pyx_NewRef(op2);
-      }
-      const int is_positive = __Pyx_PyLong_IsPos(op1);
-      const digit* digits = __Pyx_PyLong_Digits(op1);
-      const Py_ssize_t size = __Pyx_PyLong_DigitCount(op1);
-      if (likely(size == 1)) {
-          a = (long) digits[0];
-          if (!is_positive) a *= -1;
-      } else {
-          switch (size) {
-              case 2:
-                  if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
-                      a = (long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                      if (!is_positive) a *= -1;
-                      goto calculate_long;
-                  } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
-                      lla = (PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                      if (!is_positive) lla *= -1;
-                      goto calculate_long_long;
-                  }
-                  break;
-              case 3:
-                  if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
-                      a = (long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                      if (!is_positive) a *= -1;
-                      goto calculate_long;
-                  } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
-                      lla = (PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                      if (!is_positive) lla *= -1;
-                      goto calculate_long_long;
-                  }
-                  break;
-              case 4:
-                  if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
-                      a = (long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                      if (!is_positive) a *= -1;
-                      goto calculate_long;
-                  } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
-                      lla = (PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                      if (!is_positive) lla *= -1;
-                      goto calculate_long_long;
-                  }
-                  break;
-          }
-          return PyLong_Type.tp_as_number->nb_add(op1, op2);
-      }
-      calculate_long:
-          {
-              long x;
-              x = a + b;
-              return PyLong_FromLong(x);
-          }
-      calculate_long_long:
-          {
-              PY_LONG_LONG llx;
-              llx = lla + llb;
-              return PyLong_FromLongLong(llx);
-          }
-      
-  }
-  #endif
-  static PyObject* __Pyx_Float___Pyx_PyLong_AddObjC(PyObject *float_val, long intval, int zerodivision_check) {
-      CYTHON_UNUSED_VAR(zerodivision_check);
-      const long b = intval;
-      double a = __Pyx_PyFloat_AS_DOUBLE(float_val);
-          double result;
-          
-          result = ((double)a) + (double)b;
-          return PyFloat_FromDouble(result);
-  }
-  static CYTHON_INLINE PyObject* __Pyx_PyLong_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check) {
-      CYTHON_MAYBE_UNUSED_VAR(intval);
-      CYTHON_UNUSED_VAR(zerodivision_check);
-      #if CYTHON_USE_PYLONG_INTERNALS
-      if (likely(PyLong_CheckExact(op1))) {
-          return __Pyx_Unpacked___Pyx_PyLong_AddObjC(op1, op2, intval, inplace, zerodivision_check);
-      }
-      #endif
-      if (PyFloat_CheckExact(op1)) {
-          return __Pyx_Float___Pyx_PyLong_AddObjC(op1, intval, zerodivision_check);
-      }
-      return __Pyx_Fallback___Pyx_PyLong_AddObjC(op1, op2, inplace);
-  }
-  #endif
   
 /* BufferIndexErrorNogil */
   static void __Pyx_RaiseBufferIndexErrorNogil(int axis) {
@@ -16677,6 +16483,256 @@ static const char* __Pyx_BufFmt_CheckString(__Pyx_BufFmt_Context* ctx, const cha
           return result;
   #endif
       }
+  }
+  
+/* CIntFromPy */
+  static CYTHON_INLINE PY_LONG_LONG __Pyx_PyLong_As_PY_LONG_LONG(PyObject *x) {
+  #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wconversion"
+  #endif
+      const PY_LONG_LONG neg_one = (PY_LONG_LONG) -1, const_zero = (PY_LONG_LONG) 0;
+  #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
+  #pragma GCC diagnostic pop
+  #endif
+      const int is_unsigned = neg_one > const_zero;
+      if (unlikely(!PyLong_Check(x))) {
+          PY_LONG_LONG val;
+          PyObject *tmp = __Pyx_PyNumber_Long(x);
+          if (!tmp) return (PY_LONG_LONG) -1;
+          val = __Pyx_PyLong_As_PY_LONG_LONG(tmp);
+          Py_DECREF(tmp);
+          return val;
+      }
+      if (is_unsigned) {
+  #if CYTHON_USE_PYLONG_INTERNALS
+          if (unlikely(__Pyx_PyLong_IsNeg(x))) {
+              goto raise_neg_overflow;
+          } else if (__Pyx_PyLong_IsCompact(x)) {
+              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, __Pyx_compact_upylong, __Pyx_PyLong_CompactValueUnsigned(x))
+          } else {
+              const digit* digits = __Pyx_PyLong_Digits(x);
+              assert(__Pyx_PyLong_DigitCount(x) > 1);
+              switch (__Pyx_PyLong_DigitCount(x)) {
+                  case 2:
+                      if ((8 * sizeof(PY_LONG_LONG) > 1 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 2 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) >= 2 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) (((((PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0]));
+                          }
+                      }
+                      break;
+                  case 3:
+                      if ((8 * sizeof(PY_LONG_LONG) > 2 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 3 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) >= 3 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) (((((((PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0]));
+                          }
+                      }
+                      break;
+                  case 4:
+                      if ((8 * sizeof(PY_LONG_LONG) > 3 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 4 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) >= 4 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) (((((((((PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0]));
+                          }
+                      }
+                      break;
+              }
+          }
+  #endif
+  #if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX < 0x030C00A7
+          if (unlikely(Py_SIZE(x) < 0)) {
+              goto raise_neg_overflow;
+          }
+  #else
+          {
+              int result = PyObject_RichCompareBool(x, Py_False, Py_LT);
+              if (unlikely(result < 0))
+                  return (PY_LONG_LONG) -1;
+              if (unlikely(result == 1))
+                  goto raise_neg_overflow;
+          }
+  #endif
+          if ((sizeof(PY_LONG_LONG) <= sizeof(unsigned long))) {
+              __PYX_VERIFY_RETURN_INT_EXC(PY_LONG_LONG, unsigned long, PyLong_AsUnsignedLong(x))
+          } else if ((sizeof(PY_LONG_LONG) <= sizeof(unsigned PY_LONG_LONG))) {
+              __PYX_VERIFY_RETURN_INT_EXC(PY_LONG_LONG, unsigned PY_LONG_LONG, PyLong_AsUnsignedLongLong(x))
+          }
+      } else {
+  #if CYTHON_USE_PYLONG_INTERNALS
+          if (__Pyx_PyLong_IsCompact(x)) {
+              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, __Pyx_compact_pylong, __Pyx_PyLong_CompactValue(x))
+          } else {
+              const digit* digits = __Pyx_PyLong_Digits(x);
+              assert(__Pyx_PyLong_DigitCount(x) > 1);
+              switch (__Pyx_PyLong_SignedDigitCount(x)) {
+                  case -2:
+                      if ((8 * sizeof(PY_LONG_LONG) - 1 > 1 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 2 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, long, -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) (((PY_LONG_LONG)-1)*(((((PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0])));
+                          }
+                      }
+                      break;
+                  case 2:
+                      if ((8 * sizeof(PY_LONG_LONG) > 1 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 2 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, unsigned long, (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) ((((((PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0])));
+                          }
+                      }
+                      break;
+                  case -3:
+                      if ((8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 3 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, long, -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) (((PY_LONG_LONG)-1)*(((((((PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0])));
+                          }
+                      }
+                      break;
+                  case 3:
+                      if ((8 * sizeof(PY_LONG_LONG) > 2 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 3 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, unsigned long, (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) ((((((((PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0])));
+                          }
+                      }
+                      break;
+                  case -4:
+                      if ((8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 4 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, long, -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) (((PY_LONG_LONG)-1)*(((((((((PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0])));
+                          }
+                      }
+                      break;
+                  case 4:
+                      if ((8 * sizeof(PY_LONG_LONG) > 3 * PyLong_SHIFT)) {
+                          if ((8 * sizeof(unsigned long) > 4 * PyLong_SHIFT)) {
+                              __PYX_VERIFY_RETURN_INT(PY_LONG_LONG, unsigned long, (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0])))
+                          } else if ((8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT)) {
+                              return (PY_LONG_LONG) ((((((((((PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (PY_LONG_LONG)digits[0])));
+                          }
+                      }
+                      break;
+              }
+          }
+  #endif
+          if ((sizeof(PY_LONG_LONG) <= sizeof(long))) {
+              __PYX_VERIFY_RETURN_INT_EXC(PY_LONG_LONG, long, PyLong_AsLong(x))
+          } else if ((sizeof(PY_LONG_LONG) <= sizeof(PY_LONG_LONG))) {
+              __PYX_VERIFY_RETURN_INT_EXC(PY_LONG_LONG, PY_LONG_LONG, PyLong_AsLongLong(x))
+          }
+      }
+      {
+          PY_LONG_LONG val;
+          int ret = -1;
+  #if PY_VERSION_HEX >= 0x030d00A6 && !CYTHON_COMPILING_IN_LIMITED_API
+          Py_ssize_t bytes_copied = PyLong_AsNativeBytes(
+              x, &val, sizeof(val), Py_ASNATIVEBYTES_NATIVE_ENDIAN | (is_unsigned ? Py_ASNATIVEBYTES_UNSIGNED_BUFFER | Py_ASNATIVEBYTES_REJECT_NEGATIVE : 0));
+          if (unlikely(bytes_copied == -1)) {
+          } else if (unlikely(bytes_copied > (Py_ssize_t) sizeof(val))) {
+              goto raise_overflow;
+          } else {
+              ret = 0;
+          }
+  #elif PY_VERSION_HEX < 0x030d0000 && !(CYTHON_COMPILING_IN_PYPY || CYTHON_COMPILING_IN_LIMITED_API) || defined(_PyLong_AsByteArray)
+          int one = 1; int is_little = (int)*(unsigned char *)&one;
+          unsigned char *bytes = (unsigned char *)&val;
+          ret = _PyLong_AsByteArray((PyLongObject *)x,
+                                      bytes, sizeof(val),
+                                      is_little, !is_unsigned);
+  #else
+          PyObject *v;
+          PyObject *stepval = NULL, *mask = NULL, *shift = NULL;
+          int bits, remaining_bits, is_negative = 0;
+          int chunk_size = (sizeof(long) < 8) ? 30 : 62;
+          if (likely(PyLong_CheckExact(x))) {
+              v = __Pyx_NewRef(x);
+          } else {
+              v = PyNumber_Long(x);
+              if (unlikely(!v)) return (PY_LONG_LONG) -1;
+              assert(PyLong_CheckExact(v));
+          }
+          {
+              int result = PyObject_RichCompareBool(v, Py_False, Py_LT);
+              if (unlikely(result < 0)) {
+                  Py_DECREF(v);
+                  return (PY_LONG_LONG) -1;
+              }
+              is_negative = result == 1;
+          }
+          if (is_unsigned && unlikely(is_negative)) {
+              Py_DECREF(v);
+              goto raise_neg_overflow;
+          } else if (is_negative) {
+              stepval = PyNumber_Invert(v);
+              Py_DECREF(v);
+              if (unlikely(!stepval))
+                  return (PY_LONG_LONG) -1;
+          } else {
+              stepval = v;
+          }
+          v = NULL;
+          val = (PY_LONG_LONG) 0;
+          mask = PyLong_FromLong((1L << chunk_size) - 1); if (unlikely(!mask)) goto done;
+          shift = PyLong_FromLong(chunk_size); if (unlikely(!shift)) goto done;
+          for (bits = 0; bits < (int) sizeof(PY_LONG_LONG) * 8 - chunk_size; bits += chunk_size) {
+              PyObject *tmp, *digit;
+              long idigit;
+              digit = PyNumber_And(stepval, mask);
+              if (unlikely(!digit)) goto done;
+              idigit = PyLong_AsLong(digit);
+              Py_DECREF(digit);
+              if (unlikely(idigit < 0)) goto done;
+              val |= ((PY_LONG_LONG) idigit) << bits;
+              tmp = PyNumber_Rshift(stepval, shift);
+              if (unlikely(!tmp)) goto done;
+              Py_DECREF(stepval); stepval = tmp;
+          }
+          Py_DECREF(shift); shift = NULL;
+          Py_DECREF(mask); mask = NULL;
+          {
+              long idigit = PyLong_AsLong(stepval);
+              if (unlikely(idigit < 0)) goto done;
+              remaining_bits = ((int) sizeof(PY_LONG_LONG) * 8) - bits - (is_unsigned ? 0 : 1);
+              if (unlikely(idigit >= (1L << remaining_bits)))
+                  goto raise_overflow;
+              val |= ((PY_LONG_LONG) idigit) << bits;
+          }
+          if (!is_unsigned) {
+              if (unlikely(val & (((PY_LONG_LONG) 1) << (sizeof(PY_LONG_LONG) * 8 - 1))))
+                  goto raise_overflow;
+              if (is_negative)
+                  val = ~val;
+          }
+          ret = 0;
+      done:
+          Py_XDECREF(shift);
+          Py_XDECREF(mask);
+          Py_XDECREF(stepval);
+  #endif
+          if (unlikely(ret))
+              return (PY_LONG_LONG) -1;
+          return val;
+      }
+  raise_overflow:
+      PyErr_SetString(PyExc_OverflowError,
+          "value too large to convert to PY_LONG_LONG");
+      return (PY_LONG_LONG) -1;
+  raise_neg_overflow:
+      PyErr_SetString(PyExc_OverflowError,
+          "can't convert negative value to PY_LONG_LONG");
+      return (PY_LONG_LONG) -1;
   }
   
 /* FormatTypeName */

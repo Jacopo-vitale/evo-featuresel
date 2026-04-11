@@ -56,7 +56,10 @@ class Population(object):
             bits=self.setup.BITS,
             project_folder=self.setup.project_folder,
             random_state=self.setup.RANDOM_SEED,
-            penalty_factor=self.setup.PENALTY_FACTOR
+            penalty_factor=self.setup.PENALTY_FACTOR,
+            cython_layout=self.setup.get_cython_layout(),
+            enabled_models=[m for m in self.setup.INDIVIDUAL_CONFIG['models'] if m['enabled']],
+            fitness_code=getattr(self.setup, 'FITNESS_CODE', None)
         )
         individual.fitness_eval(self.setup.DATA, self.setup.LABELS)
         return individual
@@ -64,9 +67,9 @@ class Population(object):
     @staticmethod
     def _evaluate_individual(args):
         """Helper for ProcessPoolExecutor"""
-        genes, filament_len, bits, project_folder, random_state, penalty_factor, DATA, LABELS = args
+        genes, filament_len, bits, project_folder, random_state, penalty_factor, DATA, LABELS, cython_layout, enabled_models, fitness_code = args
         from evo.individual import Individual
-        ind = Individual(filament_len, genes, bits, project_folder, random_state, penalty_factor)
+        ind = Individual(filament_len, genes, bits, project_folder, random_state, penalty_factor, cython_layout, enabled_models, fitness_code)
         ind.fitness_eval(DATA, LABELS)
         # Return serializable results
         return {
@@ -123,6 +126,10 @@ class Population(object):
             ss = np.random.SeedSequence(self.setup.RANDOM_SEED)
             child_seeds = ss.spawn(remaining)
 
+            cython_layout = self.setup.get_cython_layout()
+            enabled_models = [m for m in self.setup.INDIVIDUAL_CONFIG['models'] if m['enabled']]
+            fitness_code = getattr(self.setup, 'FITNESS_CODE', None)
+
             eval_args = [
                 (
                     genes, 
@@ -132,7 +139,10 @@ class Population(object):
                     int(child_seeds[i].generate_state(1)[0]), # Unique sub-seed
                     self.setup.PENALTY_FACTOR,
                     self.setup.DATA, 
-                    self.setup.LABELS
+                    self.setup.LABELS,
+                    cython_layout,
+                    enabled_models,
+                    fitness_code
                 ) for i, genes in enumerate(random_genes_list)
             ]
             
@@ -146,7 +156,10 @@ class Population(object):
                     self.setup.BITS, 
                     self.setup.project_folder, 
                     int(child_seeds[i].generate_state(1)[0]), # Use same sub-seed as evaluation
-                    penalty_factor=self.setup.PENALTY_FACTOR
+                    penalty_factor=self.setup.PENALTY_FACTOR,
+                    cython_layout=cython_layout,
+                    enabled_models=enabled_models,
+                    fitness_code=fitness_code
                 )
                 ind._fitness = res['fitness']
                 ind.acc = res['acc']
@@ -185,6 +198,10 @@ class Population(object):
         )
         
         # 4. Re-create Individual objects (this part is still Python but much faster than before)
+        cython_layout = self.setup.get_cython_layout()
+        enabled_models = [m for m in self.setup.INDIVIDUAL_CONFIG['models'] if m['enabled']]
+        fitness_code = getattr(self.setup, 'FITNESS_CODE', None)
+        
         self._offspring = [
             Individual(
                 self.setup.FILAMENT_LEN,
@@ -192,7 +209,10 @@ class Population(object):
                 bits=self.setup.BITS,
                 project_folder=self.setup.project_folder,
                 random_state=self.setup.RANDOM_SEED,
-                penalty_factor=self.setup.PENALTY_FACTOR
+                penalty_factor=self.setup.PENALTY_FACTOR,
+                cython_layout=cython_layout,
+                enabled_models=enabled_models,
+                fitness_code=fitness_code
             ) for i in range(n_pop)
         ]
             
@@ -220,6 +240,10 @@ class Population(object):
         ss = np.random.SeedSequence(self.setup.RANDOM_SEED + epoch) # Unique per generation
         child_seeds = ss.spawn(len(mutated_pool))
 
+        cython_layout = self.setup.get_cython_layout()
+        enabled_models = [m for m in self.setup.INDIVIDUAL_CONFIG['models'] if m['enabled']]
+        fitness_code = getattr(self.setup, 'FITNESS_CODE', None)
+
         eval_args = [
             (
                 mutated_pool[i], 
@@ -229,7 +253,10 @@ class Population(object):
                 int(child_seeds[i].generate_state(1)[0]), 
                 self.setup.PENALTY_FACTOR,
                 self.setup.DATA, 
-                self.setup.LABELS
+                self.setup.LABELS,
+                cython_layout,
+                enabled_models,
+                fitness_code
             ) for i in range(len(mutated_pool))
         ]
         
@@ -244,7 +271,10 @@ class Population(object):
                 self.setup.BITS, 
                 self.setup.project_folder, 
                 int(child_seeds[i].generate_state(1)[0]), # Use same sub-seed as evaluation
-                penalty_factor=self.setup.PENALTY_FACTOR
+                penalty_factor=self.setup.PENALTY_FACTOR,
+                cython_layout=cython_layout,
+                enabled_models=enabled_models,
+                fitness_code=fitness_code
             )
             ind._fitness = res['fitness']
             ind.acc = res['acc']

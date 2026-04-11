@@ -1,11 +1,10 @@
 import logging
 import sys
 import os
+import importlib
 from typing import Iterable
 from abc import ABC, abstractmethod
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier
-from sklearn.svm import SVC
 
 try:
     from evo.core import (
@@ -17,6 +16,7 @@ try:
         fast_binary_metrics
     ) 
 except ImportError:
+# ... (rest of imports and base class)
     # Fallback implementations omitted for brevity but should be kept in a real scenario
     # or just assume Cython is available since we are in a dev branch.
     def pack_bits(x): return x
@@ -59,7 +59,11 @@ class BaseIndividual(ABC):
     
     
 class Individual(BaseIndividual):
-    def __init__(self, filament_len, genes, bits: dict, project_folder, random_state, penalty_factor: float = 0.0) -> None:
+    def __init__(self, filament_len, genes, bits: dict, project_folder, random_state, 
+                 penalty_factor: float = 0.0,
+                 cython_layout: tuple = None,
+                 enabled_models: list = None,
+                 fitness_code: str = None) -> None:
         # If genes are int8 (unpacked), pack them
         if genes.dtype == np.int8:
             genes = pack_bits(genes)
@@ -69,7 +73,12 @@ class Individual(BaseIndividual):
         self.bits = bits
         self.random_state = random_state 
         self.penalty_factor = penalty_factor
+        self.cython_layout = cython_layout # (param_names, param_categories, layout_array)
+        self.enabled_models = enabled_models # List of enabled model dictionaries
+        self.fitness_code = fitness_code # Custom python logic
+        
         self.model = None
+# ... (rest of attributes)
         self.radiomics = None
         self.model_sel = None
         self.model_param = None
@@ -103,17 +112,29 @@ class Individual(BaseIndividual):
                         
             self.ensure_phenotype()
 
-            match (self.model_sel):
-                case 0:
-                    self.model = RandomForestClassifier(random_state=self.random_state, n_jobs=1)
-                case 1:
-                    self.model = SVC(random_state=self.random_state)
-                case 2:
-                    self.model = GradientBoostingClassifier(random_state=self.random_state)
-                case 3:
-                    self.model = ExtraTreesClassifier(random_state=self.random_state, n_jobs=1)
-                case _:
-                    raise ValueError(f"Unknown model selection: {self.model_sel}")
+            # Dynamic Model Instantiation from Registry
+            if self.enabled_models and self.model_sel < len(self.enabled_models):
+                model_info = self.enabled_models[self.model_sel]
+                import_path = model_info.get('import_path')
+                
+                if not import_path:
+                    raise ValueError(f"Model {model_info['name']} has no import_path defined.")
+                
+                module_name, class_name = import_path.rsplit('.', 1)
+                module = importlib.import_module(module_name)
+                model_class = getattr(module, class_name)
+                
+                # Check if random_state is supported
+                # We instantiate once to check params
+                temp_model = model_class()
+                if 'random_state' in temp_model.get_params():
+                    self.model = model_class(random_state=self.random_state)
+                else:
+                    self.model = model_class()
+            else:
+                # Minimal Fallback for legacy / smoke tests
+                from sklearn.ensemble import RandomForestClassifier
+                self.model = RandomForestClassifier(random_state=self.random_state, n_jobs=1)
                 
             if self.radiomics.sum() >= 1:
                 X_train_sel = X_train[:, self.radiomics]
@@ -134,12 +155,38 @@ class Individual(BaseIndividual):
             
             mcc, acc, f1, prec, recall, cm = fast_binary_metrics(y_test_fast, preds_fast)
             
-            # Apply feature selection penalty
+            # 1. Base Metrics
             n_features = self.bits['features']
             n_selected = self.radiomics.sum()
-            penalty = self.penalty_factor * (n_selected / n_features)
             
-            self._fitness = mcc - penalty
+            # 2. Custom Fitness Logic
+            if self.fitness_code:
+                try:
+                    # Provide a limited set of globals
+                    safe_globals = {'np': np}
+                    local_scope = {}
+                    exec(self.fitness_code, safe_globals, local_scope)
+                    
+                    # Assume the user defined 'custom_fitness'
+                    if 'custom_fitness' in local_scope:
+                        metrics_dict = {
+                            'mcc': mcc, 'acc': acc, 'f1': f1, 
+                            'prec': prec, 'recall': recall, 'cm': cm
+                        }
+                        self._fitness = local_scope['custom_fitness'](
+                            y_test, preds, n_features, n_selected, metrics_dict
+                        )
+                    else:
+                        raise ValueError("Function 'custom_fitness' not found in provided code.")
+                except Exception as e:
+                    logger.error(f"Custom fitness execution failed: {e}. Falling back to default.")
+                    penalty = self.penalty_factor * (n_selected / n_features)
+                    self._fitness = mcc - penalty
+            else:
+                # Default Logic
+                penalty = self.penalty_factor * (n_selected / n_features)
+                self._fitness = mcc - penalty
+            
             self.acc = acc
             self.f1 = f1
             self.prec = prec
@@ -153,7 +200,19 @@ class Individual(BaseIndividual):
 
     def to_phenotype(self):
         # Use the unified Cython decoder
-        model_sel, model_param = decode_individual(self.genes, self.bits)
+        if self.cython_layout:
+            param_names, param_categories, layout_array = self.cython_layout
+            model_sel, model_param = decode_individual(
+                self.genes, 
+                self.bits['features'], 
+                self.bits['model_selection'],
+                param_names,
+                param_categories,
+                layout_array
+            )
+        else:
+            # Fallback (though BITS structure changed, this might need care)
+            model_sel, model_param = decode_individual(self.genes, self.bits)
         
         # Extract features as packed bits (first N bits)
         feat_bytes = (self.bits['features'] + 7) // 8

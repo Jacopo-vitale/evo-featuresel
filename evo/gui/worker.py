@@ -7,10 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 from sklearn.model_selection import StratifiedKFold
 from evo.runner import Runner
 from evo.population import Population
-from evo.utils import Setup
+from evo.utils import Setup, preprocessing_general
 from evo.core import unpack_bits
-
-from main import preprocessing_general
 
 def get_population_stats(population, bits):
     """
@@ -73,17 +71,19 @@ def run_single_fold(args):
         project_prefix=params.get('project_prefix', f'gui_exp_fold_{fold_k}_'),
         experiment_folder=params.get('experiment_folder', 'experiment'),
         use_timestamp=params.get('use_timestamp', True),
-        DESCRIPTION=params.get('description', "Evolutionary Feature Selection Experiment")
+        DESCRIPTION=params.get('description', "Evolutionary Feature Selection Experiment"),
+        INDIVIDUAL_CONFIG=params.get('individual_config', {})
     )
     setup.METADATA = params.copy() # Store all input params
     setup.POP_SIZE = params['pop_size']
     setup.PENALTY_FACTOR = params.get('penalty_factor', 0.01)
-    setup.BITS = {
-        'features': X_train.shape[1],
-        'model_selection': 2,
-        'model_params': 13,
-    }
-    setup.FILAMENT_LEN = sum(setup.BITS.values())
+    
+    # Initialize BITS with features count then calculate filament
+    setup.BITS = {'features': X_train.shape[1]}
+    setup.calculate_filament_len()
+    
+    setup.FITNESS_CODE = params.get('fitness_code')
+    
     setup.DATA = (X_train, X_val)
     setup.LABELS = (y_train, y_val)
     setup.RANDOM_SEED = params.get('seed', 42) + fold_k # vary seed per fold
@@ -228,17 +228,19 @@ class EvolutionWorker(QThread):
                     project_prefix=self.params.get('project_prefix', 'gui_exp_'),
                     experiment_folder=self.params.get('experiment_folder', 'experiment'),
                     use_timestamp=self.params.get('use_timestamp', True),
-                    DESCRIPTION=self.params.get('description', "Evolutionary Feature Selection Experiment")
+                    DESCRIPTION=self.params.get('description', "Evolutionary Feature Selection Experiment"),
+                    INDIVIDUAL_CONFIG=self.params.get('individual_config', {})
                 )
                 setup.METADATA = self.params.copy()
                 setup.POP_SIZE = self.params['pop_size']
                 setup.PENALTY_FACTOR = self.params.get('penalty_factor', 0.01)
-                setup.BITS = {
-                    'features': X_train_full.shape[1],
-                    'model_selection': 2,
-                    'model_params': 13,
-                }
-                setup.FILAMENT_LEN = sum(setup.BITS.values())
+                
+                # Initialize BITS with features count then calculate filament
+                setup.BITS = {'features': X_train_full.shape[1]}
+                setup.calculate_filament_len()
+                
+                setup.FITNESS_CODE = self.params.get('fitness_code')
+                
                 setup.DATA = data_evo
                 setup.LABELS = labels_evo
                 setup.RANDOM_SEED = self.params.get('seed', 42)

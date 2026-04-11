@@ -69,52 +69,74 @@ def fast_binary_to_decimal_packed(cnp.ndarray[uint8_t, ndim=1] packed, int start
         
     return res
 
-# --- Unified Decoder ---
+# --- Unified Dynamic Decoder ---
 
-def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed, dict bits):
+def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed, 
+                      int feat_bits, 
+                      int model_sel_bits,
+                      list param_names,
+                      list param_categories,
+                      cnp.ndarray[cnp.int32_t, ndim=2] model_layouts):
     """
-    Decodes all phenotype parameters from a bit-packed array in one pass.
+    Decodes phenotype parameters dynamically based on a layout array.
+    model_layouts structure: [num_params, p1_name_idx, p1_bits, p1_type, p1_e1, p1_e2, p1_e3, ...]
     """
-    cdef int feat_bits = bits['features']
-    cdef int model_sel_bits = bits['model_selection']
-    
     # 1. Model Selection
-    cdef int model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)
+    cdef int model_selection = 0
+    if model_sel_bits > 0:
+        model_selection = fast_binary_to_decimal_packed(packed, feat_bits, model_sel_bits)
     
-    # 2. Model Parameters
-    cdef int param_start = feat_bits + model_sel_bits
+    # 2. Extract layout for the selected model
+    if model_selection >= model_layouts.shape[0]:
+        model_selection = 0 # Fallback
+        
+    cdef int num_params = model_layouts[model_selection, 0]
     cdef dict model_param = {}
-    cdef int n_estimators, criterion_selector, kernel_selector, degree_bits
-    cdef double mantissa, segno, esponente
+    cdef int param_start = feat_bits + model_sel_bits
     
-    if model_selection == 0: # RandomForest
-        n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
-        model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-        criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
-        model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
+    cdef int i, name_idx, p_bits, p_type, e1, e2, e3
+    cdef long long val, m_val, e_val, s_bit
+    cdef double s_val
+    cdef list cat_list
+    
+    cdef int current_bit = param_start
+    
+    for i in range(num_params):
+        name_idx = model_layouts[model_selection, 1 + i * 6]
+        p_bits = model_layouts[model_selection, 2 + i * 6]
+        p_type = model_layouts[model_selection, 3 + i * 6]
+        e1 = model_layouts[model_selection, 4 + i * 6]
+        e2 = model_layouts[model_selection, 5 + i * 6]
+        e3 = model_layouts[model_selection, 6 + i * 6]
         
-    elif model_selection == 1: # SVC
-        mantissa = fast_binary_to_decimal_packed(packed, param_start, 3) * 0.1
-        segno = 1.0 if fast_binary_to_decimal_packed(packed, param_start + 3, 1) == 0 else -1.0
-        esponente = fast_binary_to_decimal_packed(packed, param_start + 4, 3)
-        model_param['C'] = (1.0 + mantissa) * (10 ** (segno * esponente))
-        
-        kernel_selector = fast_binary_to_decimal_packed(packed, param_start + 8, 2)
-        kernels = ['linear', 'poly', 'rbf', 'sigmoid']
-        model_param['kernel'] = kernels[kernel_selector] if kernel_selector < 4 else 'rbf'
-        model_param['degree'] = fast_binary_to_decimal_packed(packed, param_start + 10, 3) + 1 # Assuming 3 bits for degree if available
-        
-    elif model_selection == 2: # GradientBoosting
-        n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
-        model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-        model_param['criterion'] = 'friedman_mse' if fast_binary_to_decimal_packed(packed, param_start + 9, 1) == 0 else 'squared_error'
-        model_param['loss'] = 'log_loss' if fast_binary_to_decimal_packed(packed, param_start + 10, 1) == 0 else 'exponential'
-        
-    elif model_selection == 3: # ExtraTrees
-        n_estimators = fast_binary_to_decimal_packed(packed, param_start, 9)
-        model_param['n_estimators'] = n_estimators if n_estimators > 2 else 2
-        criterion_selector = fast_binary_to_decimal_packed(packed, param_start + 9, 2)
-        model_param['criterion'] = 'gini' if criterion_selector == 0 else ('entropy' if criterion_selector == 1 else 'log_loss')
+        # 0 = INT (e1 is min_val)
+        if p_type == 0:
+            val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+            model_param[param_names[name_idx]] = val + e1
+            current_bit += p_bits
+            
+        # 1 = CATEGORICAL (e1 is category_list_idx)
+        elif p_type == 1:
+            val = fast_binary_to_decimal_packed(packed, current_bit, p_bits)
+            cat_list = param_categories[e1]
+            if val < len(cat_list):
+                model_param[param_names[name_idx]] = cat_list[val]
+            else:
+                model_param[param_names[name_idx]] = cat_list[0]
+            current_bit += p_bits
+                
+        # 2 = FLOAT (e1=m_bits, e2=e_bits, e3=s_bits)
+        elif p_type == 2:
+            m_val = fast_binary_to_decimal_packed(packed, current_bit, e1)
+            current_bit += e1
+            s_val = 1.0
+            if e3 > 0:
+                s_bit = fast_binary_to_decimal_packed(packed, current_bit, e3)
+                s_val = 1.0 if s_bit == 0 else -1.0
+                current_bit += e3
+            e_val = fast_binary_to_decimal_packed(packed, current_bit, e2)
+            current_bit += e2
+            model_param[param_names[name_idx]] = (1.0 + m_val * 0.1) * (10.0 ** (s_val * e_val))
 
     return model_selection, model_param
 

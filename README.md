@@ -64,7 +64,7 @@ The `dev-gui` branch introduces a high-performance interactive dashboard built w
 
 3.  **🏃 Start the Dashboard**:
     ```bash
-    python gui_main.py
+    python main.py
     ```
 
 ### 🌟 GUI Features
@@ -80,15 +80,19 @@ The `dev-gui` branch introduces a high-performance interactive dashboard built w
 ## 🚀 Usage
 
 ### 🏃 Quick Start
-Run the main experiment with a demonstration dataset:
+Run the interactive dashboard:
 ```bash
 python main.py
+```
+Or run the CLI version:
+```bash
+python cli_main.py
 ```
 
 ### 📊 Performance Benchmarking
 Verify the C/Cython speedups on your hardware:
 ```bash
-python benchmark_c_vs_py.py
+python tools/benchmark.py
 ```
 
 ### 🧪 Unit Testing
@@ -116,12 +120,15 @@ The **Fitness** is evaluated using the **Matthews Correlation Coefficient (MCC)*
 evo-featuresel/
 ├── evo/                # Core Package
 │   ├── core.pyx        # ⚡ Cython optimized operations (C-level)
+│   ├── gui/            # 🖥️ GUI implementation (PySide6)
 │   ├── individual.py   # Individual DNA/Phenotype logic
 │   ├── population.py   # Parallel population management (OpenMP)
 │   ├── runner.py       # Evolutionary process orchestration
 │   └── utils.py        # Configuration & Setup helpers
 ├── tests/              # 🧪 Unit test suite
-├── main.py             # 🚀 Entry point
+├── tools/              # 🛠️ Benchmarking & Utility scripts
+├── main.py             # 🚀 GUI Entry point
+├── cli_main.py         # 📟 CLI Entry point
 ├── setup.py            # 🛠️ C extension build configuration
 └── pyproject.toml      # Project metadata & dependencies
 ```
