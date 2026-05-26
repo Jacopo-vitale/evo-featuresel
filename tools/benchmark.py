@@ -110,9 +110,15 @@ def run_benchmark():
         to_phenotype_py(p1_unpacked, BITS)
     py_time = time.time() - start
 
+    from evo.utils import Setup
+    setup = Setup()
+    setup.BITS = BITS
+    setup.calculate_filament_len()
+    param_names, param_categories, layout = setup.get_cython_layout()
+
     start = time.time()
     for _ in range(N_ITER):
-        decode_individual(p1_packed, BITS)
+        decode_individual(p1_packed, BITS['features'], BITS['model_selection'], param_names, param_categories, layout)
     c_time = time.time() - start
     print(f"\nUnified Phenotype Decoding:")
     print(f"  Python: {py_time:.4f}s")

@@ -72,7 +72,7 @@ def run_single_fold(args):
         experiment_folder=params.get('experiment_folder', 'experiment'),
         use_timestamp=params.get('use_timestamp', True),
         DESCRIPTION=params.get('description', "Evolutionary Feature Selection Experiment"),
-        INDIVIDUAL_CONFIG=params.get('individual_config', {})
+        INDIVIDUAL_CONFIG=params.get('individual_config') or get_default_individual_config()
     )
     setup.METADATA = params.copy() # Store all input params
     setup.POP_SIZE = params['pop_size']
@@ -234,6 +234,7 @@ class EvolutionWorker(QThread):
                 setup.METADATA = self.params.copy()
                 setup.POP_SIZE = self.params['pop_size']
                 setup.PENALTY_FACTOR = self.params.get('penalty_factor', 0.01)
+                setup.PATIENCE = self.params.get('patience', 300)
                 
                 # Initialize BITS with features count then calculate filament
                 setup.BITS = {'features': X_train_full.shape[1]}

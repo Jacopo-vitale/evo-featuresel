@@ -107,8 +107,8 @@ def test_model_instantiation_caching():
     ind1.fitness_eval(DATA, LABELS)
     
     assert import_path in _MODEL_CACHE
-    cached_class, supports_rs = _MODEL_CACHE[import_path]
-    assert cached_class.__name__ == 'RandomForestClassifier'
+    cached_class, supports_rs, supports_n_jobs = _MODEL_CACHE[import_path]
+    assert cached_class.__name__ == "RandomForestClassifier"
     assert supports_rs is True
 
 def test_float_decoding_precision():

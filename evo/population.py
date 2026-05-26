@@ -162,8 +162,46 @@ class Population(object):
                 ) for i, genes in enumerate(random_genes_list)
             ]
             
-            with ProcessPoolExecutor(max_workers=get_max_workers()) as executor:
-                results = list(executor.map(Population._evaluate_individual, eval_args))
+            from pebble import ProcessPool
+            from concurrent.futures import TimeoutError
+            
+            with ProcessPool(max_workers=get_max_workers(), initializer=_init_worker, initargs=(self.setup.DATA, self.setup.LABELS)) as executor:
+                future = executor.map(Population._evaluate_individual, eval_args, timeout=self.setup.PATIENCE)
+                
+                iterator = future.result()
+                results = []
+                while True:
+                    try:
+                        res = next(iterator)
+                        results.append(res)
+                    except StopIteration:
+                        break
+                    except TimeoutError:
+                        logger.warning("Individual evaluation timed out! Assigning penalty fitness.")
+                        results.append({
+                            'fitness': -1.0,
+                            'acc': 0.0,
+                            'f1': 0.0,
+                            'prec': 0.0,
+                            'recall': 0.0,
+                            'cm': None,
+                            'model': None,
+                            'preds': None,
+                            'genes': eval_args[len(results)][0]
+                        })
+                    except Exception as error:
+                        logger.error(f"Individual evaluation failed: {error}")
+                        results.append({
+                            'fitness': -1.0,
+                            'acc': 0.0,
+                            'f1': 0.0,
+                            'prec': 0.0,
+                            'recall': 0.0,
+                            'cm': None,
+                            'model': None,
+                            'preds': None,
+                            'genes': eval_args[len(results)][0]
+                        })
             
             for i, res in enumerate(results):
                 ind = Individual(
@@ -276,8 +314,46 @@ class Population(object):
             ) for i in range(len(mutated_pool))
         ]
         
-        with ProcessPoolExecutor(max_workers=get_max_workers()) as executor:
-            results = list(executor.map(Population._evaluate_individual, eval_args))
+        from pebble import ProcessPool
+        from concurrent.futures import TimeoutError
+        
+        with ProcessPool(max_workers=get_max_workers(), initializer=_init_worker, initargs=(self.setup.DATA, self.setup.LABELS)) as executor:
+            future = executor.map(Population._evaluate_individual, eval_args, timeout=self.setup.PATIENCE)
+            
+            iterator = future.result()
+            results = []
+            while True:
+                try:
+                    res = next(iterator)
+                    results.append(res)
+                except StopIteration:
+                    break
+                except TimeoutError:
+                    logger.warning("Individual evaluation timed out! Assigning penalty fitness.")
+                    results.append({
+                        'fitness': -1.0,
+                        'acc': 0.0,
+                        'f1': 0.0,
+                        'prec': 0.0,
+                        'recall': 0.0,
+                        'cm': None,
+                        'model': None,
+                        'preds': None,
+                        'genes': eval_args[len(results)][0]
+                    })
+                except Exception as error:
+                    logger.error(f"Individual evaluation failed: {error}")
+                    results.append({
+                        'fitness': -1.0,
+                        'acc': 0.0,
+                        'f1': 0.0,
+                        'prec': 0.0,
+                        'recall': 0.0,
+                        'cm': None,
+                        'model': None,
+                        'preds': None,
+                        'genes': eval_args[len(results)][0]
+                    })
         
         self._offspring = []
         for i, res in enumerate(results):

@@ -126,21 +126,27 @@ class Individual(BaseIndividual):
                     raise ValueError(f"Model {model_info['name']} has no import_path defined.")
                 
                 if import_path in _MODEL_CACHE:
-                    model_class, supports_rs = _MODEL_CACHE[import_path]
+                    model_class, supports_rs, supports_n_jobs = _MODEL_CACHE[import_path]
                 else:
                     module_name, class_name = import_path.rsplit('.', 1)
                     module = importlib.import_module(module_name)
                     model_class = getattr(module, class_name)
-                    
-                    # Check if random_state is supported
+
+                    # Check if random_state and n_jobs are supported
                     temp_model = model_class()
-                    supports_rs = 'random_state' in temp_model.get_params()
-                    _MODEL_CACHE[import_path] = (model_class, supports_rs)
-                
+                    params = temp_model.get_params()
+                    supports_rs = 'random_state' in params
+                    supports_n_jobs = 'n_jobs' in params
+                    _MODEL_CACHE[import_path] = (model_class, supports_rs, supports_n_jobs)
+
+                # Build instantiation kwargs
+                kwargs = {}
                 if supports_rs:
-                    self.model = model_class(random_state=self.random_state)
-                else:
-                    self.model = model_class()
+                    kwargs['random_state'] = self.random_state
+                if supports_n_jobs:
+                    kwargs['n_jobs'] = 1
+
+                self.model = model_class(**kwargs)
             else:
                 # Minimal Fallback for legacy / smoke tests
                 from sklearn.ensemble import RandomForestClassifier

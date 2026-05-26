@@ -27,15 +27,15 @@ def test_decode_individual():
     # RandomForest (0) is default enabled
     # Features: 10101010
     # Model: 0 (if only 1 model, bits=0, but default has multiple)
-    # n_models = 6 -> bits = 3
+    # n_models = 4 -> bits = 2
 
     unpacked = np.zeros(setup.FILAMENT_LEN, dtype=np.int8)
     unpacked[:8] = [1, 0, 1, 0, 1, 0, 1, 0] # Features
-    # Default bits: features=8, model_sel=3, params=...
-    # Model 0 (RandomForest) bits = [0, 0, 0]
-    unpacked[8:11] = [0, 0, 0] 
+    # Default bits: features=8, model_sel=2, params=...
+    # Model 0 (RandomForest) bits = [0, 0]
+    unpacked[8:10] = [0, 0] 
     # RF params: n_estimators (9 bits) = 10
-    unpacked[11:20] = [0, 0, 0, 0, 0, 1, 0, 1, 0] 
+    unpacked[10:19] = [0, 0, 0, 0, 0, 1, 0, 1, 0] 
 
     packed = pack_bits(unpacked)
 

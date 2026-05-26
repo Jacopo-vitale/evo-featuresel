@@ -94,10 +94,10 @@ class MainWindow(QMainWindow):
         dataset_layout = QFormLayout()
         dataset_layout.setSpacing(5)
 
-        self.train_path = QLineEdit("data/dataset.csv")
-        self.train_labels_path = QLineEdit("")
-        self.val_path = QLineEdit("")
-        self.val_labels_path = QLineEdit("")
+        self.train_path = QLineEdit("mock_train_features.csv")
+        self.train_labels_path = QLineEdit("mock_train_labels.csv")
+        self.val_path = QLineEdit("mock_valid_features.csv")
+        self.val_labels_path = QLineEdit("mock_valid_labels.csv")
         self.test_path = QLineEdit("")
         self.test_labels_path = QLineEdit("")
 
@@ -171,11 +171,13 @@ class MainWindow(QMainWindow):
 
         self.description = QLineEdit("Evo Experiment")
         self.penalty = QDoubleSpinBox(); self.penalty.setRange(0.0, 1.0); self.penalty.setSingleStep(0.01); self.penalty.setValue(0.01)
+        self.patience = QSpinBox(); self.patience.setRange(1, 3600); self.patience.setValue(20)
         self.metric_selector = QComboBox(); self.metric_selector.addItems(["MCC", "Accuracy", "F1", "Precision", "Recall"])
         self.metric_selector.currentIndexChanged.connect(self._update_plot)
 
         exp_layout.addRow("Desc:", self.description)
         exp_layout.addRow("Penalty:", self.penalty)
+        exp_layout.addRow("Patience (s):", self.patience)
         exp_layout.addRow("Display:", self.metric_selector)
         exp_group.setLayout(exp_layout)
         sidebar.addWidget(exp_group)
@@ -451,12 +453,12 @@ class MainWindow(QMainWindow):
     def _set_inputs_enabled(self, enabled: bool):
         for w in [self.train_path, self.train_labels_path, self.val_path, self.val_labels_path, self.test_path, self.test_labels_path,
                   self.pca_check, self.lda_check, self.scaler_type, self.pop_size, self.generations, self.seed, self.alpha, self.cv_folds,
-                  self.description, self.penalty, self.metric_selector, self.exp_folder, self.proj_prefix, self.use_timestamp,
+                  self.description, self.penalty, self.patience, self.metric_selector, self.exp_folder, self.proj_prefix, self.use_timestamp,
                   self.start_btn, self.reset_btn]:
             w.setEnabled(enabled)
 
     def _on_reset(self):
-        self._set_params({'train_path': 'data/dataset.csv', 'pop_size': 50, 'generations': 10, 'seed': 42, 'alpha': 0.5, 'cv_folds': 1, 'penalty_factor': 0.01})
+        self._set_params({'train_path': 'data/dataset.csv', 'pop_size': 50, 'generations': 10, 'seed': 42, 'alpha': 0.5, 'cv_folds': 1, 'penalty_factor': 0.01, 'patience': 20})
         self.history_gen = []; self.history_best_f = []; self.history_avg_f = []
         for m in self.history_metrics: self.history_metrics[m]["best"] = []; self.history_metrics[m]["avg"] = []
         self.canvas.plot_multi_data([], ([], []), ([], []))

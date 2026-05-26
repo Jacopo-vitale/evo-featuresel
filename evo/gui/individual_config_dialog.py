@@ -279,7 +279,7 @@ class IndividualConfigDialog(QDialog):
                     bits = QSpinBox(); bits.setRange(1, 32); bits.setValue(data.get('bits', 2))
                     w['layout'].addRow("Bits:", bits); w['bits'] = bits
                     vals = data.get('values', ["?"])
-                    vals_lbl = QLabel(", ".join(vals)); vals_lbl.setWordWrap(True)
+                    vals_lbl = QLabel(", ".join(str(v) for v in vals)); vals_lbl.setWordWrap(True)
                     vals_lbl.setStyleSheet("color: #aab4c3; font-size: 8pt;")
                     w['layout'].addRow("Values:", vals_lbl)
                 elif t == 'float':

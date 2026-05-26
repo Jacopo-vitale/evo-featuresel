@@ -109,6 +109,7 @@ class Setup:
     DESCRIPTION: str = "Evolutionary Feature Selection Experiment"
     RANDOM_SEED: int = 42
     PENALTY_FACTOR: float = 0.01  # Penalty for each selected feature as a ratio
+    PATIENCE: int = 300  # Maximum seconds an individual is allowed to evaluate before timeout
     N_ROBUSTNESS_RUNS: int = 1    # Number of runs for stability check
     METADATA: Dict[str, Any] = field(default_factory=dict) # Store arbitrary config metadata
     

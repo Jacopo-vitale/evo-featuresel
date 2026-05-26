@@ -22,6 +22,7 @@ class Runner(object):
     def _setup_logging(self):
         # Use a consistent logger for the whole package
         main_logger = logging.getLogger("evo")
+        main_logger.propagate = False
         main_logger.setLevel(logging.DEBUG)
         fmt = logging.Formatter("%(message)s")
 
