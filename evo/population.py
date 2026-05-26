@@ -4,7 +4,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 from evo.individual import Individual
-from evo.utils import Setup
+from evo.utils import Setup, get_max_workers
 
 try:
     from evo.core import (
@@ -146,7 +146,7 @@ class Population(object):
                 ) for i, genes in enumerate(random_genes_list)
             ]
             
-            with ProcessPoolExecutor() as executor:
+            with ProcessPoolExecutor(max_workers=get_max_workers()) as executor:
                 results = list(executor.map(Population._evaluate_individual, eval_args))
             
             for i, res in enumerate(results):
@@ -260,7 +260,7 @@ class Population(object):
             ) for i in range(len(mutated_pool))
         ]
         
-        with ProcessPoolExecutor() as executor:
+        with ProcessPoolExecutor(max_workers=get_max_workers()) as executor:
             results = list(executor.map(Population._evaluate_individual, eval_args))
         
         self._offspring = []

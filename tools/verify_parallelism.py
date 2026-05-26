@@ -2,7 +2,7 @@ import time
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from evo.individual import Individual
-from evo.utils import Setup
+from evo.utils import Setup, get_max_workers
 import os
 
 def mock_fitness_eval(individual, data, labels):
@@ -27,7 +27,7 @@ def run_test(executor_class, pop_size, data, labels, bits, filament_len):
     if executor_class is None:
         results = [task_module(arg) for arg in task_args]
     else:
-        with executor_class(max_workers=os.cpu_count()) as executor:
+        with executor_class(max_workers=get_max_workers()) as executor:
             results = list(executor.map(task_module, task_args))
     return time.time() - start
 

@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import sys
 import random
 import json
 import datetime as dt
@@ -12,6 +13,16 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from evo.models_registry import MODELS_REGISTRY
+
+def get_max_workers():
+    """
+    Returns a safe number of workers for ProcessPoolExecutor, 
+    capping at 61 on Windows to avoid OS limitations.
+    """
+    num_cpus = os.cpu_count() or 1
+    if sys.platform == "win32":
+        return min(num_cpus, 61)
+    return num_cpus
 
 def preprocessing_general(train_path, val_path, test_path,
 # ... (rest of the function)
