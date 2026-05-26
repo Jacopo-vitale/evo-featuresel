@@ -28,7 +28,12 @@ except ImportError:
 # Setup module-level logger
 logger = logging.getLogger("evo.individual")
 
+# Module-level caches to avoid redundant overhead in fitness_eval
+_MODEL_CACHE = {}
+_FITNESS_FUNC_CACHE = {}
+
 class BaseIndividual(ABC):
+# ... (rest of class)
     def __init__(self,
                  filament_len: int,
                  genes: np.ndarray,
@@ -112,7 +117,7 @@ class Individual(BaseIndividual):
                         
             self.ensure_phenotype()
 
-            # Dynamic Model Instantiation from Registry
+            # Dynamic Model Instantiation from Registry with Caching
             if self.enabled_models and self.model_sel < len(self.enabled_models):
                 model_info = self.enabled_models[self.model_sel]
                 import_path = model_info.get('import_path')
@@ -120,14 +125,18 @@ class Individual(BaseIndividual):
                 if not import_path:
                     raise ValueError(f"Model {model_info['name']} has no import_path defined.")
                 
-                module_name, class_name = import_path.rsplit('.', 1)
-                module = importlib.import_module(module_name)
-                model_class = getattr(module, class_name)
+                if import_path not in _MODEL_CACHE:
+                    module_name, class_name = import_path.rsplit('.', 1)
+                    module = importlib.import_module(module_name)
+                    model_class = getattr(module, class_name)
+                    
+                    # Check if random_state is supported
+                    temp_model = model_class()
+                    supports_rs = 'random_state' in temp_model.get_params()
+                    _MODEL_CACHE[import_path] = (model_class, supports_rs)
                 
-                # Check if random_state is supported
-                # We instantiate once to check params
-                temp_model = model_class()
-                if 'random_state' in temp_model.get_params():
+                model_class, supports_rs = _MODEL_CACHE[import_path]
+                if supports_rs:
                     self.model = model_class(random_state=self.random_state)
                 else:
                     self.model = model_class()
@@ -159,25 +168,29 @@ class Individual(BaseIndividual):
             n_features = self.bits['features']
             n_selected = self.radiomics.sum()
             
-            # 2. Custom Fitness Logic
+            # 2. Custom Fitness Logic with Caching
             if self.fitness_code:
                 try:
-                    # Provide a limited set of globals
-                    safe_globals = {'np': np}
-                    local_scope = {}
-                    exec(self.fitness_code, safe_globals, local_scope)
+                    code_hash = hash(self.fitness_code)
+                    if code_hash not in _FITNESS_FUNC_CACHE:
+                        # Provide a limited set of globals
+                        safe_globals = {'np': np}
+                        local_scope = {}
+                        exec(self.fitness_code, safe_globals, local_scope)
+                        
+                        # Assume the user defined 'custom_fitness'
+                        if 'custom_fitness' in local_scope:
+                            _FITNESS_FUNC_CACHE[code_hash] = local_scope['custom_fitness']
+                        else:
+                            raise ValueError("Function 'custom_fitness' not found in provided code.")
                     
-                    # Assume the user defined 'custom_fitness'
-                    if 'custom_fitness' in local_scope:
-                        metrics_dict = {
-                            'mcc': mcc, 'acc': acc, 'f1': f1, 
-                            'prec': prec, 'recall': recall, 'cm': cm
-                        }
-                        self._fitness = local_scope['custom_fitness'](
-                            y_test, preds, n_features, n_selected, metrics_dict
-                        )
-                    else:
-                        raise ValueError("Function 'custom_fitness' not found in provided code.")
+                    custom_func = _FITNESS_FUNC_CACHE[code_hash]
+                    metrics_dict = {
+                        'mcc': mcc, 'acc': acc, 'f1': f1, 
+                        'prec': prec, 'recall': recall, 'cm': cm
+                    }
+                    self._fitness = custom_func(y_test, preds, n_features, n_selected, metrics_dict)
+                    
                 except Exception as e:
                     logger.error(f"Custom fitness execution failed: {e}. Falling back to default.")
                     penalty = self.penalty_factor * (n_selected / n_features)

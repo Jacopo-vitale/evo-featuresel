@@ -1,61 +1,70 @@
 # cython: language_level=3
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: cdivision=True
+
 import numpy as np
 cimport numpy as cnp
-from libc.stdint cimport uint8_t, int8_t, uint64_t
-
+cimport cython
+from libc.stdint cimport uint8_t, int8_t, uint64_t, int32_t, int64_t
+from libc.math cimport sqrt
 from cython.parallel import prange
 
 # --- Bit-Packed Operations ---
 
-def pack_bits(cnp.ndarray[int8_t, ndim=1] unpacked):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def pack_bits(const int8_t[:] unpacked):
     """
     Packs an int8 array of 0s and 1s into a uint8 array (1 bit per bit).
-    Optimized to process 8 elements at a time.
+    Optimized to process 8 elements at a time using bitwise shifts.
     """
     cdef int n = unpacked.shape[0]
-    cdef int packed_n = (n + 7) // 8
-    cdef cnp.ndarray[uint8_t, ndim=1] packed = np.zeros(packed_n, dtype=np.uint8)
+    cdef int packed_n = (n + 7) >> 3
+    cdef uint8_t[:] packed = np.zeros(packed_n, dtype=np.uint8)
     cdef int i, j, byte_idx
     cdef uint8_t byte_val
     
     # Process complete bytes
-    for byte_idx in range(n // 8):
+    for byte_idx in range(n >> 3):
         byte_val = 0
         for j in range(8):
-            if unpacked[byte_idx * 8 + j]:
+            if unpacked[(byte_idx << 3) + j]:
                 byte_val |= (1 << (7 - j))
         packed[byte_idx] = byte_val
             
     # Process remaining bits
-    if n % 8 != 0:
-        byte_idx = n // 8
+    if n & 7:
+        byte_idx = n >> 3
         byte_val = 0
-        for j in range(n % 8):
-            if unpacked[byte_idx * 8 + j]:
+        for j in range(n & 7):
+            if unpacked[(byte_idx << 3) + j]:
                 byte_val |= (1 << (7 - j))
         packed[byte_idx] = byte_val
             
-    return packed
+    return np.asarray(packed)
 
-def unpack_bits(cnp.ndarray[uint8_t, ndim=1] packed, int original_n):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def unpack_bits(const uint8_t[:] packed, int original_n):
     """
     Unpacks a uint8 array back into an int8 array of 0s and 1s.
     Optimized to process bits using bitwise extraction.
     """
-    cdef cnp.ndarray[int8_t, ndim=1] unpacked = np.zeros(original_n, dtype=np.int8)
+    cdef int8_t[:] unpacked = np.zeros(original_n, dtype=np.int8)
     cdef int i, byte_idx, bit_idx
     cdef uint8_t byte_val
     
     for byte_idx in range(packed.shape[0]):
         byte_val = packed[byte_idx]
         for bit_idx in range(8):
-            i = byte_idx * 8 + bit_idx
+            i = (byte_idx << 3) + bit_idx
             if i < original_n:
                 unpacked[i] = (byte_val >> (7 - bit_idx)) & 1
             
-    return unpacked
+    return np.asarray(unpacked)
 
-def fast_binary_to_decimal_packed(cnp.ndarray[uint8_t, ndim=1] packed, int start_bit, int n_bits):
+def fast_binary_to_decimal_packed(const uint8_t[:] packed, int start_bit, int n_bits):
     """
     Extracts a decimal value from a bit-packed array given a start bit and length.
     """
@@ -63,20 +72,22 @@ def fast_binary_to_decimal_packed(cnp.ndarray[uint8_t, ndim=1] packed, int start
     cdef int i, byte_idx, bit_idx
     
     for i in range(n_bits):
-        byte_idx = (start_bit + i) // 8
-        bit_idx = (start_bit + i) % 8
+        byte_idx = (start_bit + i) >> 3
+        bit_idx = (start_bit + i) & 7
         res = (res << 1) | ((packed[byte_idx] >> (7 - bit_idx)) & 1)
         
     return res
 
 # --- Unified Dynamic Decoder ---
 
-def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed, 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def decode_individual(const uint8_t[:] packed, 
                       int feat_bits, 
                       int model_sel_bits,
                       list param_names,
                       list param_categories,
-                      cnp.ndarray[cnp.int32_t, ndim=2] model_layouts):
+                      const int32_t[:, :] model_layouts):
     """
     Decodes phenotype parameters dynamically based on a layout array.
     model_layouts structure: [num_params, p1_name_idx, p1_bits, p1_type, p1_e1, p1_e2, p1_e3, ...]
@@ -142,18 +153,20 @@ def decode_individual(cnp.ndarray[uint8_t, ndim=1] packed,
 
 # --- Evolution Operations on Packed Data ---
 
-def fast_crossover_packed(cnp.ndarray[uint8_t, ndim=1] p1, 
-                          cnp.ndarray[uint8_t, ndim=1] p2, 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_crossover_packed(const uint8_t[:] p1, 
+                          const uint8_t[:] p2, 
                           int crossover_bit,
                           int total_bits):
     """
     Fast bit-level crossover on packed uint8 arrays.
     """
     cdef int n_bytes = p1.shape[0]
-    cdef cnp.ndarray[uint8_t, ndim=1] child = np.empty(n_bytes, dtype=np.uint8)
-    cdef int i, byte_idx, bit_idx
-    cdef int cross_byte = crossover_bit // 8
-    cdef int cross_bit = crossover_bit % 8
+    cdef uint8_t[:] child = np.empty(n_bytes, dtype=np.uint8)
+    cdef int i
+    cdef int cross_byte = crossover_bit >> 3
+    cdef int cross_bit = crossover_bit & 7
     cdef uint8_t mask
     
     # 1. Bytes before crossover byte
@@ -169,11 +182,13 @@ def fast_crossover_packed(cnp.ndarray[uint8_t, ndim=1] p1,
     for i in range(cross_byte + 1, n_bytes):
         child[i] = p2[i]
         
-    return child
+    return np.asarray(child)
 
-def fast_mutation_packed(cnp.ndarray[uint8_t, ndim=1] packed, 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_mutation_packed(uint8_t[:] packed, 
                          double mutation_rate,
-                         cnp.ndarray[cnp.float64_t, ndim=1] random_values,
+                         const double[:] random_values,
                          int total_bits):
     """
     Fast bit-level mutation on packed uint8 arrays.
@@ -182,54 +197,54 @@ def fast_mutation_packed(cnp.ndarray[uint8_t, ndim=1] packed,
     
     for i in range(total_bits):
         if random_values[i] < mutation_rate:
-            byte_idx = i // 8
-            bit_idx = i % 8
+            byte_idx = i >> 3
+            bit_idx = i & 7
             packed[byte_idx] ^= (1 << (7 - bit_idx))
             
-    return packed
+    return np.asarray(packed)
 
 # --- Parallel Batch Operations (OpenMP) ---
 
-def batch_crossover_packed(cnp.ndarray[uint8_t, ndim=2] parents_pool,
-                           cnp.ndarray[cnp.int32_t, ndim=1] p1_indices,
-                           cnp.ndarray[cnp.int32_t, ndim=1] p2_indices,
-                           cnp.ndarray[cnp.int32_t, ndim=1] crossover_bits,
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def batch_crossover_packed(const uint8_t[:, :] parents_pool,
+                           const int32_t[:] p1_indices,
+                           const int32_t[:] p2_indices,
+                           const int32_t[:] crossover_bits,
                            int total_bits):
     """
     Parallel crossover of the entire population using OpenMP.
     """
     cdef int n_offspring = p1_indices.shape[0]
     cdef int n_bytes = parents_pool.shape[1]
-    cdef cnp.ndarray[uint8_t, ndim=2] offspring = np.empty((n_offspring, n_bytes), dtype=np.uint8)
+    cdef uint8_t[:, :] offspring = np.empty((n_offspring, n_bytes), dtype=np.uint8)
     
     cdef int i, j, cross_byte, cross_bit
     cdef uint8_t mask
     
-    # We release the GIL to let OpenMP threads run in parallel
     with nogil:
         for i in prange(n_offspring, schedule='static'):
-            cross_byte = crossover_bits[i] // 8
-            cross_bit = crossover_bits[i] % 8
+            cross_byte = crossover_bits[i] >> 3
+            cross_bit = crossover_bits[i] & 7
             mask = 0xFF << (8 - cross_bit)
             
-            # 1. Bytes before crossover
             for j in range(cross_byte):
                 offspring[i, j] = parents_pool[p1_indices[i], j]
             
-            # 2. Crossover byte
             if cross_byte < n_bytes:
                 offspring[i, cross_byte] = (parents_pool[p1_indices[i], cross_byte] & mask) | \
                                             (parents_pool[p2_indices[i], cross_byte] & ~mask)
             
-            # 3. Bytes after crossover
             for j in range(cross_byte + 1, n_bytes):
                 offspring[i, j] = parents_pool[p2_indices[i], j]
                 
-    return offspring
+    return np.asarray(offspring)
 
-def batch_mutation_packed(cnp.ndarray[uint8_t, ndim=2] offspring_pool,
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def batch_mutation_packed(uint8_t[:, :] offspring_pool,
                           double mutation_rate,
-                          cnp.ndarray[cnp.float64_t, ndim=2] random_matrix,
+                          const double[:, :] random_matrix,
                           int total_bits):
     """
     Parallel mutation of the entire population using OpenMP.
@@ -243,46 +258,52 @@ def batch_mutation_packed(cnp.ndarray[uint8_t, ndim=2] offspring_pool,
         for i in prange(n_pop, schedule='static'):
             for j in range(total_bits):
                 if random_matrix[i, j] < mutation_rate:
-                    byte_idx = j // 8
-                    bit_idx = j % 8
+                    byte_idx = j >> 3
+                    bit_idx = j & 7
                     offspring_pool[i, byte_idx] ^= (1 << (7 - bit_idx))
                     
-    return offspring_pool
+    return np.asarray(offspring_pool)
 
 # --- Original int8 Helpers (for backward compatibility) ---
 
-def fast_binary_to_decimal(cnp.ndarray[int8_t, ndim=1] binary):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_binary_to_decimal(const int8_t[:] binary):
     cdef long long res = 0
     cdef int i, n = binary.shape[0]
     for i in range(n):
         res = (res << 1) | binary[i]
     return res
 
-def fast_crossover(cnp.ndarray[int8_t, ndim=1] parent1, 
-                   cnp.ndarray[int8_t, ndim=1] parent2, 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_crossover(const int8_t[:] parent1, 
+                   const int8_t[:] parent2, 
                    int crossover_point):
     cdef int n = parent1.shape[0]
-    cdef cnp.ndarray[int8_t, ndim=1] child = np.empty(n, dtype=np.int8)
+    cdef int8_t[:] child = np.empty(n, dtype=np.int8)
     cdef int i
     for i in range(crossover_point):
         child[i] = parent1[i]
     for i in range(crossover_point, n):
         child[i] = parent2[i]
-    return child
+    return np.asarray(child)
 
-def fast_mutation(cnp.ndarray[int8_t, ndim=1] genes, 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_mutation(int8_t[:] genes, 
                   double mutation_rate,
-                  cnp.ndarray[cnp.float64_t, ndim=1] random_values):
+                  const double[:] random_values):
     cdef int n = genes.shape[0]
     cdef int i
     for i in range(n):
         if random_values[i] < mutation_rate:
             genes[i] = 1 - genes[i]
-    return genes
+    return np.asarray(genes)
 
-from libc.math cimport sqrt
-
-def fast_binary_metrics(cnp.ndarray[cnp.int64_t, ndim=1] y_true, cnp.ndarray[cnp.int64_t, ndim=1] y_pred):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_binary_metrics(const int64_t[:] y_true, const int64_t[:] y_pred):
     """
     Ultra-fast C-level calculation of binary classification metrics.
     Calculates TP, TN, FP, FN in a single pass to avoid Python loop overhead
@@ -323,7 +344,7 @@ def fast_binary_metrics(cnp.ndarray[cnp.int64_t, ndim=1] y_true, cnp.ndarray[cnp
         recall = tp / float(tp + fn)
         
     if (prec + recall) > 0:
-        f1 = 2 * (prec * recall) / (prec + recall)
+        f1 = (2.0 * prec * recall) / (prec + recall)
         
     mcc_num = (tp * tn) - (fp * fn)
     mcc_den_sq = float(tp + fp) * float(tp + fn) * float(tn + fp) * float(tn + fn)

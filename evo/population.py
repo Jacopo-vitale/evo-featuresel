@@ -23,6 +23,16 @@ except ImportError:
 # Setup module-level logger
 logger = logging.getLogger("evo.population")
 
+# Global variables for worker processes to avoid redundant data serialization
+_WORKER_DATA = None
+_WORKER_LABELS = None
+
+def _init_worker(data, labels):
+    """Initializer for ProcessPoolExecutor workers"""
+    global _WORKER_DATA, _WORKER_LABELS
+    _WORKER_DATA = data
+    _WORKER_LABELS = labels
+
 class Population(object):
     def __init__(self, setup: Setup) -> None:
         self.setup = setup
@@ -70,7 +80,13 @@ class Population(object):
         genes, filament_len, bits, project_folder, random_state, penalty_factor, DATA, LABELS, cython_layout, enabled_models, fitness_code = args
         from evo.individual import Individual
         ind = Individual(filament_len, genes, bits, project_folder, random_state, penalty_factor, cython_layout, enabled_models, fitness_code)
-        ind.fitness_eval(DATA, LABELS)
+        
+        # Use worker-local data if available to avoid serialization overhead
+        global _WORKER_DATA, _WORKER_LABELS
+        actual_data = DATA if DATA is not None else _WORKER_DATA
+        actual_labels = LABELS if LABELS is not None else _WORKER_LABELS
+        
+        ind.fitness_eval(actual_data, actual_labels)
         # Return serializable results
         return {
             'fitness': ind.fitness,
@@ -138,15 +154,15 @@ class Population(object):
                     self.setup.project_folder, 
                     int(child_seeds[i].generate_state(1)[0]), # Unique sub-seed
                     self.setup.PENALTY_FACTOR,
-                    self.setup.DATA, 
-                    self.setup.LABELS,
+                    None, # Use worker-local data
+                    None, # Use worker-local labels
                     cython_layout,
                     enabled_models,
                     fitness_code
                 ) for i, genes in enumerate(random_genes_list)
             ]
             
-            with ProcessPoolExecutor() as executor:
+            with ProcessPoolExecutor(initializer=_init_worker, initargs=(self.setup.DATA, self.setup.LABELS)) as executor:
                 results = list(executor.map(Population._evaluate_individual, eval_args))
             
             for i, res in enumerate(results):
@@ -252,15 +268,15 @@ class Population(object):
                 self.setup.project_folder, 
                 int(child_seeds[i].generate_state(1)[0]), 
                 self.setup.PENALTY_FACTOR,
-                self.setup.DATA, 
-                self.setup.LABELS,
+                None, # Use worker-local data
+                None, # Use worker-local labels
                 cython_layout,
                 enabled_models,
                 fitness_code
             ) for i in range(len(mutated_pool))
         ]
         
-        with ProcessPoolExecutor() as executor:
+        with ProcessPoolExecutor(initializer=_init_worker, initargs=(self.setup.DATA, self.setup.LABELS)) as executor:
             results = list(executor.map(Population._evaluate_individual, eval_args))
         
         self._offspring = []
