@@ -314,6 +314,12 @@ class MainWindow(QMainWindow):
         QMessageBox.about(self, "About evo-featuresel", "<h3>evo-featuresel Dashboard</h3><p>Optimized Evolutionary Feature Selection.</p>")
 
     def closeEvent(self, event):
+        # 1. Stop worker if running
+        if hasattr(self, 'worker') and self.worker.isRunning():
+            self.worker.stop()
+            self.worker.wait() # Ensure it finishes before app exits
+
+        # 2. Check for unsaved changes
         if self._get_params() == getattr(self, '_last_saved_params', None):
             event.accept()
             return

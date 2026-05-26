@@ -28,9 +28,9 @@ except ImportError:
 # Setup module-level logger
 logger = logging.getLogger("evo.individual")
 
-# Module-level caches to avoid redundant overhead in fitness_eval
-_MODEL_CACHE = {}
-_FITNESS_FUNC_CACHE = {}
+# Global caches for dynamic components
+_MODEL_CACHE = {}         # {import_path: (model_class, supports_random_state)}
+_FITNESS_FUNC_CACHE = {}  # {hash(fitness_code): custom_fitness_function}
 
 class BaseIndividual(ABC):
 # ... (rest of class)
@@ -125,7 +125,9 @@ class Individual(BaseIndividual):
                 if not import_path:
                     raise ValueError(f"Model {model_info['name']} has no import_path defined.")
                 
-                if import_path not in _MODEL_CACHE:
+                if import_path in _MODEL_CACHE:
+                    model_class, supports_rs = _MODEL_CACHE[import_path]
+                else:
                     module_name, class_name = import_path.rsplit('.', 1)
                     module = importlib.import_module(module_name)
                     model_class = getattr(module, class_name)
@@ -135,7 +137,6 @@ class Individual(BaseIndividual):
                     supports_rs = 'random_state' in temp_model.get_params()
                     _MODEL_CACHE[import_path] = (model_class, supports_rs)
                 
-                model_class, supports_rs = _MODEL_CACHE[import_path]
                 if supports_rs:
                     self.model = model_class(random_state=self.random_state)
                 else:
@@ -172,7 +173,9 @@ class Individual(BaseIndividual):
             if self.fitness_code:
                 try:
                     code_hash = hash(self.fitness_code)
-                    if code_hash not in _FITNESS_FUNC_CACHE:
+                    if code_hash in _FITNESS_FUNC_CACHE:
+                        custom_func = _FITNESS_FUNC_CACHE[code_hash]
+                    else:
                         # Provide a limited set of globals
                         safe_globals = {'np': np}
                         local_scope = {}
@@ -180,17 +183,18 @@ class Individual(BaseIndividual):
                         
                         # Assume the user defined 'custom_fitness'
                         if 'custom_fitness' in local_scope:
-                            _FITNESS_FUNC_CACHE[code_hash] = local_scope['custom_fitness']
+                            custom_func = local_scope['custom_fitness']
+                            _FITNESS_FUNC_CACHE[code_hash] = custom_func
                         else:
                             raise ValueError("Function 'custom_fitness' not found in provided code.")
                     
-                    custom_func = _FITNESS_FUNC_CACHE[code_hash]
                     metrics_dict = {
                         'mcc': mcc, 'acc': acc, 'f1': f1, 
                         'prec': prec, 'recall': recall, 'cm': cm
                     }
-                    self._fitness = custom_func(y_test, preds, n_features, n_selected, metrics_dict)
-                    
+                    self._fitness = custom_func(
+                        y_test, preds, n_features, n_selected, metrics_dict
+                    )
                 except Exception as e:
                     logger.error(f"Custom fitness execution failed: {e}. Falling back to default.")
                     penalty = self.penalty_factor * (n_selected / n_features)
