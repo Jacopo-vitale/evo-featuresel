@@ -14,7 +14,7 @@
 The project follows a modular evolutionary architecture:
 - **`evo/core.pyx`**: The performance heart. Contains bit-packed genetic operators (crossover, mutation) and fast fitness metrics (MCC, Accuracy) implemented in Cython.
 - **`evo/individual.py`**: Defines candidate solutions. Chromosomes are stored as **bit-packed uint8 arrays** to minimize memory footprint and improve cache locality.
-- **`evo/population.py`**: Manages the evolution cycle. It uses `ProcessPoolExecutor` for parallel fitness evaluations and calls Cython/OpenMP batch functions for genetic operations.
+- **`evo/population.py`**: Manages the evolution cycle. It uses `pebble.ProcessPool` for parallel fitness evaluations (with strict timeout handling) and calls Cython/OpenMP batch functions for genetic operations.
 - **`evo/runner.py`**: Orchestrates the entire experiment lifecycle, including logging, robustness runs, and result serialization.
 - **`evo/gui/`**: Interactive dashboard for real-time monitoring and parameter tuning.
 
@@ -30,8 +30,8 @@ python setup.py build_ext --inplace
 *Requires a C compiler (GCC, Clang, or MSVC).*
 
 ### 🏃 Running the Project
-- **CLI Mode**: `python main.py` (Main entry point for experiments)
-- **GUI Dashboard**: `python gui_main.py` (Interactive UI)
+- **CLI Mode**: `python cli_main.py` (Modernized argparse entry point for experiments)
+- **GUI Dashboard**: `python main.py` or `python gui_main.py` (Interactive UI using PySide6)
 - **Benchmarking**: `python benchmark_c_vs_py.py` (Compare Python vs. C performance)
 - **Parallelism Verification**: `python verify_parallelism.py`
 
@@ -48,7 +48,8 @@ python -m pytest tests/
 ### ⚡ Performance-First Mindset
 - **Bit-Packing**: Always use bit-packed representations (`pack_bits`, `unpack_bits`) for genomic data.
 - **Cython for Hot Loops**: Any operation that iterates over large populations or long chromosomes should be moved to `evo/core.pyx`.
-- **Parallelism**: Use OpenMP in Cython for batch operations. Use `ProcessPoolExecutor` for model training/evaluation to leverage multiple cores.
+- **Parallelism**: Use OpenMP in Cython for batch operations. Use `pebble.ProcessPool` for model training/evaluation to leverage multiple cores and enforce evaluation timeouts (`PATIENCE`).
+- **Thread Oversubscription**: Always explicitly set `n_jobs=1` when dynamically instantiating Scikit-Learn models inside the population workers to prevent threads from conflicting with the OpenMP process pool.
 
 ### 📂 Experiment Management
 - Results are automatically saved to the `experiment/` directory, organized by timestamp.

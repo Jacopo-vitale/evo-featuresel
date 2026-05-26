@@ -18,5 +18,6 @@ Decoding is handled in `evo/core.pyx` for performance:
 
 ## 🔥 OpenMP & Multithreading
 -   **Batch Crossover/Mutation**: Parallelized at the C level across the population.
--   **Fitness Evaluation**: Uses `ProcessPoolExecutor` in `evo/population.py` to leverage multiple cores for model training (which is CPU intensive).
+-   **Fitness Evaluation**: Uses `pebble.ProcessPool` in `evo/population.py` to leverage multiple cores for model training and enforces strict evaluation timeouts (`PATIENCE`).
+-   **Thread Oversubscription Control**: Dynamic models MUST be instantiated with `n_jobs=1` to prevent Scikit-learn from spawning OpenMP threads that clash with the process pool.
 -   **GIL Management**: Cython functions use `with nogil` where possible to allow true parallel genetic operations.
